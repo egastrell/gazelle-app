@@ -6,98 +6,110 @@
 <title>💰 Modo Gazelle</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg:#0a0a0f;--surface:#12121a;--surface2:#1a1a26;--border:#2a2a3e;
-    --green:#00e676;--yellow:#ffd740;--red:#ff1744;--orange:#ff6d00;
-    --blue:#448aff;--text:#e8e8f0;--muted:#6b6b88;--accent:#7c4dff;
-  }
+  :root{--bg:#0a0a0f;--surface:#12121a;--surface2:#1a1a26;--border:#2a2a3e;--green:#00e676;--yellow:#ffd740;--red:#ff1744;--orange:#ff6d00;--blue:#448aff;--text:#e8e8f0;--muted:#6b6b88;--accent:#7c4dff;}
   *{margin:0;padding:0;box-sizing:border-box}
   body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
-  .header{padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between}
-  .logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--green);text-shadow:0 0 20px rgba(0,230,118,.4)}
+  .header{padding:16px 20px 0;display:flex;align-items:center;justify-content:space-between}
+  .logo{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:var(--green);text-shadow:0 0 20px rgba(0,230,118,.4)}
   .mode-badge{background:linear-gradient(135deg,#ff6d00,#ff1744);color:white;font-size:10px;font-weight:600;letter-spacing:2px;padding:4px 10px;border-radius:20px;text-transform:uppercase}
-  .sync-bar{display:flex;align-items:center;gap:10px;padding:12px 24px;font-size:12px;color:var(--muted)}
-  .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+  .ciclo-bar{display:flex;align-items:center;gap:8px;padding:10px 20px;font-size:12px;background:var(--surface);margin:10px 20px;border-radius:12px;border:1px solid var(--border)}
+  .ciclo-info{flex:1}
+  .ciclo-titulo{font-weight:600;font-size:13px;color:var(--text)}
+  .ciclo-fechas{color:var(--muted);font-size:11px;margin-top:2px}
+  .ciclo-dias{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--yellow);text-align:right;line-height:1}
+  .ciclo-dias-lbl{font-size:9px;color:var(--muted);text-align:right;letter-spacing:1px}
+  .sync-bar{display:flex;align-items:center;gap:8px;padding:6px 20px;font-size:11px;color:var(--muted)}
+  .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0}
   .sync-dot.ok{background:var(--green);box-shadow:0 0 6px rgba(0,230,118,.5)}
   .sync-dot.loading{background:var(--yellow);animation:blink 1s ease infinite}
   .sync-dot.error{background:var(--red)}
   @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-  .btn-refresh{margin-left:auto;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:12px;padding:5px 12px;border-radius:20px;cursor:pointer;transition:all .2s}
-  .btn-refresh:hover{border-color:var(--green);color:var(--green)}
-  .tabs{display:flex;padding:0 24px;gap:4px;margin-bottom:16px;overflow-x:auto;scrollbar-width:none}
-  .tab{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:all .2s;white-space:nowrap}
+  .btn-refresh{margin-left:auto;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:11px;padding:4px 10px;border-radius:20px;cursor:pointer}
+  .tabs{display:flex;padding:0 20px;gap:4px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
+  .tab{padding:7px 14px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:all .2s;white-space:nowrap}
   .tab.active{background:var(--accent);border-color:var(--accent);color:white}
-  .score-section{padding:0 24px 20px}
-  .score-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px;position:relative;overflow:hidden}
-  .score-card::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:radial-gradient(circle,rgba(0,230,118,.08) 0%,transparent 70%);pointer-events:none}
-  .score-label{font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px}
-  .score-main{display:flex;align-items:flex-end;gap:16px;margin-bottom:20px;flex-wrap:wrap}
-  .score-amount{font-family:'Bebas Neue',sans-serif;font-size:56px;line-height:1;color:var(--green);text-shadow:0 0 30px rgba(0,230,118,.3)}
+  .score-section{padding:0 20px 16px}
+  .score-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:22px;position:relative;overflow:hidden}
+  .score-card::before{content:'';position:absolute;top:-40px;right:-40px;width:150px;height:150px;background:radial-gradient(circle,rgba(0,230,118,.08) 0%,transparent 70%);pointer-events:none}
+  .score-label{font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
+  .score-main{display:flex;align-items:flex-end;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+  .score-amount{font-family:'Bebas Neue',sans-serif;font-size:52px;line-height:1;color:var(--green);text-shadow:0 0 30px rgba(0,230,118,.3)}
   .score-amount.danger{color:var(--red);text-shadow:0 0 30px rgba(255,23,68,.3)}
   .score-amount.warning{color:var(--yellow);text-shadow:0 0 30px rgba(255,215,64,.3)}
-  .score-sub{font-size:14px;color:var(--muted);padding-bottom:8px}
-  .judge-msg{background:var(--surface2);border-left:3px solid var(--green);border-radius:0 10px 10px 0;padding:12px 16px;font-size:14px;line-height:1.6;color:var(--text)}
+  .score-sub{font-size:13px;color:var(--muted);padding-bottom:6px}
+  .judge-msg{background:var(--surface2);border-left:3px solid var(--green);border-radius:0 10px 10px 0;padding:10px 14px;font-size:13px;line-height:1.6;color:var(--text)}
   .judge-msg.danger{border-left-color:var(--red)}
   .judge-msg.warning{border-left-color:var(--yellow)}
-  .stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:0 24px 20px}
-  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center}
-  .stat-val{font-family:'Bebas Neue',sans-serif;font-size:22px}
-  .stat-lbl{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
-  .bars-section{padding:0 24px 20px;display:grid;gap:10px}
-  .bar-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;transition:all .2s}
-  .bar-card:hover{border-color:var(--accent)}
-  .bar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-  .bar-name{font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px}
-  .bar-amounts{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);text-align:right}
-  .bar-amounts .spent{color:var(--text);font-size:13px}
+  .pagar-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin:0 20px 14px}
+  .pagar-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--muted);margin-bottom:10px}
+  .pagar-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+  .pagar-row:last-child{border-bottom:none;padding-top:10px;margin-top:2px}
+  .pagar-nombre{font-size:13px}
+  .pagar-vence{font-size:10px;color:var(--muted)}
+  .pagar-monto{font-family:'DM Mono',monospace;font-size:14px;font-weight:500}
+  .pagar-monto.ok{color:var(--green)}
+  .pagar-monto.danger{color:var(--red)}
+  .pagar-total{font-family:'Bebas Neue',sans-serif;font-size:20px}
+  .stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:0 20px 14px}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center}
+  .stat-val{font-family:'Bebas Neue',sans-serif;font-size:20px}
+  .stat-lbl{font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+  .bars-section{padding:0 20px 16px;display:grid;gap:8px}
+  .bar-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
+  .bar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+  .bar-name{font-size:12px;font-weight:500;display:flex;align-items:center;gap:7px}
+  .bar-amounts{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-align:right}
+  .bar-amounts .spent{color:var(--text);font-size:12px}
   .bar-track{height:5px;background:var(--border);border-radius:10px;overflow:hidden}
   .bar-fill{height:100%;border-radius:10px;transition:width .8s cubic-bezier(.23,1,.32,1);background:var(--green)}
   .bar-fill.warning{background:var(--yellow)}
   .bar-fill.danger,.bar-fill.over{background:var(--red)}
-  .section-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--muted);margin-bottom:12px;padding:0 24px}
-  .hormigas-section{padding:0 24px 20px}
-  .hormigas-card{background:var(--surface);border:1px solid var(--orange);border-radius:14px;padding:16px 18px}
-  .hormiga-total{font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--orange)}
-  .hormiga-label{font-size:12px;color:var(--muted);margin-bottom:4px}
-  .hormiga-items{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-  .hormiga-tag{background:rgba(255,109,0,.12);border:1px solid rgba(255,109,0,.3);color:var(--orange);font-size:11px;padding:3px 8px;border-radius:20px;font-family:'DM Mono',monospace}
-  .prohibidos-section{padding:0 24px 20px}
-  .prohibido-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .section-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--muted);margin-bottom:10px}
+  .hormigas-section{padding:0 20px 16px}
+  .hormigas-card{background:var(--surface);border:1px solid var(--orange);border-radius:12px;padding:14px}
+  .hormiga-total{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--orange)}
+  .hormiga-label{font-size:11px;color:var(--muted);margin-bottom:4px}
+  .hormiga-items{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+  .hormiga-tag{background:rgba(255,109,0,.12);border:1px solid rgba(255,109,0,.3);color:var(--orange);font-size:10px;padding:2px 7px;border-radius:20px;font-family:'DM Mono',monospace}
+  .prohibidos-section{padding:0 20px 16px}
+  .prohibido-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
   .prohibido-item.found{border-color:rgba(255,23,68,.4);background:rgba(255,23,68,.05)}
-  .prohibido-name{font-size:13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  .prohibido-amount{font-family:'DM Mono',monospace;font-size:13px;color:var(--red);white-space:nowrap}
-  .prohibido-ok{font-size:11px;color:var(--green)}
-  .txn-section{padding:0 24px 20px}
-  .txn-filters{display:flex;gap:8px;margin-bottom:12px;overflow-x:auto;scrollbar-width:none}
-  .filter-chip{padding:5px 12px;border-radius:20px;font-size:12px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap}
+  .prohibido-name{font-size:12px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .prohibido-amount{font-family:'DM Mono',monospace;font-size:12px;color:var(--red);white-space:nowrap}
+  .prohibido-ok{font-size:10px;color:var(--green)}
+  .txn-section{padding:0 20px 16px}
+  .txn-filters{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;scrollbar-width:none}
+  .filter-chip{padding:4px 10px;border-radius:20px;font-size:11px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap}
   .filter-chip.active{background:var(--surface2);color:var(--text);border-color:var(--accent)}
-  .txn-list{display:grid;gap:6px;max-height:500px;overflow-y:auto}
-  .txn-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center}
+  .txn-list{display:grid;gap:5px;max-height:500px;overflow-y:auto}
+  .txn-item{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center}
   .txn-item.prohibido{border-color:rgba(255,23,68,.3)}
-  .txn-left{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
-  .txn-comercio{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .txn-meta{font-size:11px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
-  .txn-monto{font-family:'DM Mono',monospace;font-size:14px;font-weight:500;white-space:nowrap;margin-left:8px}
-  .chip{font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600}
+  .txn-left{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+  .txn-comercio{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .txn-meta{font-size:10px;color:var(--muted);display:flex;gap:5px;flex-wrap:wrap;margin-top:2px}
+  .txn-monto{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;white-space:nowrap;margin-left:6px}
+  .chip{font-size:9px;padding:2px 5px;border-radius:6px;font-weight:600}
   .chip-edu{background:rgba(68,138,255,.15);color:var(--blue)}
   .chip-romi{background:rgba(124,77,255,.15);color:#ce93d8}
   .chip-otros{background:rgba(107,107,136,.15);color:var(--muted)}
   .chip-hormiga{background:rgba(255,109,0,.15);color:var(--orange)}
-  .edit-section{padding:0 24px 20px}
-  .edit-row{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:8px}
-  .edit-row span{flex:1;font-size:13px}
-  .edit-row input{background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:13px;padding:6px 10px;border-radius:6px;width:130px;text-align:right;outline:none}
-  .btn-save{width:100%;background:var(--green);color:#000;font-weight:700;font-size:14px;padding:14px;border:none;border-radius:12px;cursor:pointer;margin-top:4px}
+  .edit-section{padding:0 20px 16px}
+  .edit-row{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:9px 12px;margin-bottom:6px}
+  .edit-row span{flex:1;font-size:12px}
+  .edit-row input{background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;padding:5px 8px;border-radius:6px;width:120px;text-align:right;outline:none}
+  .btn-save{width:100%;background:var(--green);color:#000;font-weight:700;font-size:14px;padding:13px;border:none;border-radius:11px;cursor:pointer;margin-top:4px}
   .alert-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:100;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s}
   .alert-overlay.show{opacity:1;pointer-events:all}
-  .alert-panel{background:var(--surface);border:1px solid var(--border);border-radius:20px 20px 0 0;padding:30px 24px 40px;width:100%;max-width:480px;transform:translateY(100%);transition:transform .4s cubic-bezier(.23,1,.32,1)}
+  .alert-panel{background:var(--surface);border:1px solid var(--border);border-radius:20px 20px 0 0;padding:28px 22px 38px;width:100%;max-width:480px;transform:translateY(100%);transition:transform .4s cubic-bezier(.23,1,.32,1)}
   .alert-overlay.show .alert-panel{transform:translateY(0)}
-  .alert-emoji{font-size:52px;text-align:center;display:block;margin-bottom:16px}
-  .alert-title{font-family:'Bebas Neue',sans-serif;font-size:32px;text-align:center;margin-bottom:10px;letter-spacing:2px}
-  .alert-msg{font-size:15px;color:var(--muted);text-align:center;line-height:1.6;margin-bottom:24px}
-  .btn-close-alert{width:100%;background:var(--surface2);color:var(--text);font-weight:600;font-size:14px;padding:14px;border:1px solid var(--border);border-radius:12px;cursor:pointer}
+  .alert-emoji{font-size:48px;text-align:center;display:block;margin-bottom:14px}
+  .alert-title{font-family:'Bebas Neue',sans-serif;font-size:30px;text-align:center;margin-bottom:8px;letter-spacing:2px}
+  .alert-msg{font-size:14px;color:var(--muted);text-align:center;line-height:1.6;margin-bottom:22px}
+  .btn-close-alert{width:100%;background:var(--surface2);color:var(--text);font-weight:600;font-size:14px;padding:13px;border:1px solid var(--border);border-radius:11px;cursor:pointer}
   .bottom-pad{height:40px}
-  .empty-state{text-align:center;padding:40px 24px;color:var(--muted);font-size:14px}
+  .empty-state{text-align:center;padding:30px;color:var(--muted);font-size:13px}
+  .progress-ciclo{height:4px;background:var(--border);border-radius:10px;overflow:hidden;margin-top:6px}
+  .progress-ciclo-fill{height:100%;background:var(--yellow);border-radius:10px;transition:width .5s}
 </style>
 </head>
 <body>
@@ -107,39 +119,43 @@
   <div class="mode-badge">Baby Step 2</div>
 </div>
 
+<div class="ciclo-bar">
+  <div class="ciclo-info">
+    <div class="ciclo-titulo" id="cicloTitulo">Ciclo Marzo</div>
+    <div class="ciclo-fechas" id="cicloFechas">20/02 → 19/03/2026</div>
+    <div class="progress-ciclo"><div class="progress-ciclo-fill" id="cicloPct" style="width:0%"></div></div>
+  </div>
+  <div>
+    <div class="ciclo-dias" id="cicloDias">—</div>
+    <div class="ciclo-dias-lbl">DÍAS RESTANTES</div>
+  </div>
+</div>
+
 <div class="sync-bar">
   <div class="sync-dot loading" id="syncDot"></div>
   <span id="syncTxt">Conectando...</span>
-  <select id="mesSelect" onchange="aplicarFiltroMes()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:11px;padding:4px 8px;border-radius:8px;outline:none;margin-left:4px">
-    <option value="2026-03">Mar 2026</option>
-    <option value="2026-02">Feb 2026</option>
-    <option value="2026-01">Ene 2026</option>
-    <option value="2025-12">Dic 2025</option>
-    <option value="2025-11">Nov 2025</option>
-    <option value="2025-10">Oct 2025</option>
-    <option value="2025-09">Sep 2025</option>
-    <option value="todos">Todos los meses</option>
-  </select>
   <button class="btn-refresh" onclick="fetchSheet()">↺</button>
 </div>
 
 <div class="tabs">
   <div class="tab active" onclick="showTab('resumen',this)">Resumen</div>
+  <div class="tab" onclick="showTab('pagar',this)">💳 A Pagar</div>
   <div class="tab" onclick="showTab('categorias',this)">Categorías</div>
   <div class="tab" onclick="showTab('prohibidos',this)">🚫 Prohibidos</div>
   <div class="tab" onclick="showTab('transacciones',this)">Movimientos</div>
-  <div class="tab" onclick="showTab('presupuesto',this)">⚙️ Presupuesto</div>
+  <div class="tab" onclick="showTab('presupuesto',this)">⚙️ Config</div>
 </div>
 
+<!-- RESUMEN -->
 <div id="tab-resumen">
   <div class="score-section">
     <div class="score-card">
-      <div class="score-label">Disponible este mes — Núcleo</div>
+      <div class="score-label">Disponible este ciclo — Núcleo</div>
       <div class="score-main">
         <div class="score-amount" id="disponibleAmt">—</div>
         <div class="score-sub" id="disponibleSub">sincronizando...</div>
       </div>
-      <div class="judge-msg" id="judgeMsg">Conectando con tu planilla de Google Sheets...</div>
+      <div class="judge-msg" id="judgeMsg">Conectando con Google Sheets...</div>
     </div>
   </div>
   <div class="stats-row">
@@ -148,31 +164,76 @@
     <div class="stat-card"><div class="stat-val" id="statProhibidos" style="color:var(--red)">—</div><div class="stat-lbl">Prohibidos</div></div>
   </div>
   <div class="hormigas-section">
-    <div class="section-title" style="padding:0">☕ Gastos Hormiga</div>
+    <div class="section-title">☕ Gastos Hormiga</div>
     <div class="hormigas-card">
-      <div class="hormiga-label">Pequeños gastos acumulados</div>
+      <div class="hormiga-label">Pequeños gastos acumulados este ciclo</div>
       <div class="hormiga-total" id="hormigaTotal">$0</div>
       <div class="hormiga-items" id="hormigaItems"></div>
     </div>
   </div>
 </div>
 
-<div id="tab-categorias" style="display:none">
-  <div class="bars-section" id="barsContainer">
-    <div class="empty-state">Cargando categorías...</div>
+<!-- A PAGAR -->
+<div id="tab-pagar" style="display:none">
+  <div class="pagar-card">
+    <div class="pagar-title">💳 Proyección de Pagos</div>
+    <div class="pagar-row">
+      <div><div class="pagar-nombre">Visa Galicia</div><div class="pagar-vence">Vence 02/04/2026</div></div>
+      <div class="pagar-monto" id="pagarVisa">—</div>
+    </div>
+    <div class="pagar-row">
+      <div><div class="pagar-nombre">Mastercard BNA</div><div class="pagar-vence">Vence 04/04/2026</div></div>
+      <div class="pagar-monto" id="pagarMaster">—</div>
+    </div>
+    <div class="pagar-row">
+      <div><div class="pagar-nombre" style="font-weight:700">Total a pagar</div></div>
+      <div class="pagar-total" id="pagarTotal">—</div>
+    </div>
+  </div>
+  <div class="pagar-card" style="margin-top:0">
+    <div class="pagar-title">💰 Tu Capacidad de Pago</div>
+    <div class="pagar-row">
+      <div><div class="pagar-nombre">Ingreso neto</div></div>
+      <div class="pagar-monto ok">$3.800.000</div>
+    </div>
+    <div class="pagar-row">
+      <div><div class="pagar-nombre">(-) Diezmo 10%</div></div>
+      <div class="pagar-monto">$380.000</div>
+    </div>
+    <div class="pagar-row">
+      <div><div class="pagar-nombre">(-) Fijos + Variables</div></div>
+      <div class="pagar-monto">$1.875.784</div>
+    </div>
+    <div class="pagar-row">
+      <div><div class="pagar-nombre" style="font-weight:700">Disponible para tarjetas</div></div>
+      <div class="pagar-total ok" id="capacidadPago">$1.544.216</div>
+    </div>
+    <div class="pagar-row">
+      <div><div class="pagar-nombre" style="font-weight:700">Diferencia</div></div>
+      <div class="pagar-total" id="diferenciaPago">—</div>
+    </div>
   </div>
 </div>
 
+<!-- CATEGORÍAS -->
+<div id="tab-categorias" style="display:none">
+  <div class="bars-section" id="barsContainer">
+    <div class="empty-state">Cargando...</div>
+  </div>
+</div>
+
+<!-- PROHIBIDOS -->
 <div id="tab-prohibidos" style="display:none">
   <div class="prohibidos-section">
-    <div class="section-title" style="padding:0">🚫 Modo Gazelle — Prohibidos</div>
+    <div class="section-title">🚫 Modo Gazelle</div>
     <div id="prohibidoList"></div>
   </div>
 </div>
 
+<!-- TRANSACCIONES -->
 <div id="tab-transacciones" style="display:none">
   <div class="txn-section">
-    <div class="section-title" style="padding:0">Movimientos</div>
+    <div class="section-title">Movimientos del Ciclo</div>
     <div class="txn-filters">
       <div class="filter-chip active" onclick="filtrarTxn('todos',this)">Todos</div>
       <div class="filter-chip" onclick="filtrarTxn('Eduardo',this)">Eduardo</div>
@@ -184,9 +245,10 @@
   </div>
 </div>
 
+<!-- CONFIG -->
 <div id="tab-presupuesto" style="display:none">
   <div class="edit-section">
-    <div class="section-title" style="padding:0">Presupuesto Mensual</div>
+    <div class="section-title">Presupuesto por Ciclo</div>
     <div id="editGrid"></div>
     <button class="btn-save" onclick="guardarPresupuesto()">💾 Guardar</button>
   </div>
@@ -204,266 +266,94 @@
 </div>
 
 <script>
+// ============================================================
+// CONFIG
+// ============================================================
 const SHEET_ID='1GnmI8m9OaJAyNMSiho5SNomFxpWXjYtXF_vpFHPWg08';
 const SHEET_NAME='Tarjetas';
 const API_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
 
-let gastosMes=[];
-let todosLosGastos=[];
-let mesFiltro='2026-03';
-let filtroActual='todos';
+const INGRESO = 3800000;
+const DIEZMO  = 380000;
+const FIJOS   = 1136000;
+const CUOTAS  = 104784;
+const VARIABLES_MAX = 635000;
+const PARA_TARJETAS = INGRESO - DIEZMO - FIJOS - CUOTAS - VARIABLES_MAX; // 1.544.216
 
-let presupuesto=JSON.parse(localStorage.getItem('gazelle_presupuesto')||'null')||{
-  "Alimentación":{icon:"🛒",limite:650000},
-  "Salud":{icon:"🏥",limite:420000},
-  "Servicios":{icon:"💡",limite:280000},
-  "Educación":{icon:"📚",limite:200000},
-  "Transporte":{icon:"🚇",limite:180000},
-  "Diezmo":{icon:"🙏",limite:600000},
-  "Deudas":{icon:"📉",limite:500000},
-  "Indumentaria":{icon:"👕",limite:50000},
-  "Entretenimiento":{icon:"🎭",limite:30000},
-  "Hogar":{icon:"🏠",limite:100000},
-  "Belleza":{icon:"💅",limite:40000},
-  "Otros":{icon:"📦",limite:80000},
-};
-
-const PROHIBIDOS_DEF=[
-  {nombre:"Delivery (PedidosYa/Rappi)",keys:["pedidosya","rappi","dlo*pedidos"]},
-  {nombre:"Fast Food (Mostaza/KFC)",keys:["mostaza","kfc","burger","mcdonalds"]},
-  {nombre:"Restaurantes / Pizzerías",keys:["pizzeria","restaurant","buffet","dichabuffet"]},
-  {nombre:"Taxi / Cabify / Remis",keys:["cabify","uber","taxi","remis"]},
-  {nombre:"Ropa no urgente",keys:["shein","temu","mimo","cheka","tropea","ropelato"]},
-  {nombre:"Vivero / Plantas",keys:["vivero"]},
-  {nombre:"Juguetería",keys:["kinderland","elmundodeljug","juguet"]},
+// Ciclos basados en anteúltimo jueves de cada mes
+const CICLOS = [
+  { nombre:'Enero 2026',      inicio:'2025-12-19', fin:'2026-01-22' },
+  { nombre:'Febrero 2026',    inicio:'2026-01-23', fin:'2026-02-19' },
+  { nombre:'Marzo 2026',      inicio:'2026-02-20', fin:'2026-03-19' },
+  { nombre:'Abril 2026',      inicio:'2026-03-20', fin:'2026-04-23' },
+  { nombre:'Mayo 2026',       inicio:'2026-04-24', fin:'2026-05-21' },
+  { nombre:'Junio 2026',      inicio:'2026-05-22', fin:'2026-06-18' },
 ];
 
-function fp(n){return'$'+Math.round(n).toLocaleString('es-AR')}
+let gastosMes = [];
+let todosLosGastos = [];
+let cicloActual = null;
+let filtroActual = 'todos';
 
-async function fetchSheet(){
-  setSyncState('loading','Sincronizando...');
-  try{
-    const res=await fetch(API_URL);
-    const text=await res.text();
-    const json=JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*?)\);/)[1]);
-    const rows=json.table.rows;
-    const cols=json.table.cols.map(c=>c.label);
+let presupuesto = JSON.parse(localStorage.getItem('gazelle_presupuesto')||'null') || {
+  "Alimentación": { icon:"🛒", limite:450000 },
+  "Salud":        { icon:"🏥", limite:420000 },
+  "Servicios":    { icon:"💡", limite:280000 },
+  "Educación":    { icon:"📚", limite:200000 },
+  "Transporte":   { icon:"🚇", limite:160000 },
+  "Diezmo":       { icon:"🙏", limite:380000 },
+  "Hogar":        { icon:"🏠", limite:100000 },
+  "Indumentaria": { icon:"👕", limite:50000  },
+  "Entretenimiento":{ icon:"🎭", limite:30000 },
+  "Belleza":      { icon:"💅", limite:40000  },
+  "Otros":        { icon:"📦", limite:80000  },
+};
 
-    todosLosGastos=rows
-      .filter(r=>r.c&&r.c[0]&&r.c[0].v)
-      .map(r=>{
-        const get=l=>{const i=cols.indexOf(l);return i>=0&&r.c[i]?(r.c[i].f||r.c[i].v||''):''};
-        const montoRaw=get('Monto');
-        // Parsear formato argentino: "$7.810,00" → 7810.00
-        const montoStr=String(montoRaw).replace(/\$/g,'').replace(/\./g,'').replace(',','.').trim();
-        const monto=parseFloat(montoStr)||0;
-        const comercio=String(get('Comercio')||get('DescripcionRaw')||'');
-        const cat=String(get('Categoria')||'Otros');
-        const signo=String(get('Signo')||'S');
-        const hormiga=String(get('Hormiga')||'NO').toUpperCase()==='SI';
-        const usuario=String(get('USUARIO')||'');
-        const fuente=String(get('Fuente')||'');
-        const fecha=String(get('Fecha')||'');
-        const nota=String(get('Nota')||'');
-        const esProhibido=PROHIBIDOS_DEF.some(p=>p.keys.some(k=>comercio.toLowerCase().includes(k)));
-        let quien='Eduardo';
-        if(usuario.includes('ZIEGLER')||usuario.includes('ROMINA'))quien='Romina';
-        else if(usuario.includes('SEGOVIA')||usuario.includes('ALFREDO'))quien='Padres';
-        return{fecha,comercio,monto,cat,signo,hormiga,quien,fuente,nota,esProhibido};
-      })
-      .filter(g=>g.signo!=='E'&&g.quien!=='Padres');
-    
-    aplicarFiltroMes();
+const PROHIBIDOS_DEF = [
+  { nombre:"Delivery (PedidosYa/Rappi)", keys:["pedidosya","rappi","dlo*pedidos"] },
+  { nombre:"Fast Food (Mostaza/KFC)",    keys:["mostaza","kfc","burger","mcdonalds"] },
+  { nombre:"Restaurantes",               keys:["pizzeria","restaurant","buffet","dichabuffet"] },
+  { nombre:"Taxi / Cabify",              keys:["cabify","uber","taxi","remis"] },
+  { nombre:"Ropa no urgente",            keys:["shein","temu","mimo","tropea","ropelato"] },
+  { nombre:"Vivero / Plantas",           keys:["vivero"] },
+  { nombre:"Juguetería",                 keys:["kinderland","elmundodeljug","juguet"] },
+];
 
-    setSyncState('ok',`Actualizado — ${gastosMes.length} transacciones`);
-    renderAll();
-  }catch(e){
-    setSyncState('error','Error de conexión. Verificá tu internet.');
-    console.error(e);
+// ============================================================
+// CICLO
+// ============================================================
+function detectarCicloActual() {
+  const hoy = new Date();
+  hoy.setHours(0,0,0,0);
+  for(const c of CICLOS) {
+    const ini = new Date(c.inicio);
+    const fin = new Date(c.fin);
+    if(hoy >= ini && hoy <= fin) return c;
   }
+  return CICLOS[CICLOS.length-1];
 }
 
-function parseFecha(f) {
-  // Soporta DD/MM/YY y DD/MM/YYYY
+function parseFechaStr(f) {
   if(!f) return null;
   const p = String(f).split('/');
   if(p.length===3) {
-    let y = p[2]; if(y.length===2) y='20'+y;
-    return y+'-'+p[1].padStart(2,'0');
+    let y = p[2].trim();
+    if(y.length===2) y='20'+y;
+    const m = p[1].trim().padStart(2,'0');
+    const d = p[0].trim().padStart(2,'0');
+    return new Date(`${y}-${m}-${d}`);
   }
   return null;
 }
 
-function aplicarFiltroMes() {
-  const sel = document.getElementById('mesSelect');
-  mesFiltro = sel ? sel.value : 'todos';
-  if(mesFiltro === 'todos') {
-    gastosMes = todosLosGastos;
-  } else {
-    gastosMes = todosLosGastos.filter(g => parseFecha(g.fecha) === mesFiltro);
-  }
-  renderAll();
-}
+function actualizarCicloUI() {
+  cicloActual = detectarCicloActual();
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const fin = new Date(cicloActual.fin);
+  const ini = new Date(cicloActual.inicio);
+  const diasRestantes = Math.ceil((fin - hoy) / (1000*60*60*24));
+  const totalDias = Math.ceil((fin - ini) / (1000*60*60*24));
+  const diasPasados = totalDias - diasRestantes;
+  const pct = Math.min((diasPasados/totalDias)*100, 100);
 
-function setSyncState(s,m){
-  document.getElementById('syncDot').className='sync-dot '+s;
-  document.getElementById('syncTxt').textContent=m;
-}
-
-function renderAll(){
-  renderResumen();
-  renderCategorias();
-  renderProhibidos();
-  renderTxn();
-  renderPresupuesto();
-}
-
-function renderResumen(){
-  const total=gastosMes.reduce((s,g)=>s+g.monto,0);
-  const limite=Object.values(presupuesto).reduce((s,c)=>s+c.limite,0);
-  const disponible=limite-total;
-  const pct=(total/limite)*100;
-  const el=document.getElementById('disponibleAmt');
-  const sub=document.getElementById('disponibleSub');
-  const msg=document.getElementById('judgeMsg');
-  el.textContent=fp(Math.abs(disponible));
-  sub.textContent=`gastado ${fp(total)} de ${fp(limite)}`;
-  const hormigas=gastosMes.filter(g=>g.hormiga);
-  const prohibidos=gastosMes.filter(g=>g.esProhibido);
-  document.getElementById('statTxn').textContent=gastosMes.length;
-  document.getElementById('statHormigas').textContent=hormigas.length;
-  document.getElementById('statProhibidos').textContent=prohibidos.length;
-  if(disponible<0){
-    el.className='score-amount danger';
-    el.textContent='-'+el.textContent;
-    msg.className='judge-msg danger';
-    msg.innerHTML=`😤 <strong>¡Alerta!</strong> Se pasaron ${fp(Math.abs(disponible))} del presupuesto. Cada peso extra es un mes más en deuda. Hay que cortar YA.`;
-  }else if(pct>80){
-    el.className='score-amount warning';
-    msg.className='judge-msg warning';
-    msg.innerHTML=`⚠️ Ya van en el ${Math.round(pct)}% del presupuesto. Solo quedan ${fp(disponible)}. Cuidado con los gastos que quedan.`;
-  }else if(pct>50){
-    el.className='score-amount';
-    msg.className='judge-msg';
-    msg.innerHTML=`📊 Van en el ${Math.round(pct)}% del presupuesto. Bien encaminados. Ojo con los gastos variables de fin de mes.`;
-  }else{
-    el.className='score-amount';
-    msg.className='judge-msg';
-    msg.innerHTML=`✅ <strong>¡Excelente!</strong> Solo usaron el ${Math.round(pct)}% del presupuesto. Cada peso que sobra va a la Bola de Nieve. ¡Sigan así!`;
-  }
-  const totalH=hormigas.reduce((s,g)=>s+g.monto,0);
-  document.getElementById('hormigaTotal').textContent=fp(totalH);
-  const tags=document.getElementById('hormigaItems');
-  tags.innerHTML='';
-  hormigas.slice(0,10).forEach(h=>{
-    const t=document.createElement('span');
-    t.className='hormiga-tag';
-    t.textContent=h.comercio.substring(0,16)+' '+fp(h.monto);
-    tags.appendChild(t);
-  });
-}
-
-function renderCategorias(){
-  const c=document.getElementById('barsContainer');
-  c.innerHTML='';
-  const totCat={};
-  gastosMes.forEach(g=>{totCat[g.cat]=(totCat[g.cat]||0)+g.monto});
-  const cats=new Set([...Object.keys(presupuesto),...Object.keys(totCat)]);
-  [...cats].forEach(cat=>{
-    const cfg=presupuesto[cat]||{icon:'📦',limite:50000};
-    const gastado=totCat[cat]||0;
-    const pct=Math.min((gastado/cfg.limite)*100,100);
-    let cl='';
-    if(pct>=100)cl='over';
-    else if(pct>=80)cl='danger';
-    else if(pct>=60)cl='warning';
-    const div=document.createElement('div');
-    div.className='bar-card';
-    div.innerHTML=`<div class="bar-header"><div class="bar-name"><span>${cfg.icon}</span>${cat}</div><div class="bar-amounts"><div class="spent">${fp(gastado)}</div><div>de ${fp(cfg.limite)}</div></div></div><div class="bar-track"><div class="bar-fill ${cl}" style="width:0%" data-pct="${pct}"></div></div>`;
-    c.appendChild(div);
-  });
-  setTimeout(()=>{document.querySelectorAll('.bar-fill[data-pct]').forEach(el=>{el.style.width=el.dataset.pct+'%'})},50);
-}
-
-function renderProhibidos(){
-  const list=document.getElementById('prohibidoList');
-  list.innerHTML='';
-  PROHIBIDOS_DEF.forEach(p=>{
-    const enc=gastosMes.filter(g=>p.keys.some(k=>g.comercio.toLowerCase().includes(k)));
-    const total=enc.reduce((s,g)=>s+g.monto,0);
-    const found=enc.length>0;
-    const div=document.createElement('div');
-    div.className='prohibido-item'+(found?' found':'');
-    const chips=found?[...new Set(enc.map(g=>g.quien))].map(q=>`<span class="chip ${q==='Eduardo'?'chip-edu':'chip-romi'}">${q.substring(0,3).toUpperCase()}</span>`).join(''):'';
-    div.innerHTML=`<div class="prohibido-name">${found?'🚨':'✅'} ${p.nombre} ${chips}</div>${found?`<div class="prohibido-amount">${fp(total)}</div>`:'<div class="prohibido-ok">Libre ✓</div>'}`;
-    list.appendChild(div);
-  });
-}
-
-function renderTxn(filtro){
-  if(filtro)filtroActual=filtro;
-  const list=document.getElementById('txnList');
-  list.innerHTML='';
-  let datos=[...gastosMes].sort((a,b)=>b.monto-a.monto);
-  if(filtroActual==='Eduardo')datos=datos.filter(g=>g.quien==='Eduardo');
-  else if(filtroActual==='Romina')datos=datos.filter(g=>g.quien==='Romina');
-  else if(filtroActual==='prohibido')datos=datos.filter(g=>g.esProhibido);
-  else if(filtroActual==='hormiga')datos=datos.filter(g=>g.hormiga);
-  if(!datos.length){list.innerHTML='<div class="empty-state">No hay transacciones con ese filtro</div>';return}
-  datos.slice(0,100).forEach(g=>{
-    const div=document.createElement('div');
-    div.className='txn-item'+(g.esProhibido?' prohibido':'');
-    const qc=g.quien==='Eduardo'?'chip-edu':g.quien==='Romina'?'chip-romi':'chip-otros';
-    div.innerHTML=`<div class="txn-left"><div class="txn-comercio">${g.esProhibido?'🚫 ':''}${g.comercio}</div><div class="txn-meta"><span class="chip ${qc}">${g.quien.substring(0,3).toUpperCase()}</span><span>${g.cat}</span>${g.hormiga?'<span class="chip chip-hormiga">🐜</span>':''}<span>${g.fecha}</span></div></div><div class="txn-monto">${fp(g.monto)}</div>`;
-    list.appendChild(div);
-  });
-}
-
-function filtrarTxn(f,el){
-  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
-  el.classList.add('active');
-  renderTxn(f);
-}
-
-function renderPresupuesto(){
-  const grid=document.getElementById('editGrid');
-  grid.innerHTML='';
-  Object.entries(presupuesto).forEach(([cat,cfg])=>{
-    const div=document.createElement('div');
-    div.className='edit-row';
-    div.innerHTML=`<span>${cfg.icon} ${cat}</span><input type="number" value="${cfg.limite}" id="budget_${cat}">`;
-    grid.appendChild(div);
-  });
-}
-
-function guardarPresupuesto(){
-  Object.keys(presupuesto).forEach(cat=>{
-    const inp=document.getElementById('budget_'+cat);
-    if(inp)presupuesto[cat].limite=parseInt(inp.value)||presupuesto[cat].limite;
-  });
-  localStorage.setItem('gazelle_presupuesto',JSON.stringify(presupuesto));
-  renderAll();
-  mostrarAlert('💾','Presupuesto Guardado','Los nuevos límites se aplicaron. Se guardan en tu dispositivo.');
-}
-
-function mostrarAlert(emoji,titulo,msg){
-  document.getElementById('alertEmoji').textContent=emoji;
-  document.getElementById('alertTitle').textContent=titulo;
-  document.getElementById('alertMsg').textContent=msg;
-  document.getElementById('alertOverlay').classList.add('show');
-}
-
-function cerrarAlert(){document.getElementById('alertOverlay').classList.remove('show')}
-
-function showTab(name,el){
-  document.querySelectorAll('[id^="tab-"]').forEach(t=>t.style.display='none');
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('tab-'+name).style.display='block';
-  el.classList.add('active');
-}
-
-fetchSheet();
-setInterval(fetchSheet,5*60*1000);
-</script>
-</body>
-</html>
+  document.getElementById('cic
