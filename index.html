@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💰 Modo Gazelle</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a0a0f;--surface:#12121a;--surface2:#1a1a26;--border:#2a2a3e;
+    --green:#00e676;--yellow:#ffd740;--red:#ff1744;--orange:#ff6d00;
+    --blue:#448aff;--text:#e8e8f0;--muted:#6b6b88;--accent:#7c4dff;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
+  .header{padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between}
+  .logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--green);text-shadow:0 0 20px rgba(0,230,118,.4)}
+  .mode-badge{background:linear-gradient(135deg,#ff6d00,#ff1744);color:white;font-size:10px;font-weight:600;letter-spacing:2px;padding:4px 10px;border-radius:20px;text-transform:uppercase}
+  .sync-bar{display:flex;align-items:center;gap:10px;padding:12px 24px;font-size:12px;color:var(--muted)}
+  .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+  .sync-dot.ok{background:var(--green);box-shadow:0 0 6px rgba(0,230,118,.5)}
+  .sync-dot.loading{background:var(--yellow);animation:blink 1s ease infinite}
+  .sync-dot.error{background:var(--red)}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+  .btn-refresh{margin-left:auto;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:12px;padding:5px 12px;border-radius:20px;cursor:pointer;transition:all .2s}
+  .btn-refresh:hover{border-color:var(--green);color:var(--green)}
+  .tabs{display:flex;padding:0 24px;gap:4px;margin-bottom:16px;overflow-x:auto;scrollbar-width:none}
+  .tab{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:all .2s;white-space:nowrap}
+  .tab.active{background:var(--accent);border-color:var(--accent);color:white}
+  .score-section{padding:0 24px 20px}
+  .score-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px;position:relative;overflow:hidden}
+  .score-card::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:radial-gradient(circle,rgba(0,230,118,.08) 0%,transparent 70%);pointer-events:none}
+  .score-label{font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px}
+  .score-main{display:flex;align-items:flex-end;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+  .score-amount{font-family:'Bebas Neue',sans-serif;font-size:56px;line-height:1;color:var(--green);text-shadow:0 0 30px rgba(0,230,118,.3)}
+  .score-amount.danger{color:var(--red);text-shadow:0 0 30px rgba(255,23,68,.3)}
+  .score-amount.warning{color:var(--yellow);text-shadow:0 0 30px rgba(255,215,64,.3)}
+  .score-sub{font-size:14px;color:var(--muted);padding-bottom:8px}
+  .judge-msg{background:var(--surface2);border-left:3px solid var(--green);border-radius:0 10px 10px 0;padding:12px 16px;font-size:14px;line-height:1.6;color:var(--text)}
+  .judge-msg.danger{border-left-color:var(--red)}
+  .judge-msg.warning{border-left-color:var(--yellow)}
+  .stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:0 24px 20px}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center}
+  .stat-val{font-family:'Bebas Neue',sans-serif;font-size:22px}
+  .stat-lbl{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+  .bars-section{padding:0 24px 20px;display:grid;gap:10px}
+  .bar-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;transition:all .2s}
+  .bar-card:hover{border-color:var(--accent)}
+  .bar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .bar-name{font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px}
+  .bar-amounts{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);text-align:right}
+  .bar-amounts .spent{color:var(--text);font-size:13px}
+  .bar-track{height:5px;background:var(--border);border-radius:10px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:10px;transition:width .8s cubic-bezier(.23,1,.32,1);background:var(--green)}
+  .bar-fill.warning{background:var(--yellow)}
+  .bar-fill.danger,.bar-fill.over{background:var(--red)}
+  .section-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--muted);margin-bottom:12px;padding:0 24px}
+  .hormigas-section{padding:0 24px 20px}
+  .hormigas-card{background:var(--surface);border:1px solid var(--orange);border-radius:14px;padding:16px 18px}
+  .hormiga-total{font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--orange)}
+  .hormiga-label{font-size:12px;color:var(--muted);margin-bottom:4px}
+  .hormiga-items{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .hormiga-tag{background:rgba(255,109,0,.12);border:1px solid rgba(255,109,0,.3);color:var(--orange);font-size:11px;padding:3px 8px;border-radius:20px;font-family:'DM Mono',monospace}
+  .prohibidos-section{padding:0 24px 20px}
+  .prohibido-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .prohibido-item.found{border-color:rgba(255,23,68,.4);background:rgba(255,23,68,.05)}
+  .prohibido-name{font-size:13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .prohibido-amount{font-family:'DM Mono',monospace;font-size:13px;color:var(--red);white-space:nowrap}
+  .prohibido-ok{font-size:11px;color:var(--green)}
+  .txn-section{padding:0 24px 20px}
+  .txn-filters{display:flex;gap:8px;margin-bottom:12px;overflow-x:auto;scrollbar-width:none}
+  .filter-chip{padding:5px 12px;border-radius:20px;font-size:12px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap}
+  .filter-chip.active{background:var(--surface2);color:var(--text);border-color:var(--accent)}
+  .txn-list{display:grid;gap:6px;max-height:500px;overflow-y:auto}
+  .txn-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center}
+  .txn-item.prohibido{border-color:rgba(255,23,68,.3)}
+  .txn-left{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+  .txn-comercio{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .txn-meta{font-size:11px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+  .txn-monto{font-family:'DM Mono',monospace;font-size:14px;font-weight:500;white-space:nowrap;margin-left:8px}
+  .chip{font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600}
+  .chip-edu{background:rgba(68,138,255,.15);color:var(--blue)}
+  .chip-romi{background:rgba(124,77,255,.15);color:#ce93d8}
+  .chip-otros{background:rgba(107,107,136,.15);color:var(--muted)}
+  .chip-hormiga{background:rgba(255,109,0,.15);color:var(--orange)}
+  .edit-section{padding:0 24px 20px}
+  .edit-row{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:8px}
+  .edit-row span{flex:1;font-size:13px}
+  .edit-row input{background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:13px;padding:6px 10px;border-radius:6px;width:130px;text-align:right;outline:none}
+  .btn-save{width:100%;background:var(--green);color:#000;font-weight:700;font-size:14px;padding:14px;border:none;border-radius:12px;cursor:pointer;margin-top:4px}
+  .alert-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:100;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s}
+  .alert-overlay.show{opacity:1;pointer-events:all}
+  .alert-panel{background:var(--surface);border:1px solid var(--border);border-radius:20px 20px 0 0;padding:30px 24px 40px;width:100%;max-width:480px;transform:translateY(100%);transition:transform .4s cubic-bezier(.23,1,.32,1)}
+  .alert-overlay.show .alert-panel{transform:translateY(0)}
+  .alert-emoji{font-size:52px;text-align:center;display:block;margin-bottom:16px}
+  .alert-title{font-family:'Bebas Neue',sans-serif;font-size:32px;text-align:center;margin-bottom:10px;letter-spacing:2px}
+  .alert-msg{font-size:15px;color:var(--muted);text-align:center;line-height:1.6;margin-bottom:24px}
+  .btn-close-alert{width:100%;background:var(--surface2);color:var(--text);font-weight:600;font-size:14px;padding:14px;border:1px solid var(--border);border-radius:12px;cursor:pointer}
+  .bottom-pad{height:40px}
+  .empty-state{text-align:center;padding:40px 24px;color:var(--muted);font-size:14px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">🦌 GAZELLE</div>
+  <div class="mode-badge">Baby Step 2</div>
+</div>
+
+<div class="sync-bar">
+  <div class="sync-dot loading" id="syncDot"></div>
+  <span id="syncTxt">Conectando...</span>
+  <button class="btn-refresh" onclick="fetchSheet()">↺ Actualizar</button>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('resumen',this)">Resumen</div>
+  <div class="tab" onclick="showTab('categorias',this)">Categorías</div>
+  <div class="tab" onclick="showTab('prohibidos',this)">🚫 Prohibidos</div>
+  <div class="tab" onclick="showTab('transacciones',this)">Movimientos</div>
+  <div class="tab" onclick="showTab('presupuesto',this)">⚙️ Presupuesto</div>
+</div>
+
+<div id="tab-resumen">
+  <div class="score-section">
+    <div class="score-card">
+      <div class="score-label">Disponible este mes — Núcleo</div>
+      <div class="score-main">
+        <div class="score-amount" id="disponibleAmt">—</div>
+        <div class="score-sub" id="disponibleSub">sincronizando...</div>
+      </div>
+      <div class="judge-msg" id="judgeMsg">Conectando con tu planilla de Google Sheets...</div>
+    </div>
+  </div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-val" id="statTxn" style="color:var(--blue)">—</div><div class="stat-lbl">Gastos</div></div>
+    <div class="stat-card"><div class="stat-val" id="statHormigas" style="color:var(--orange)">—</div><div class="stat-lbl">Hormigas</div></div>
+    <div class="stat-card"><div class="stat-val" id="statProhibidos" style="color:var(--red)">—</div><div class="stat-lbl">Prohibidos</div></div>
+  </div>
+  <div class="hormigas-section">
+    <div class="section-title" style="padding:0">☕ Gastos Hormiga</div>
+    <div class="hormigas-card">
+      <div class="hormiga-label">Pequeños gastos acumulados</div>
+      <div class="hormiga-total" id="hormigaTotal">$0</div>
+      <div class="hormiga-items" id="hormigaItems"></div>
+    </div>
+  </div>
+</div>
+
+<div id="tab-categorias" style="display:none">
+  <div class="bars-section" id="barsContainer">
+    <div class="empty-state">Cargando categorías...</div>
+  </div>
+</div>
+
+<div id="tab-prohibidos" style="display:none">
+  <div class="prohibidos-section">
+    <div class="section-title" style="padding:0">🚫 Modo Gazelle — Prohibidos</div>
+    <div id="prohibidoList"></div>
+  </div>
+</div>
+
+<div id="tab-transacciones" style="display:none">
+  <div class="txn-section">
+    <div class="section-title" style="padding:0">Movimientos</div>
+    <div class="txn-filters">
+      <div class="filter-chip active" onclick="filtrarTxn('todos',this)">Todos</div>
+      <div class="filter-chip" onclick="filtrarTxn('Eduardo',this)">Eduardo</div>
+      <div class="filter-chip" onclick="filtrarTxn('Romina',this)">Romina</div>
+      <div class="filter-chip" onclick="filtrarTxn('prohibido',this)">🚫 Prohibidos</div>
+      <div class="filter-chip" onclick="filtrarTxn('hormiga',this)">🐜 Hormiga</div>
+    </div>
+    <div class="txn-list" id="txnList"></div>
+  </div>
+</div>
+
+<div id="tab-presupuesto" style="display:none">
+  <div class="edit-section">
+    <div class="section-title" style="padding:0">Presupuesto Mensual</div>
+    <div id="editGrid"></div>
+    <button class="btn-save" onclick="guardarPresupuesto()">💾 Guardar</button>
+  </div>
+</div>
+
+<div class="bottom-pad"></div>
+
+<div class="alert-overlay" id="alertOverlay" onclick="cerrarAlert()">
+  <div class="alert-panel" onclick="event.stopPropagation()">
+    <span class="alert-emoji" id="alertEmoji">💬</span>
+    <div class="alert-title" id="alertTitle"></div>
+    <div class="alert-msg" id="alertMsg"></div>
+    <button class="btn-close-alert" onclick="cerrarAlert()">Entendido</button>
+  </div>
+</div>
+
+<script>
+const SHEET_ID='1GnmI8m9OaJAyNMSiho5SNomFxpWXjYtXF_vpFHPWg08';
+const SHEET_NAME='Tarjetas';
+const API_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
+
+let gastosMes=[];
+let filtroActual='todos';
+
+let presupuesto=JSON.parse(localStorage.getItem('gazelle_presupuesto')||'null')||{
+  "Alimentación":{icon:"🛒",limite:650000},
+  "Salud":{icon:"🏥",limite:420000},
+  "Servicios":{icon:"💡",limite:280000},
+  "Educación":{icon:"📚",limite:200000},
+  "Transporte":{icon:"🚇",limite:180000},
+  "Diezmo":{icon:"🙏",limite:600000},
+  "Deudas":{icon:"📉",limite:500000},
+  "Indumentaria":{icon:"👕",limite:50000},
+  "Entretenimiento":{icon:"🎭",limite:30000},
+  "Hogar":{icon:"🏠",limite:100000},
+  "Belleza":{icon:"💅",limite:40000},
+  "Otros":{icon:"📦",limite:80000},
+};
+
+const PROHIBIDOS_DEF=[
+  {nombre:"Delivery (PedidosYa/Rappi)",keys:["pedidosya","rappi","dlo*pedidos"]},
+  {nombre:"Fast Food (Mostaza/KFC)",keys:["mostaza","kfc","burger","mcdonalds"]},
+  {nombre:"Restaurantes / Pizzerías",keys:["pizzeria","restaurant","buffet","dichabuffet"]},
+  {nombre:"Taxi / Cabify / Remis",keys:["cabify","uber","taxi","remis"]},
+  {nombre:"Ropa no urgente",keys:["shein","temu","mimo","cheka","tropea","ropelato"]},
+  {nombre:"Vivero / Plantas",keys:["vivero"]},
+  {nombre:"Juguetería",keys:["kinderland","elmundodeljug","juguet"]},
+];
+
+function fp(n){return'$'+Math.round(n).toLocaleString('es-AR')}
+
+async function fetchSheet(){
+  setSyncState('loading','Sincronizando...');
+  try{
+    const res=await fetch(API_URL);
+    const text=await res.text();
+    const json=JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*?)\);/)[1]);
+    const rows=json.table.rows;
+    const cols=json.table.cols.map(c=>c.label);
+
+    gastosMes=rows
+      .filter(r=>r.c&&r.c[0]&&r.c[0].v)
+      .map(r=>{
+        const get=l=>{const i=cols.indexOf(l);return i>=0&&r.c[i]?(r.c[i].f||r.c[i].v||''):''};
+        const montoRaw=get('Monto');
+        const monto=parseFloat(String(montoRaw).replace(/[^\d.]/g,''))||0;
+        const comercio=String(get('Comercio')||get('DescripcionRaw')||'');
+        const cat=String(get('Categoria')||'Otros');
+        const signo=String(get('Signo')||'S');
+        const hormiga=String(get('Hormiga')||'NO').toUpperCase()==='SI';
+        const usuario=String(get('USUARIO')||'');
+        const fuente=String(get('Fuente')||'');
+        const fecha=String(get('Fecha')||'');
+        const nota=String(get('Nota')||'');
+        const esProhibido=PROHIBIDOS_DEF.some(p=>p.keys.some(k=>comercio.toLowerCase().includes(k)));
+        let quien='Eduardo';
+        if(usuario.includes('ZIEGLER')||usuario.includes('ROMINA'))quien='Romina';
+        else if(usuario.includes('SEGOVIA')||usuario.includes('ALFREDO'))quien='Padres';
+        return{fecha,comercio,monto,cat,signo,hormiga,quien,fuente,nota,esProhibido};
+      })
+      .filter(g=>g.signo!=='E'&&g.cat!=='ERROR'&&g.quien!=='Padres');
+
+    setSyncState('ok',`Actualizado — ${gastosMes.length} transacciones`);
+    renderAll();
+  }catch(e){
+    setSyncState('error','Error de conexión. Verificá tu internet.');
+    console.error(e);
+  }
+}
+
+function setSyncState(s,m){
+  document.getElementById('syncDot').className='sync-dot '+s;
+  document.getElementById('syncTxt').textContent=m;
+}
+
+function renderAll(){
+  renderResumen();
+  renderCategorias();
+  renderProhibidos();
+  renderTxn();
+  renderPresupuesto();
+}
+
+function renderResumen(){
+  const total=gastosMes.reduce((s,g)=>s+g.monto,0);
+  const limite=Object.values(presupuesto).reduce((s,c)=>s+c.limite,0);
+  const disponible=limite-total;
+  const pct=(total/limite)*100;
+  const el=document.getElementById('disponibleAmt');
+  const sub=document.getElementById('disponibleSub');
+  const msg=document.getElementById('judgeMsg');
+  el.textContent=fp(Math.abs(disponible));
+  sub.textContent=`gastado ${fp(total)} de ${fp(limite)}`;
+  const hormigas=gastosMes.filter(g=>g.hormiga);
+  const prohibidos=gastosMes.filter(g=>g.esProhibido);
+  document.getElementById('statTxn').textContent=gastosMes.length;
+  document.getElementById('statHormigas').textContent=hormigas.length;
+  document.getElementById('statProhibidos').textContent=prohibidos.length;
+  if(disponible<0){
+    el.className='score-amount danger';
+    el.textContent='-'+el.textContent;
+    msg.className='judge-msg danger';
+    msg.innerHTML=`😤 <strong>¡Alerta!</strong> Se pasaron ${fp(Math.abs(disponible))} del presupuesto. Cada peso extra es un mes más en deuda. Hay que cortar YA.`;
+  }else if(pct>80){
+    el.className='score-amount warning';
+    msg.className='judge-msg warning';
+    msg.innerHTML=`⚠️ Ya van en el ${Math.round(pct)}% del presupuesto. Solo quedan ${fp(disponible)}. Cuidado con los gastos que quedan.`;
+  }else if(pct>50){
+    el.className='score-amount';
+    msg.className='judge-msg';
+    msg.innerHTML=`📊 Van en el ${Math.round(pct)}% del presupuesto. Bien encaminados. Ojo con los gastos variables de fin de mes.`;
+  }else{
+    el.className='score-amount';
+    msg.className='judge-msg';
+    msg.innerHTML=`✅ <strong>¡Excelente!</strong> Solo usaron el ${Math.round(pct)}% del presupuesto. Cada peso que sobra va a la Bola de Nieve. ¡Sigan así!`;
+  }
+  const totalH=hormigas.reduce((s,g)=>s+g.monto,0);
+  document.getElementById('hormigaTotal').textContent=fp(totalH);
+  const tags=document.getElementById('hormigaItems');
+  tags.innerHTML='';
+  hormigas.slice(0,10).forEach(h=>{
+    const t=document.createElement('span');
+    t.className='hormiga-tag';
+    t.textContent=h.comercio.substring(0,16)+' '+fp(h.monto);
+    tags.appendChild(t);
+  });
+}
+
+function renderCategorias(){
+  const c=document.getElementById('barsContainer');
+  c.innerHTML='';
+  const totCat={};
+  gastosMes.forEach(g=>{totCat[g.cat]=(totCat[g.cat]||0)+g.monto});
+  const cats=new Set([...Object.keys(presupuesto),...Object.keys(totCat)]);
+  [...cats].forEach(cat=>{
+    const cfg=presupuesto[cat]||{icon:'📦',limite:50000};
+    const gastado=totCat[cat]||0;
+    const pct=Math.min((gastado/cfg.limite)*100,100);
+    let cl='';
+    if(pct>=100)cl='over';
+    else if(pct>=80)cl='danger';
+    else if(pct>=60)cl='warning';
+    const div=document.createElement('div');
+    div.className='bar-card';
+    div.innerHTML=`<div class="bar-header"><div class="bar-name"><span>${cfg.icon}</span>${cat}</div><div class="bar-amounts"><div class="spent">${fp(gastado)}</div><div>de ${fp(cfg.limite)}</div></div></div><div class="bar-track"><div class="bar-fill ${cl}" style="width:0%" data-pct="${pct}"></div></div>`;
+    c.appendChild(div);
+  });
+  setTimeout(()=>{document.querySelectorAll('.bar-fill[data-pct]').forEach(el=>{el.style.width=el.dataset.pct+'%'})},50);
+}
+
+function renderProhibidos(){
+  const list=document.getElementById('prohibidoList');
+  list.innerHTML='';
+  PROHIBIDOS_DEF.forEach(p=>{
+    const enc=gastosMes.filter(g=>p.keys.some(k=>g.comercio.toLowerCase().includes(k)));
+    const total=enc.reduce((s,g)=>s+g.monto,0);
+    const found=enc.length>0;
+    const div=document.createElement('div');
+    div.className='prohibido-item'+(found?' found':'');
+    const chips=found?[...new Set(enc.map(g=>g.quien))].map(q=>`<span class="chip ${q==='Eduardo'?'chip-edu':'chip-romi'}">${q.substring(0,3).toUpperCase()}</span>`).join(''):'';
+    div.innerHTML=`<div class="prohibido-name">${found?'🚨':'✅'} ${p.nombre} ${chips}</div>${found?`<div class="prohibido-amount">${fp(total)}</div>`:'<div class="prohibido-ok">Libre ✓</div>'}`;
+    list.appendChild(div);
+  });
+}
+
+function renderTxn(filtro){
+  if(filtro)filtroActual=filtro;
+  const list=document.getElementById('txnList');
+  list.innerHTML='';
+  let datos=[...gastosMes].sort((a,b)=>b.monto-a.monto);
+  if(filtroActual==='Eduardo')datos=datos.filter(g=>g.quien==='Eduardo');
+  else if(filtroActual==='Romina')datos=datos.filter(g=>g.quien==='Romina');
+  else if(filtroActual==='prohibido')datos=datos.filter(g=>g.esProhibido);
+  else if(filtroActual==='hormiga')datos=datos.filter(g=>g.hormiga);
+  if(!datos.length){list.innerHTML='<div class="empty-state">No hay transacciones con ese filtro</div>';return}
+  datos.slice(0,100).forEach(g=>{
+    const div=document.createElement('div');
+    div.className='txn-item'+(g.esProhibido?' prohibido':'');
+    const qc=g.quien==='Eduardo'?'chip-edu':g.quien==='Romina'?'chip-romi':'chip-otros';
+    div.innerHTML=`<div class="txn-left"><div class="txn-comercio">${g.esProhibido?'🚫 ':''}${g.comercio}</div><div class="txn-meta"><span class="chip ${qc}">${g.quien.substring(0,3).toUpperCase()}</span><span>${g.cat}</span>${g.hormiga?'<span class="chip chip-hormiga">🐜</span>':''}<span>${g.fecha}</span></div></div><div class="txn-monto">${fp(g.monto)}</div>`;
+    list.appendChild(div);
+  });
+}
+
+function filtrarTxn(f,el){
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderTxn(f);
+}
+
+function renderPresupuesto(){
+  const grid=document.getElementById('editGrid');
+  grid.innerHTML='';
+  Object.entries(presupuesto).forEach(([cat,cfg])=>{
+    const div=document.createElement('div');
+    div.className='edit-row';
+    div.innerHTML=`<span>${cfg.icon} ${cat}</span><input type="number" value="${cfg.limite}" id="budget_${cat}">`;
+    grid.appendChild(div);
+  });
+}
+
+function guardarPresupuesto(){
+  Object.keys(presupuesto).forEach(cat=>{
+    const inp=document.getElementById('budget_'+cat);
+    if(inp)presupuesto[cat].limite=parseInt(inp.value)||presupuesto[cat].limite;
+  });
+  localStorage.setItem('gazelle_presupuesto',JSON.stringify(presupuesto));
+  renderAll();
+  mostrarAlert('💾','Presupuesto Guardado','Los nuevos límites se aplicaron. Se guardan en tu dispositivo.');
+}
+
+function mostrarAlert(emoji,titulo,msg){
+  document.getElementById('alertEmoji').textContent=emoji;
+  document.getElementById('alertTitle').textContent=titulo;
+  document.getElementById('alertMsg').textContent=msg;
+  document.getElementById('alertOverlay').classList.add('show');
+}
+
+function cerrarAlert(){document.getElementById('alertOverlay').classList.remove('show')}
+
+function showTab(name,el){
+  document.querySelectorAll('[id^="tab-"]').forEach(t=>t.style.display='none');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).style.display='block';
+  el.classList.add('active');
+}
+
+fetchSheet();
+setInterval(fetchSheet,5*60*1000);
+</script>
+</body>
+</html>
