@@ -445,11 +445,10 @@ const PROHIBIDOS_DEF = [
 // ============================================================
 function detectarCicloActual() {
   const hoy = new Date();
-  hoy.setHours(23,59,59,0); // incluir todo el día de cierre
+  hoy.setHours(0,0,0,0);
   for(let i = 0; i < CICLOS.length; i++) {
-    const ini = new Date(CICLOS[i].inicio);
-    const fin = new Date(CICLOS[i].fin);
-    fin.setHours(23,59,59,0);
+    const ini = parseFechaISO(CICLOS[i].inicio);
+    const fin = parseFechaISO(CICLOS[i].fin);
     if(hoy >= ini && hoy <= fin) {
       cicloIndex = i;
       return CICLOS[i];
@@ -471,9 +470,8 @@ function navegarCiclo(dir) {
 
 function aplicarFiltroCiclo() {
   if(!cicloActual) return;
-  const ini = new Date(cicloActual.inicio);
-  const fin = new Date(cicloActual.fin);
-  fin.setHours(23,59,59,0);
+  const ini = parseFechaISO(cicloActual.inicio);
+  const fin = parseFechaISO(cicloActual.fin);
   gastosMes = todosLosGastos.filter(g=>g.fechaDate&&g.fechaDate>=ini&&g.fechaDate<=fin);
 }
 
@@ -481,29 +479,32 @@ function parseFechaStr(f) {
   if(!f) return null;
   const p = String(f).split('/');
   if(p.length===3) {
-    let y = p[2].trim();
-    if(y.length===2) y='20'+y;
-    const m = p[1].trim().padStart(2,'0');
-    const d = p[0].trim().padStart(2,'0');
-    return new Date(`${y}-${m}-${d}`);
+    let y = parseInt(p[2].trim()); if(y < 100) y += 2000;
+    const m = parseInt(p[1].trim()) - 1;
+    const d = parseInt(p[0].trim());
+    return new Date(y, m, d); // local, no UTC
   }
   return null;
 }
 
+function parseFechaISO(s) {
+  // Parsear YYYY-MM-DD como fecha local (no UTC)
+  const p = s.split('-');
+  return new Date(parseInt(p[0]), parseInt(p[1])-1, parseInt(p[2]));
+}
+
 function actualizarCicloUI() {
-  const hoy = new Date();
-  const fin = new Date(cicloActual.fin);
-  fin.setHours(23,59,59,0);
-  const ini = new Date(cicloActual.inicio);
-  const diasRestantes = Math.ceil((fin - hoy) / (1000*60*60*24));
-  const totalDias = Math.ceil((fin - ini) / (1000*60*60*24));
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const fin = parseFechaISO(cicloActual.fin);
+  const ini = parseFechaISO(cicloActual.inicio);
+  const diasRestantes = Math.ceil((fin - hoy) / (1000*60*60*24)) + 1; // +1 para incluir el día de cierre
+  const totalDias = Math.ceil((fin - ini) / (1000*60*60*24)) + 1;
   const diasPasados = totalDias - diasRestantes;
   const pct = Math.min((diasPasados/totalDias)*100, 100);
   
   // Detectar si es ciclo actual, pasado o futuro
-  const hoySinHora = new Date(); hoySinHora.setHours(0,0,0,0);
-  const esPasado = fin < hoySinHora;
-  const esFuturo = ini > hoySinHora;
+  const esPasado = fin < hoy;
+  const esFuturo = ini > hoy;
   
   document.getElementById('cicloTitulo').textContent = 'Ciclo ' + cicloActual.nombre + (esPasado ? ' 📁' : esFuturo ? ' 🔮' : ' ✦');
   const fmtIni = cicloActual.inicio.split('-').reverse().join('/').substring(0,5);
