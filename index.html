@@ -119,15 +119,19 @@
   <div class="mode-badge">Baby Step 2</div>
 </div>
 
-<div class="ciclo-bar">
-  <div class="ciclo-info">
-    <div class="ciclo-titulo" id="cicloTitulo">Ciclo Marzo</div>
-    <div class="ciclo-fechas" id="cicloFechas">20/02 → 19/03/2026</div>
-    <div class="progress-ciclo"><div class="progress-ciclo-fill" id="cicloPct" style="width:0%"></div></div>
-  </div>
-  <div>
-    <div class="ciclo-dias" id="cicloDias">—</div>
-    <div class="ciclo-dias-lbl">DÍAS RESTANTES</div>
+<div class="ciclo-bar" style="flex-direction:column;gap:8px">
+  <div style="display:flex;align-items:center;width:100%;gap:8px">
+    <button onclick="navegarCiclo(-1)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:4px 10px;border-radius:8px;cursor:pointer;font-size:16px">‹</button>
+    <div class="ciclo-info" style="flex:1">
+      <div class="ciclo-titulo" id="cicloTitulo">Ciclo Marzo</div>
+      <div class="ciclo-fechas" id="cicloFechas">20/02 → 19/03/2026</div>
+      <div class="progress-ciclo"><div class="progress-ciclo-fill" id="cicloPct" style="width:0%"></div></div>
+    </div>
+    <div style="text-align:right">
+      <div class="ciclo-dias" id="cicloDias">—</div>
+      <div class="ciclo-dias-lbl" id="cicloLbl">DÍAS REST.</div>
+    </div>
+    <button onclick="navegarCiclo(1)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:4px 10px;border-radius:8px;cursor:pointer;font-size:16px">›</button>
   </div>
 </div>
 
@@ -361,26 +365,55 @@ const SHEET_ID='1GnmI8m9OaJAyNMSiho5SNomFxpWXjYtXF_vpFHPWg08';
 const SHEET_NAME='Tarjetas';
 const API_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
 
-const INGRESO = 3800000;
-const DIEZMO  = 380000;
-const FIJOS   = 1136000;
-const CUOTAS  = 104784;
-const VARIABLES_MAX = 635000;
-const PARA_TARJETAS = INGRESO - DIEZMO - FIJOS - CUOTAS - VARIABLES_MAX; // 1.544.216
+// Calcular anteúltimo jueves de cada mes dinámicamente
+function anteultimoJueves(year, month) {
+  const jueves = [];
+  const d = new Date(year, month - 1, 1);
+  while (d.getMonth() === month - 1) {
+    if (d.getDay() === 4) jueves.push(new Date(d));
+    d.setDate(d.getDate() + 1);
+  }
+  return jueves[jueves.length - 2];
+}
 
-// Ciclos basados en anteúltimo jueves de cada mes
-const CICLOS = [
-  { nombre:'Enero 2026',      inicio:'2025-12-19', fin:'2026-01-22' },
-  { nombre:'Febrero 2026',    inicio:'2026-01-23', fin:'2026-02-19' },
-  { nombre:'Marzo 2026',      inicio:'2026-02-20', fin:'2026-03-19' },
-  { nombre:'Abril 2026',      inicio:'2026-03-20', fin:'2026-04-23' },
-  { nombre:'Mayo 2026',       inicio:'2026-04-24', fin:'2026-05-21' },
-  { nombre:'Junio 2026',      inicio:'2026-05-22', fin:'2026-06-18' },
-];
+function generarCiclos(desde, hasta) {
+  const ciclos = [];
+  const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                 'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  let prev = anteultimoJueves(desde.getFullYear(), desde.getMonth() + 1);
+  
+  let y = desde.getFullYear();
+  let m = desde.getMonth() + 2; // empezamos desde el siguiente mes
+  
+  while (true) {
+    if (m > 12) { m = 1; y++; }
+    const fin = anteultimoJueves(y, m);
+    const ini = new Date(prev);
+    ini.setDate(ini.getDate() + 1);
+    
+    const finDate = new Date(fin);
+    const iniDate = new Date(ini);
+    
+    ciclos.push({
+      nombre: meses[m-1] + ' ' + y,
+      inicio: iniDate.toISOString().split('T')[0],
+      fin: finDate.toISOString().split('T')[0],
+    });
+    
+    prev = fin;
+    if (fin > hasta) break;
+    m++;
+  }
+  return ciclos;
+}
+
+// Generar ciclos desde Sep 2024 hasta fin de 2027
+const CICLOS = generarCiclos(new Date(2024, 8, 1), new Date(2027, 11, 31));
 
 let gastosMes = [];
 let todosLosGastos = [];
 let cicloActual = null;
+let cicloIndex = -1;  // índice del ciclo mostrado actualmente
 let filtroActual = 'todos';
 
 let presupuesto = JSON.parse(localStorage.getItem('gazelle_presupuesto')||'null') || {
@@ -412,13 +445,36 @@ const PROHIBIDOS_DEF = [
 // ============================================================
 function detectarCicloActual() {
   const hoy = new Date();
-  hoy.setHours(0,0,0,0);
-  for(const c of CICLOS) {
-    const ini = new Date(c.inicio);
-    const fin = new Date(c.fin);
-    if(hoy >= ini && hoy <= fin) return c;
+  hoy.setHours(23,59,59,0); // incluir todo el día de cierre
+  for(let i = 0; i < CICLOS.length; i++) {
+    const ini = new Date(CICLOS[i].inicio);
+    const fin = new Date(CICLOS[i].fin);
+    fin.setHours(23,59,59,0);
+    if(hoy >= ini && hoy <= fin) {
+      cicloIndex = i;
+      return CICLOS[i];
+    }
   }
+  cicloIndex = CICLOS.length - 1;
   return CICLOS[CICLOS.length-1];
+}
+
+function navegarCiclo(dir) {
+  const nuevoIdx = cicloIndex + dir;
+  if(nuevoIdx < 0 || nuevoIdx >= CICLOS.length) return;
+  cicloIndex = nuevoIdx;
+  cicloActual = CICLOS[cicloIndex];
+  actualizarCicloUI();
+  aplicarFiltroCiclo();
+  renderAll();
+}
+
+function aplicarFiltroCiclo() {
+  if(!cicloActual) return;
+  const ini = new Date(cicloActual.inicio);
+  const fin = new Date(cicloActual.fin);
+  fin.setHours(23,59,59,0);
+  gastosMes = todosLosGastos.filter(g=>g.fechaDate&&g.fechaDate>=ini&&g.fechaDate<=fin);
 }
 
 function parseFechaStr(f) {
@@ -435,20 +491,26 @@ function parseFechaStr(f) {
 }
 
 function actualizarCicloUI() {
-  cicloActual = detectarCicloActual();
-  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const hoy = new Date();
   const fin = new Date(cicloActual.fin);
+  fin.setHours(23,59,59,0);
   const ini = new Date(cicloActual.inicio);
   const diasRestantes = Math.ceil((fin - hoy) / (1000*60*60*24));
   const totalDias = Math.ceil((fin - ini) / (1000*60*60*24));
   const diasPasados = totalDias - diasRestantes;
   const pct = Math.min((diasPasados/totalDias)*100, 100);
-
-  document.getElementById('cicloTitulo').textContent = 'Ciclo ' + cicloActual.nombre;
+  
+  // Detectar si es ciclo actual, pasado o futuro
+  const hoySinHora = new Date(); hoySinHora.setHours(0,0,0,0);
+  const esPasado = fin < hoySinHora;
+  const esFuturo = ini > hoySinHora;
+  
+  document.getElementById('cicloTitulo').textContent = 'Ciclo ' + cicloActual.nombre + (esPasado ? ' 📁' : esFuturo ? ' 🔮' : ' ✦');
   const fmtIni = cicloActual.inicio.split('-').reverse().join('/').substring(0,5);
   const fmtFin = cicloActual.fin.split('-').reverse().join('/');
   document.getElementById('cicloFechas').textContent = fmtIni + ' → ' + fmtFin;
-  document.getElementById('cicloDias').textContent = Math.max(diasRestantes,0);
+  document.getElementById('cicloDias').textContent = esPasado ? '—' : esFuturo ? '—' : Math.max(diasRestantes,0);
+  document.getElementById('cicloLbl').textContent = esPasado ? 'CERRADO' : esFuturo ? 'PRÓXIMO' : 'DÍAS REST.';
   document.getElementById('cicloPct').style.width = pct+'%';
 }
 
@@ -488,13 +550,7 @@ async function fetchSheet() {
       .filter(g=>g.signo!=='E'&&g.quien!=='Padres');
 
     // Filtrar por ciclo actual
-    if(cicloActual) {
-      const ini = new Date(cicloActual.inicio);
-      const fin = new Date(cicloActual.fin);
-      gastosMes = todosLosGastos.filter(g=>g.fechaDate&&g.fechaDate>=ini&&g.fechaDate<=fin);
-    } else {
-      gastosMes = todosLosGastos;
-    }
+    aplicarFiltroCiclo();
 
     setSyncState('ok',`Ciclo: ${gastosMes.length} transacciones`);
     renderAll();
@@ -828,6 +884,7 @@ function showTab(name,el){
 }
 
 // INIT
+cicloActual = detectarCicloActual();
 actualizarCicloUI();
 cargarConfigGuardada();
 fetchSheet();
