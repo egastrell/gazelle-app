@@ -165,17 +165,25 @@
   </div>
   <div style="padding:0 20px 14px">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px">
-        <div style="font-size:10px;color:var(--blue);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">🧔 Eduardo</div>
+      <div onclick="toggleDetalle('edu')" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:border-color .2s" id="cardEdu">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div style="font-size:10px;color:var(--blue);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">🧔 Eduardo</div>
+          <div style="font-size:10px;color:var(--muted)" id="arrowEdu">▼</div>
+        </div>
         <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--blue);line-height:1" id="totalEdu">—</div>
         <div style="font-size:11px;color:var(--muted);margin-top:4px" id="pctEdu">— del ingreso</div>
         <div style="height:3px;background:var(--border);border-radius:10px;margin-top:8px;overflow:hidden"><div id="barEdu" style="height:100%;background:var(--blue);border-radius:10px;width:0%;transition:width .8s"></div></div>
+        <div id="detalleEdu" style="display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px;max-height:200px;overflow-y:auto"></div>
       </div>
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px">
-        <div style="font-size:10px;color:#ce93d8;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">👩 Romina</div>
+      <div onclick="toggleDetalle('romi')" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:border-color .2s" id="cardRomi">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div style="font-size:10px;color:#ce93d8;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">👩 Romina</div>
+          <div style="font-size:10px;color:var(--muted)" id="arrowRomi">▼</div>
+        </div>
         <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:#ce93d8;line-height:1" id="totalRomi">—</div>
         <div style="font-size:11px;color:var(--muted);margin-top:4px" id="pctRomi">— del ingreso</div>
         <div style="height:3px;background:var(--border);border-radius:10px;margin-top:8px;overflow:hidden"><div id="barRomi" style="height:100%;background:#ce93d8;border-radius:10px;width:0%;transition:width .8s"></div></div>
+        <div id="detalleRomi" style="display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px;max-height:200px;overflow-y:auto"></div>
       </div>
     </div>
   </div>
@@ -264,9 +272,73 @@
 <!-- CONFIG -->
 <div id="tab-presupuesto" style="display:none">
   <div class="edit-section">
-    <div class="section-title">Presupuesto por Ciclo</div>
-    <div id="editGrid"></div>
-    <button class="btn-save" onclick="guardarPresupuesto()">💾 Guardar</button>
+
+    <!-- Frase Ramsey -->
+    <div id="ramseyCita" style="background:var(--surface2);border-left:3px solid var(--green);border-radius:0 10px 10px 0;padding:12px 14px;margin-bottom:16px;font-size:13px;font-style:italic;color:var(--text);line-height:1.6"></div>
+
+    <!-- INGRESO -->
+    <div class="section-title">💰 Ingreso Mensual</div>
+    <div class="edit-row">
+      <span>Ingreso neto promedio</span>
+      <input type="number" id="cfg_ingreso" value="3800000" onchange="recalcularConfig()">
+    </div>
+
+    <!-- DIEZMO - BLOQUEADO -->
+    <div class="section-title" style="margin-top:14px">🙏 Diezmo (10% — inamovible)</div>
+    <div class="edit-row" style="border-color:var(--green);opacity:0.8">
+      <span style="color:var(--green)">Diezmo automático</span>
+      <div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--green)" id="cfg_diezmo_calc">$380.000</div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);padding:0 4px 10px;font-style:italic">"Honra al Señor con tus riquezas y con las primicias de todos tus frutos." — Proverbios 3:9</div>
+
+    <!-- GASTOS FIJOS -->
+    <div class="section-title" style="margin-top:4px">🔒 Gastos Fijos (actualizá cuando suban)</div>
+    <div class="edit-row"><span>Swiss Medical Prepago</span><input type="number" id="cfg_swiss" value="405000" onchange="recalcularConfig()"></div>
+    <div class="edit-row"><span>EDENOR (luz)</span><input type="number" id="cfg_edenor" value="122000" onchange="recalcularConfig()"></div>
+    <div class="edit-row"><span>Gas Natural FENO</span><input type="number" id="cfg_gas" value="45000" onchange="recalcularConfig()"></div>
+    <div class="edit-row"><span>Claro (telefonía)</span><input type="number" id="cfg_claro" value="36000" onchange="recalcularConfig()"></div>
+    <div class="edit-row"><span>Zurich (seguro vida/auto)</span><input type="number" id="cfg_zurich" value="146000" onchange="recalcularConfig()"></div>
+    <div class="edit-row"><span>Provincia Seguros</span><input type="number" id="cfg_provseg" value="147000" onchange="recalcularConfig()"></div>
+    <div class="edit-row"><span>ARBA</span><input type="number" id="cfg_arba" value="13000" onchange="recalcularConfig()"></div>
+    <div class="edit-row"><span>Municipalidad Morón</span><input type="number" id="cfg_munici" value="7000" onchange="recalcularConfig()"></div>
+    <div class="edit-row"><span>Colegio G. Belgrano</span><input type="number" id="cfg_colegio" value="200000" onchange="recalcularConfig()"></div>
+    <div class="edit-row"><span>AySA (agua)</span><input type="number" id="cfg_aysa" value="20000" onchange="recalcularConfig()"></div>
+
+    <!-- GASTOS VARIABLES -->
+    <div class="section-title" style="margin-top:14px">🛒 Variables (techos máximos)</div>
+    <div class="edit-row"><span>Supermercado</span><input type="number" id="cfg_super" value="450000" onchange="recalcularConfig()"></div>
+    <div class="edit-row"><span>Combustible</span><input type="number" id="cfg_nafta" value="130000" onchange="recalcularConfig()"></div>
+    <div class="edit-row"><span>Transporte público</span><input type="number" id="cfg_transp" value="30000" onchange="recalcularConfig()"></div>
+    <div class="edit-row"><span>Farmacia / Salud extra</span><input type="number" id="cfg_farma" value="25000" onchange="recalcularConfig()"></div>
+
+    <!-- BOLA DE NIEVE -->
+    <div class="section-title" style="margin-top:14px">❄️ Bola de Nieve (deudas)</div>
+    <div class="edit-row" style="border-color:var(--red)">
+      <span style="color:var(--red)">Disponible para tarjetas</span>
+      <div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--red)" id="cfg_bolanieve">—</div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);padding:0 4px 10px;font-style:italic">"Paguen todo lo que deban." — Romanos 13:8 | Cada peso extra va a la deuda más chica primero.</div>
+
+    <!-- SANTA ANITA -->
+    <div class="section-title" style="margin-top:4px">🏡 Ahorro Santa Anita</div>
+    <div class="edit-row" style="border-color:var(--muted);opacity:0.5">
+      <span style="color:var(--muted)">Bloqueado hasta terminar deudas</span>
+      <div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--muted)">$0</div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);padding:0 4px 10px;font-style:italic">"El rico gobierna al pobre; el que pide prestado es esclavo del que presta." — Proverbios 22:7 | Primero libertad, luego el sueño.</div>
+
+    <!-- RESUMEN TOTAL -->
+    <div style="background:var(--surface);border:1px solid var(--accent);border-radius:14px;padding:16px;margin-top:8px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--muted);margin-bottom:12px">📊 RESUMEN DEL CICLO</div>
+      <div id="cfg_resumen_rows"></div>
+      <div style="border-top:1px solid var(--border);margin-top:10px;padding-top:10px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-weight:600">BALANCE</span>
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:22px" id="cfg_balance">—</span>
+      </div>
+    </div>
+
+    <button class="btn-save" onclick="guardarConfig()" style="margin-top:12px">💾 Guardar Presupuesto</button>
+    <div style="height:20px"></div>
   </div>
 </div>
 
@@ -562,6 +634,17 @@ function esFijo(comercio) {
   return FIJOS_KEYS.some(k => c.includes(k));
 }
 
+function toggleDetalle(quien) {
+  const id = quien === 'edu' ? 'detalleEdu' : 'detalleRomi';
+  const arrow = quien === 'edu' ? 'arrowEdu' : 'arrowRomi';
+  const card = quien === 'edu' ? 'cardEdu' : 'cardRomi';
+  const el = document.getElementById(id);
+  const isOpen = el.style.display !== 'none';
+  el.style.display = isOpen ? 'none' : 'block';
+  document.getElementById(arrow).textContent = isOpen ? '▼' : '▲';
+  document.getElementById(card).style.borderColor = isOpen ? 'var(--border)' : (quien==='edu'?'var(--blue)':'#ce93d8');
+}
+
 function renderResumenPersonas(){
   const edu = gastosMes.filter(g=>g.quien==='Eduardo').reduce((s,g)=>s+g.monto,0);
   const romi = gastosMes.filter(g=>g.quien==='Romina').reduce((s,g)=>s+g.monto,0);
@@ -577,6 +660,19 @@ function renderResumenPersonas(){
     document.getElementById('barEdu').style.width = Math.min(edu/INGRESO_BASE*100,100)+'%';
     document.getElementById('barRomi').style.width = Math.min(romi/INGRESO_BASE*100,100)+'%';
   },50);
+
+  // Llenar detalles expandibles
+  const llenarDetalle = (elId, quien, color) => {
+    const el = document.getElementById(elId);
+    const gastos = gastosMes.filter(g=>g.quien===quien).sort((a,b)=>b.monto-a.monto);
+    el.innerHTML = gastos.map(g=>`
+      <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)">
+        <div style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%">${g.esProhibido?'🚫 ':''}${g.comercio}</div>
+        <div style="font-family:DM Mono,monospace;font-size:11px;color:${color};white-space:nowrap">${fp(g.monto)}</div>
+      </div>`).join('');
+  };
+  llenarDetalle('detalleEdu', 'Eduardo', 'var(--blue)');
+  llenarDetalle('detalleRomi', 'Romina', '#ce93d8');
 }
 
 function renderTxn(filtro){
@@ -606,26 +702,116 @@ function filtrarTxn(f,el){
   renderTxn(f);
 }
 
+const RAMSEY_CITAS = [
+  '"Actúa tu edad financiera, no tu edad emocional." — Dave Ramsey',
+  '"La deuda no es una herramienta, es un producto que te venden los ricos." — Dave Ramsey',
+  '"Vivir como nadie hoy para poder vivir como nadie mañana." — Dave Ramsey',
+  '"El plan de cuotas es la manera más cara de comprar algo." — Dave Ramsey',
+  '"Si sacrificás hoy, podés ganar mañana." — Dave Ramsey',
+  '"La intensidad gana. El Modo Gazelle no es una dieta, es un estilo de vida." — Dave Ramsey',
+  '"Tus ingresos son tu herramienta más poderosa para construir riqueza." — Dave Ramsey',
+  '"La disciplina financiera hoy = libertad mañana." — Dave Ramsey',
+];
+
+function recalcularConfig() {
+  const ingreso = parseInt(document.getElementById('cfg_ingreso').value)||3800000;
+  const diezmo = Math.round(ingreso * 0.10);
+  
+  const swiss    = parseInt(document.getElementById('cfg_swiss').value)||0;
+  const edenor   = parseInt(document.getElementById('cfg_edenor').value)||0;
+  const gas      = parseInt(document.getElementById('cfg_gas').value)||0;
+  const claro    = parseInt(document.getElementById('cfg_claro').value)||0;
+  const zurich   = parseInt(document.getElementById('cfg_zurich').value)||0;
+  const provseg  = parseInt(document.getElementById('cfg_provseg').value)||0;
+  const arba     = parseInt(document.getElementById('cfg_arba').value)||0;
+  const munici   = parseInt(document.getElementById('cfg_munici').value)||0;
+  const colegio  = parseInt(document.getElementById('cfg_colegio').value)||0;
+  const aysa     = parseInt(document.getElementById('cfg_aysa').value)||0;
+  const totalFijos = swiss+edenor+gas+claro+zurich+provseg+arba+munici+colegio+aysa;
+
+  const superM   = parseInt(document.getElementById('cfg_super').value)||0;
+  const nafta    = parseInt(document.getElementById('cfg_nafta').value)||0;
+  const transp   = parseInt(document.getElementById('cfg_transp').value)||0;
+  const farma    = parseInt(document.getElementById('cfg_farma').value)||0;
+  const totalVar = superM+nafta+transp+farma;
+
+  const disponible = ingreso - diezmo - totalFijos - totalVar;
+  const balance = ingreso - diezmo - totalFijos - totalVar;
+
+  document.getElementById('cfg_diezmo_calc').textContent = fp(diezmo);
+  document.getElementById('cfg_bolanieve').textContent = disponible > 0 ? fp(disponible) : '⚠️ '+fp(Math.abs(disponible))+' de déficit';
+  document.getElementById('cfg_bolanieve').style.color = disponible > 0 ? 'var(--green)' : 'var(--red)';
+
+  // Resumen
+  const rows = [
+    ['Ingreso neto', ingreso, 'var(--text)', false],
+    ['(-) Diezmo 10%', diezmo, 'var(--green)', true],
+    ['(-) Gastos fijos', totalFijos, 'var(--muted)', true],
+    ['(-) Variables (techo)', totalVar, 'var(--muted)', true],
+    ['(-) Ahorro Santa Anita', 0, 'var(--muted)', true],
+  ];
+  document.getElementById('cfg_resumen_rows').innerHTML = rows.map(([lbl,val,color,minus])=>`
+    <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px">
+      <span style="color:var(--muted)">${lbl}</span>
+      <span style="font-family:DM Mono,monospace;color:${color}">${minus?'-':''} ${fp(val)}</span>
+    </div>`).join('');
+
+  document.getElementById('cfg_balance').textContent = fp(Math.abs(balance)) + (balance >= 0 ? ' ✅' : ' ⚠️');
+  document.getElementById('cfg_balance').style.color = balance >= 0 ? 'var(--green)' : 'var(--red)';
+
+  // Actualizar presupuesto interno
+  presupuesto['Alimentación'].limite = superM;
+  presupuesto['Transporte'].limite = nafta + transp;
+  presupuesto['Salud'].limite = swiss + farma;
+  presupuesto['Servicios'].limite = edenor+gas+claro+zurich+provseg+arba+munici+aysa;
+  presupuesto['Educación'].limite = colegio;
+  presupuesto['Diezmo'].limite = diezmo;
+}
+
 function renderPresupuesto(){
-  const grid=document.getElementById('editGrid');
-  grid.innerHTML='';
-  Object.entries(presupuesto).forEach(([cat,cfg])=>{
-    const div=document.createElement('div');
-    div.className='edit-row';
-    div.innerHTML=`<span>${cfg.icon} ${cat}</span><input type="number" value="${cfg.limite}" id="budget_${cat}">`;
-    grid.appendChild(div);
+  // Mostrar cita aleatoria
+  const cita = RAMSEY_CITAS[Math.floor(Math.random()*RAMSEY_CITAS.length)];
+  document.getElementById('ramseyCita').textContent = cita;
+  // Recalcular totales
+  recalcularConfig();
+}
+
+function guardarConfig(){
+  recalcularConfig();
+  localStorage.setItem('gazelle_presupuesto',JSON.stringify(presupuesto));
+  // Guardar valores fijos
+  const cfg = {
+    ingreso: parseInt(document.getElementById('cfg_ingreso').value)||3800000,
+    swiss: parseInt(document.getElementById('cfg_swiss').value)||0,
+    edenor: parseInt(document.getElementById('cfg_edenor').value)||0,
+    gas: parseInt(document.getElementById('cfg_gas').value)||0,
+    claro: parseInt(document.getElementById('cfg_claro').value)||0,
+    zurich: parseInt(document.getElementById('cfg_zurich').value)||0,
+    provseg: parseInt(document.getElementById('cfg_provseg').value)||0,
+    arba: parseInt(document.getElementById('cfg_arba').value)||0,
+    munici: parseInt(document.getElementById('cfg_munici').value)||0,
+    colegio: parseInt(document.getElementById('cfg_colegio').value)||0,
+    aysa: parseInt(document.getElementById('cfg_aysa').value)||0,
+    super: parseInt(document.getElementById('cfg_super').value)||0,
+    nafta: parseInt(document.getElementById('cfg_nafta').value)||0,
+    transp: parseInt(document.getElementById('cfg_transp').value)||0,
+    farma: parseInt(document.getElementById('cfg_farma').value)||0,
+  };
+  localStorage.setItem('gazelle_config',JSON.stringify(cfg));
+  renderAll();
+  mostrarAlert('💾','Presupuesto Guardado','Los valores se guardaron. Cuando suba Swiss Medical o EDENOR, actualizalos acá y el sistema se recalcula solo.');
+}
+
+function cargarConfigGuardada(){
+  const cfg = JSON.parse(localStorage.getItem('gazelle_config')||'null');
+  if(!cfg) return;
+  Object.entries(cfg).forEach(([k,v])=>{
+    const el = document.getElementById('cfg_'+k);
+    if(el) el.value = v;
   });
 }
 
-function guardarPresupuesto(){
-  Object.keys(presupuesto).forEach(cat=>{
-    const inp=document.getElementById('budget_'+cat);
-    if(inp)presupuesto[cat].limite=parseInt(inp.value)||presupuesto[cat].limite;
-  });
-  localStorage.setItem('gazelle_presupuesto',JSON.stringify(presupuesto));
-  renderAll();
-  mostrarAlert('💾','Guardado','Los límites del ciclo se actualizaron.');
-}
+function guardarPresupuesto(){ guardarConfig(); }
 
 function mostrarAlert(emoji,titulo,msg){
   document.getElementById('alertEmoji').textContent=emoji;
@@ -643,6 +829,7 @@ function showTab(name,el){
 
 // INIT
 actualizarCicloUI();
+cargarConfigGuardada();
 fetchSheet();
 setInterval(fetchSheet, 5*60*1000);
 </script>
