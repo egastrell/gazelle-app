@@ -164,34 +164,18 @@
     <div class="stat-card"><div class="stat-val" id="statProhibidos" style="color:var(--red)">—</div><div class="stat-lbl">Prohibidos</div></div>
   </div>
   <div style="padding:0 20px 14px">
-    <div id="resumenPersonas" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px">
-        <div style="font-size:10px;color:var(--blue);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">🧔 Eduardo</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--blue)" id="totalEdu">—</div>
-        <div style="font-size:11px;color:var(--muted)" id="pctEdu">—% del total</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px">
+        <div style="font-size:10px;color:var(--blue);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">🧔 Eduardo</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--blue);line-height:1" id="totalEdu">—</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px" id="pctEdu">— del ingreso</div>
         <div style="height:3px;background:var(--border);border-radius:10px;margin-top:8px;overflow:hidden"><div id="barEdu" style="height:100%;background:var(--blue);border-radius:10px;width:0%;transition:width .8s"></div></div>
       </div>
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px">
-        <div style="font-size:10px;color:#ce93d8;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">👩 Romina</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#ce93d8" id="totalRomi">—</div>
-        <div style="font-size:11px;color:var(--muted)" id="pctRomi">—% del total</div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px">
+        <div style="font-size:10px;color:#ce93d8;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">👩 Romina</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:#ce93d8;line-height:1" id="totalRomi">—</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px" id="pctRomi">— del ingreso</div>
         <div style="height:3px;background:var(--border);border-radius:10px;margin-top:8px;overflow:hidden"><div id="barRomi" style="height:100%;background:#ce93d8;border-radius:10px;width:0%;transition:width .8s"></div></div>
-      </div>
-    </div>
-    <!-- Vista discrecional -->
-    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px">
-      <div style="font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">📊 Solo gastos variables (sin fijos)</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div>
-          <div style="font-size:10px;color:var(--blue);margin-bottom:2px">Eduardo</div>
-          <div style="font-family:'DM Mono',monospace;font-size:14px;color:var(--blue)" id="discEdu">—</div>
-          <div style="font-size:10px;color:var(--muted)" id="discPctEdu">—%</div>
-        </div>
-        <div>
-          <div style="font-size:10px;color:#ce93d8;margin-bottom:2px">Romina</div>
-          <div style="font-family:'DM Mono',monospace;font-size:14px;color:#ce93d8" id="discRomi">—</div>
-          <div style="font-size:10px;color:var(--muted)" id="discPctRomi">—%</div>
-        </div>
       </div>
     </div>
   </div>
@@ -584,23 +568,15 @@ function renderResumenPersonas(){
   const total = edu + romi || 1;
   const pEdu = Math.round(edu/total*100);
   const pRomi = Math.round(romi/total*100);
+  const INGRESO_BASE = 3800000;
   document.getElementById('totalEdu').textContent = fp(edu);
   document.getElementById('totalRomi').textContent = fp(romi);
-  document.getElementById('pctEdu').textContent = pEdu+'% del total';
-  document.getElementById('pctRomi').textContent = pRomi+'% del total';
+  document.getElementById('pctEdu').textContent = Math.round(edu/INGRESO_BASE*100)+'% del ingreso';
+  document.getElementById('pctRomi').textContent = Math.round(romi/INGRESO_BASE*100)+'% del ingreso';
   setTimeout(()=>{
-    document.getElementById('barEdu').style.width = pEdu+'%';
-    document.getElementById('barRomi').style.width = pRomi+'%';
+    document.getElementById('barEdu').style.width = Math.min(edu/INGRESO_BASE*100,100)+'%';
+    document.getElementById('barRomi').style.width = Math.min(romi/INGRESO_BASE*100,100)+'%';
   },50);
-  
-  // Discrecional (sin fijos)
-  const eduDisc = gastosMes.filter(g=>g.quien==='Eduardo'&&!esFijo(g.comercio)).reduce((s,g)=>s+g.monto,0);
-  const romiDisc = gastosMes.filter(g=>g.quien==='Romina'&&!esFijo(g.comercio)).reduce((s,g)=>s+g.monto,0);
-  const totalDisc = eduDisc + romiDisc || 1;
-  document.getElementById('discEdu').textContent = fp(eduDisc);
-  document.getElementById('discRomi').textContent = fp(romiDisc);
-  document.getElementById('discPctEdu').textContent = Math.round(eduDisc/totalDisc*100)+'% del variable';
-  document.getElementById('discPctRomi').textContent = Math.round(romiDisc/totalDisc*100)+'% del variable';
 }
 
 function renderTxn(filtro){
