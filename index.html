@@ -356,4 +356,252 @@ function actualizarCicloUI() {
   const diasPasados = totalDias - diasRestantes;
   const pct = Math.min((diasPasados/totalDias)*100, 100);
 
-  document.getElementById('cic
+  document.getElementById('cicloTitulo').textContent = 'Ciclo ' + cicloActual.nombre;
+  const fmtIni = cicloActual.inicio.split('-').reverse().join('/').substring(0,5);
+  const fmtFin = cicloActual.fin.split('-').reverse().join('/');
+  document.getElementById('cicloFechas').textContent = fmtIni + ' → ' + fmtFin;
+  document.getElementById('cicloDias').textContent = Math.max(diasRestantes,0);
+  document.getElementById('cicloPct').style.width = pct+'%';
+}
+
+// ============================================================
+// FETCH
+// ============================================================
+function fp(n){ return '$'+Math.round(n).toLocaleString('es-AR') }
+
+async function fetchSheet() {
+  setSyncState('loading','Sincronizando...');
+  try {
+    const res = await fetch(API_URL);
+    const text = await res.text();
+    const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*?)\);/)[1]);
+    const rows = json.table.rows;
+    const cols = json.table.cols.map(c=>c.label);
+
+    todosLosGastos = rows
+      .filter(r=>r.c&&r.c[0]&&r.c[0].v)
+      .map(r=>{
+        const get=l=>{const i=cols.indexOf(l);return i>=0&&r.c[i]?(r.c[i].f||r.c[i].v||''):''};
+        const montoStr=String(get('Monto')).replace(/\$/g,'').replace(/\./g,'').replace(',','.').trim();
+        const monto=parseFloat(montoStr)||0;
+        const comercio=String(get('Comercio')||get('DescripcionRaw')||'');
+        const signo=String(get('Signo')||'S');
+        const hormiga=String(get('Hormiga')||'NO').toUpperCase()==='SI';
+        const usuario=String(get('USUARIO')||'');
+        const fecha=String(get('Fecha')||'');
+        const fechaDate=parseFechaStr(fecha);
+        const cat=String(get('Categoria')||'Otros');
+        const esProhibido=PROHIBIDOS_DEF.some(p=>p.keys.some(k=>comercio.toLowerCase().includes(k)));
+        let quien='Eduardo';
+        if(usuario.includes('ZIEGLER')||usuario.includes('ROMINA'))quien='Romina';
+        else if(usuario.includes('SEGOVIA')||usuario.includes('ALFREDO'))quien='Padres';
+        return{fecha,fechaDate,comercio,monto,cat,signo,hormiga,quien,esProhibido};
+      })
+      .filter(g=>g.signo!=='E'&&g.quien!=='Padres');
+
+    // Filtrar por ciclo actual
+    if(cicloActual) {
+      const ini = new Date(cicloActual.inicio);
+      const fin = new Date(cicloActual.fin);
+      gastosMes = todosLosGastos.filter(g=>g.fechaDate&&g.fechaDate>=ini&&g.fechaDate<=fin);
+    } else {
+      gastosMes = todosLosGastos;
+    }
+
+    setSyncState('ok',`Ciclo: ${gastosMes.length} transacciones`);
+    renderAll();
+  } catch(e) {
+    setSyncState('error','Error de conexión');
+    console.error(e);
+  }
+}
+
+function setSyncState(s,m){
+  document.getElementById('syncDot').className='sync-dot '+s;
+  document.getElementById('syncTxt').textContent=m;
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function renderAll(){
+  renderResumen();
+  renderPagar();
+  renderCategorias();
+  renderProhibidos();
+  renderTxn();
+  renderPresupuesto();
+}
+
+function renderResumen(){
+  const total=gastosMes.reduce((s,g)=>s+g.monto,0);
+  const limite=Object.values(presupuesto).reduce((s,c)=>s+c.limite,0);
+  const disponible=limite-total;
+  const pct=(total/limite)*100;
+  const el=document.getElementById('disponibleAmt');
+  const sub=document.getElementById('disponibleSub');
+  const msg=document.getElementById('judgeMsg');
+  el.textContent=fp(Math.abs(disponible));
+  sub.textContent=`gastado ${fp(total)} de ${fp(limite)}`;
+  const hormigas=gastosMes.filter(g=>g.hormiga);
+  const prohibidos=gastosMes.filter(g=>g.esProhibido);
+  document.getElementById('statTxn').textContent=gastosMes.length;
+  document.getElementById('statHormigas').textContent=hormigas.length;
+  document.getElementById('statProhibidos').textContent=prohibidos.length;
+  if(disponible<0){
+    el.className='score-amount danger';
+    el.textContent='-'+el.textContent;
+    msg.className='judge-msg danger';
+    msg.innerHTML=`😤 <strong>¡Alerta!</strong> Se pasaron ${fp(Math.abs(disponible))} del presupuesto. Cada peso extra es un mes más vendiendo dólares para pagar tarjetas.`;
+  } else if(pct>80){
+    el.className='score-amount warning';
+    msg.className='judge-msg warning';
+    msg.innerHTML=`⚠️ Van en el ${Math.round(pct)}% del presupuesto del ciclo. Cuidado con los gastos que faltan hasta el cierre.`;
+  } else if(pct>50){
+    el.className='score-amount';
+    msg.className='judge-msg';
+    msg.innerHTML=`📊 Van en el ${Math.round(pct)}% del presupuesto. Bien encaminados. Ojo con fin de ciclo.`;
+  } else {
+    el.className='score-amount';
+    msg.className='judge-msg';
+    msg.innerHTML=`✅ <strong>¡Excelente!</strong> Solo usaron el ${Math.round(pct)}% del presupuesto. Si siguen así, pagan las tarjetas sin vender dólares. ¡Modo Gazelle funciona!`;
+  }
+  const totalH=hormigas.reduce((s,g)=>s+g.monto,0);
+  document.getElementById('hormigaTotal').textContent=fp(totalH);
+  const tags=document.getElementById('hormigaItems');
+  tags.innerHTML='';
+  hormigas.slice(0,10).forEach(h=>{
+    const t=document.createElement('span');
+    t.className='hormiga-tag';
+    t.textContent=h.comercio.substring(0,16)+' '+fp(h.monto);
+    tags.appendChild(t);
+  });
+}
+
+function renderPagar(){
+  const totalGastado=gastosMes.reduce((s,g)=>s+g.monto,0);
+  // Proyección simple: lo gastado en el ciclo = lo que vas a deber
+  // Visa Galicia no está en Sheets aún, se muestra como pendiente
+  const estimadoMaster = totalGastado;
+  const estimadoVisa = 0; // pendiente integración Visa
+
+  document.getElementById('pagarMaster').textContent = fp(estimadoMaster);
+  document.getElementById('pagarMaster').className = estimadoMaster > PARA_TARJETAS ? 'pagar-monto danger' : 'pagar-monto ok';
+  document.getElementById('pagarVisa').textContent = 'Pendiente (sin datos Visa)';
+  document.getElementById('pagarVisa').className = 'pagar-monto';
+  document.getElementById('pagarTotal').textContent = fp(estimadoMaster);
+
+  const diferencia = PARA_TARJETAS - estimadoMaster;
+  const difEl = document.getElementById('diferenciaPago');
+  difEl.textContent = (diferencia >= 0 ? '+' : '') + fp(diferencia);
+  difEl.className = 'pagar-total ' + (diferencia >= 0 ? 'ok' : 'danger');
+
+  if(diferencia < 0) {
+    difEl.title = `⚠️ Necesitás ${fp(Math.abs(diferencia))} extra (dólares)`;
+  }
+}
+
+function renderCategorias(){
+  const c=document.getElementById('barsContainer');
+  c.innerHTML='';
+  const totCat={};
+  gastosMes.forEach(g=>{totCat[g.cat]=(totCat[g.cat]||0)+g.monto});
+  const cats=new Set([...Object.keys(presupuesto),...Object.keys(totCat)]);
+  [...cats].forEach(cat=>{
+    const cfg=presupuesto[cat]||{icon:'📦',limite:50000};
+    const gastado=totCat[cat]||0;
+    const pct=Math.min((gastado/cfg.limite)*100,100);
+    let cl='';
+    if(pct>=100)cl='over';
+    else if(pct>=80)cl='danger';
+    else if(pct>=60)cl='warning';
+    const div=document.createElement('div');
+    div.className='bar-card';
+    div.innerHTML=`<div class="bar-header"><div class="bar-name"><span>${cfg.icon}</span>${cat}</div><div class="bar-amounts"><div class="spent">${fp(gastado)}</div><div>de ${fp(cfg.limite)}</div></div></div><div class="bar-track"><div class="bar-fill ${cl}" style="width:0%" data-pct="${pct}"></div></div>`;
+    c.appendChild(div);
+  });
+  setTimeout(()=>{document.querySelectorAll('.bar-fill[data-pct]').forEach(el=>{el.style.width=el.dataset.pct+'%'})},50);
+}
+
+function renderProhibidos(){
+  const list=document.getElementById('prohibidoList');
+  list.innerHTML='';
+  PROHIBIDOS_DEF.forEach(p=>{
+    const enc=gastosMes.filter(g=>p.keys.some(k=>g.comercio.toLowerCase().includes(k)));
+    const total=enc.reduce((s,g)=>s+g.monto,0);
+    const found=enc.length>0;
+    const div=document.createElement('div');
+    div.className='prohibido-item'+(found?' found':'');
+    const chips=found?[...new Set(enc.map(g=>g.quien))].map(q=>`<span class="chip ${q==='Eduardo'?'chip-edu':'chip-romi'}">${q.substring(0,3).toUpperCase()}</span>`).join(''):'';
+    div.innerHTML=`<div class="prohibido-name">${found?'🚨':'✅'} ${p.nombre} ${chips}</div>${found?`<div class="prohibido-amount">${fp(total)}</div>`:'<div class="prohibido-ok">Libre ✓</div>'}`;
+    list.appendChild(div);
+  });
+}
+
+function renderTxn(filtro){
+  if(filtro)filtroActual=filtro;
+  const list=document.getElementById('txnList');
+  list.innerHTML='';
+  let datos=[...gastosMes].sort((a,b)=>b.monto-a.monto);
+  if(filtroActual==='Eduardo')datos=datos.filter(g=>g.quien==='Eduardo');
+  else if(filtroActual==='Romina')datos=datos.filter(g=>g.quien==='Romina');
+  else if(filtroActual==='prohibido')datos=datos.filter(g=>g.esProhibido);
+  else if(filtroActual==='hormiga')datos=datos.filter(g=>g.hormiga);
+  if(!datos.length){list.innerHTML='<div class="empty-state">No hay transacciones</div>';return}
+  datos.slice(0,100).forEach(g=>{
+    const div=document.createElement('div');
+    div.className='txn-item'+(g.esProhibido?' prohibido':'');
+    const qc=g.quien==='Eduardo'?'chip-edu':g.quien==='Romina'?'chip-romi':'chip-otros';
+    div.innerHTML=`<div class="txn-left"><div class="txn-comercio">${g.esProhibido?'🚫 ':''}${g.comercio}</div><div class="txn-meta"><span class="chip ${qc}">${g.quien.substring(0,3).toUpperCase()}</span><span>${g.cat}</span>${g.hormiga?'<span class="chip chip-hormiga">🐜</span>':''}<span>${g.fecha}</span></div></div><div class="txn-monto">${fp(g.monto)}</div>`;
+    list.appendChild(div);
+  });
+}
+
+function filtrarTxn(f,el){
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderTxn(f);
+}
+
+function renderPresupuesto(){
+  const grid=document.getElementById('editGrid');
+  grid.innerHTML='';
+  Object.entries(presupuesto).forEach(([cat,cfg])=>{
+    const div=document.createElement('div');
+    div.className='edit-row';
+    div.innerHTML=`<span>${cfg.icon} ${cat}</span><input type="number" value="${cfg.limite}" id="budget_${cat}">`;
+    grid.appendChild(div);
+  });
+}
+
+function guardarPresupuesto(){
+  Object.keys(presupuesto).forEach(cat=>{
+    const inp=document.getElementById('budget_'+cat);
+    if(inp)presupuesto[cat].limite=parseInt(inp.value)||presupuesto[cat].limite;
+  });
+  localStorage.setItem('gazelle_presupuesto',JSON.stringify(presupuesto));
+  renderAll();
+  mostrarAlert('💾','Guardado','Los límites del ciclo se actualizaron.');
+}
+
+function mostrarAlert(emoji,titulo,msg){
+  document.getElementById('alertEmoji').textContent=emoji;
+  document.getElementById('alertTitle').textContent=titulo;
+  document.getElementById('alertMsg').textContent=msg;
+  document.getElementById('alertOverlay').classList.add('show');
+}
+function cerrarAlert(){document.getElementById('alertOverlay').classList.remove('show')}
+function showTab(name,el){
+  document.querySelectorAll('[id^="tab-"]').forEach(t=>t.style.display='none');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).style.display='block';
+  el.classList.add('active');
+}
+
+// INIT
+actualizarCicloUI();
+fetchSheet();
+setInterval(fetchSheet, 5*60*1000);
+</script>
+</body>
+</html>
