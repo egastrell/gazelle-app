@@ -163,6 +163,38 @@
     <div class="stat-card"><div class="stat-val" id="statHormigas" style="color:var(--orange)">—</div><div class="stat-lbl">Hormigas</div></div>
     <div class="stat-card"><div class="stat-val" id="statProhibidos" style="color:var(--red)">—</div><div class="stat-lbl">Prohibidos</div></div>
   </div>
+  <div style="padding:0 20px 14px">
+    <div id="resumenPersonas" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px">
+        <div style="font-size:10px;color:var(--blue);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">🧔 Eduardo</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--blue)" id="totalEdu">—</div>
+        <div style="font-size:11px;color:var(--muted)" id="pctEdu">—% del total</div>
+        <div style="height:3px;background:var(--border);border-radius:10px;margin-top:8px;overflow:hidden"><div id="barEdu" style="height:100%;background:var(--blue);border-radius:10px;width:0%;transition:width .8s"></div></div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px">
+        <div style="font-size:10px;color:#ce93d8;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">👩 Romina</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#ce93d8" id="totalRomi">—</div>
+        <div style="font-size:11px;color:var(--muted)" id="pctRomi">—% del total</div>
+        <div style="height:3px;background:var(--border);border-radius:10px;margin-top:8px;overflow:hidden"><div id="barRomi" style="height:100%;background:#ce93d8;border-radius:10px;width:0%;transition:width .8s"></div></div>
+      </div>
+    </div>
+    <!-- Vista discrecional -->
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px">
+      <div style="font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">📊 Solo gastos variables (sin fijos)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div>
+          <div style="font-size:10px;color:var(--blue);margin-bottom:2px">Eduardo</div>
+          <div style="font-family:'DM Mono',monospace;font-size:14px;color:var(--blue)" id="discEdu">—</div>
+          <div style="font-size:10px;color:var(--muted)" id="discPctEdu">—%</div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:#ce93d8;margin-bottom:2px">Romina</div>
+          <div style="font-family:'DM Mono',monospace;font-size:14px;color:#ce93d8" id="discRomi">—</div>
+          <div style="font-size:10px;color:var(--muted)" id="discPctRomi">—%</div>
+        </div>
+      </div>
+    </div>
+  </div>
   <div class="hormigas-section">
     <div class="section-title">☕ Gastos Hormiga</div>
     <div class="hormigas-card">
@@ -234,36 +266,6 @@
 <div id="tab-transacciones" style="display:none">
   <div class="txn-section">
     <div class="section-title">Movimientos del Ciclo</div>
-    <div id="resumenPersonas" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px">
-        <div style="font-size:10px;color:var(--blue);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">🧔 Eduardo</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--blue)" id="totalEdu">—</div>
-        <div style="font-size:11px;color:var(--muted)" id="pctEdu">—% del total</div>
-        <div style="height:3px;background:var(--border);border-radius:10px;margin-top:8px;overflow:hidden"><div id="barEdu" style="height:100%;background:var(--blue);border-radius:10px;width:0%;transition:width .8s"></div></div>
-      </div>
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px">
-        <div style="font-size:10px;color:#ce93d8;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">👩 Romina</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#ce93d8" id="totalRomi">—</div>
-        <div style="font-size:11px;color:var(--muted)" id="pctRomi">—% del total</div>
-        <div style="height:3px;background:var(--border);border-radius:10px;margin-top:8px;overflow:hidden"><div id="barRomi" style="height:100%;background:#ce93d8;border-radius:10px;width:0%;transition:width .8s"></div></div>
-      </div>
-    </div>
-    <!-- Vista discrecional -->
-    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px">
-      <div style="font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">📊 Solo gastos variables (sin fijos)</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div>
-          <div style="font-size:10px;color:var(--blue);margin-bottom:2px">Eduardo</div>
-          <div style="font-family:'DM Mono',monospace;font-size:14px;color:var(--blue)" id="discEdu">—</div>
-          <div style="font-size:10px;color:var(--muted)" id="discPctEdu">—%</div>
-        </div>
-        <div>
-          <div style="font-size:10px;color:#ce93d8;margin-bottom:2px">Romina</div>
-          <div style="font-family:'DM Mono',monospace;font-size:14px;color:#ce93d8" id="discRomi">—</div>
-          <div style="font-size:10px;color:var(--muted)" id="discPctRomi">—%</div>
-        </div>
-      </div>
-    </div>
     <div class="txn-filters">
       <div class="filter-chip active" onclick="filtrarTxn('todos',this)">Todos</div>
       <div class="filter-chip" onclick="filtrarTxn('Eduardo',this)">Eduardo</div>
@@ -603,6 +605,8 @@ function renderResumenPersonas(){
 
 function renderTxn(filtro){
   if(filtro)filtroActual=filtro;
+  // Actualizar resumen personas cada vez que se renderiza
+  renderResumenPersonas();
   const list=document.getElementById('txnList');
   list.innerHTML='';
   let datos=[...gastosMes].sort((a,b)=>b.monto-a.monto);
