@@ -363,7 +363,8 @@
 // ============================================================
 const SHEET_ID='1GnmI8m9OaJAyNMSiho5SNomFxpWXjYtXF_vpFHPWg08';
 const SHEET_NAME='Tarjetas';
-const API_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
+const SHEETS_API_KEY='AIzaSyD3QpBs7qRD3bpO00zjIPzXOXbU3Z7o7mA';
+const API_URL=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(SHEET_NAME)}?key=${SHEETS_API_KEY}`;
 
 // Calcular anteúltimo jueves de cada mes dinámicamente
 function anteultimoJueves(year, month) {
