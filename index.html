@@ -525,20 +525,21 @@ async function fetchSheet() {
   setSyncState('loading','Sincronizando...');
   try {
     const res = await fetch(API_URL);
-    const text = await res.text();
-    const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*?)\);/)[1]);
-    const rows = json.table.rows;
-    const cols = json.table.cols.map(c=>c.label);
-
-    todosLosGastos = rows
-      .filter(r=>r.c&&r.c[0]&&r.c[0].v)
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    const allValues = json.values || [];
+    if(allValues.length < 2) throw new Error('Sin datos');
+    const cols = allValues[0];
+    const dataRows = allValues.slice(1);
+    todosLosGastos = dataRows
+      .filter(r=>r&&r[0])
       .map(r=>{
-        const get=l=>{const i=cols.indexOf(l);return i>=0&&r.c[i]?(r.c[i].f||r.c[i].v||''):''};
-        const montoStr=String(get('Monto')).replace(/\$/g,'').replace(/\./g,'').replace(',','.').trim();
+        const get=l=>{const i=cols.indexOf(l);return i>=0&&r[i]!==undefined?String(r[i]):'';};
+        const montoStr=get('Monto').replace(/\$/g,'').replace(/\./g,'').replace(',','.').trim();
         const monto=parseFloat(montoStr)||0;
         const comercio=String(get('Comercio')||get('DescripcionRaw')||'');
         const signo=String(get('Signo')||'S');
-        const hormiga=String(get('Hormiga')||'NO').toUpperCase()==='SI';
+        const hormiga=get('Hormiga').toUpperCase()==='SI';
         const usuario=String(get('USUARIO')||'');
         const fecha=String(get('Fecha')||'');
         const fechaDate=parseFechaStr(fecha);
@@ -550,17 +551,14 @@ async function fetchSheet() {
         return{fecha,fechaDate,comercio,monto,cat,signo,hormiga,quien,esProhibido};
       })
       .filter(g=>g.signo!=='E'&&g.quien!=='Padres');
-
-    // Filtrar por ciclo actual
     aplicarFiltroCiclo();
-
     setSyncState('ok',`Ciclo: ${gastosMes.length} transacciones`);
     renderAll();
   } catch(e) {
     setSyncState('error','Error de conexión');
     console.error(e);
   }
-}
+  }
 
 function setSyncState(s,m){
   document.getElementById('syncDot').className='sync-dot '+s;
