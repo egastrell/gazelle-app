@@ -555,7 +555,7 @@ async function fetchSheet() {
     setSyncState('ok',`Ciclo: ${gastosMes.length} transacciones`);
     renderAll();
   } catch(e) {
-    setSyncState('error','Error de conexión');
+    setSyncState('error','ERR:'+String(e.message||e).substring(0,40));
     console.error(e);
   }
   }
