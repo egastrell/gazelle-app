@@ -662,7 +662,13 @@ function renderCategorias(){
     else if(pct>=60)cl='warning';
     const div=document.createElement('div');
     div.className='bar-card';
-    div.innerHTML=`<div class="bar-header"><div class="bar-name"><span>${cfg.icon}</span>${cat}</div><div class="bar-amounts"><div class="spent">${fp(gastado)}</div><div>de ${fp(cfg.limite)}</div></div></div><div class="bar-track"><div class="bar-fill ${cl}" style="width:0%" data-pct="${pct}"></div></div>`;
+    const idCat='cat-'+cat.replace(/[^a-z0-9]/gi,'');
+div.id=idCat;
+div.onclick=()=>{
+  const det=document.getElementById('det-'+idCat);
+  if(det)det.style.display=det.style.display==='none'?'block':'none';
+};
+div.innerHTML=`<div class="bar-header"><div class="bar-name"><span>${cfg.icon}</span>${cat}</div><div class="bar-amounts"><div class="spent">${fp(gastado)}</div><div>de ${fp(cfg.limite)}</div></div></div><div class="bar-track"><div class="bar-fill ${cl}" style="width:0%" data-pct="${pct}"></div></div><div id="det-${idCat}" style="display:none;margin-top:8px;border-top:1px solid var(--border);padding-top:8px">${gastosMes.filter(g=>g.cat===cat).sort((a,b)=>b.monto-a.monto).map(g=>`<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:11px"><span style="color:var(--muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${g.comercio.substring(0,20)} <span class="chip ${g.quien==='Romina'?'chip-romi':'chip-edu'}">${g.quien.substring(0,3).toUpperCase()}</span></span><span style="font-family:DM Mono,monospace;color:var(--text);white-space:nowrap;margin-left:6px">${fp(g.monto)}</span></div>`).join('')||'<div style="color:var(--muted);font-size:11px">Sin movimientos</div>'}</div>`;
     c.appendChild(div);
   });
   setTimeout(()=>{document.querySelectorAll('.bar-fill[data-pct]').forEach(el=>{el.style.width=el.dataset.pct+'%'})},50);
