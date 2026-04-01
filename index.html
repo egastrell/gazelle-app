@@ -628,7 +628,7 @@ function renderPagar(){
   // Proyección simple: lo gastado en el ciclo = lo que vas a deber
   // Visa Galicia no está en Sheets aún, se muestra como pendiente
   const estimadoMaster = totalGastado;
-  const estimadoVisa = gastosMes.filter(g=>g.medio&&g.medio.toLowerCase().includes('visa')).reduce((s,g)=>s+g.monto,0);
+  const estimadoVisa = gastosMes.filter(g=>g.cuenta&&g.cuenta.toLowerCase().includes('visa')).reduce((s,g)=>s+g.monto,0);
 
   document.getElementById('pagarMaster').textContent = fp(estimadoMaster);
   document.getElementById('pagarMaster').className = estimadoMaster > PARA_TARJETAS ? 'pagar-monto danger' : 'pagar-monto ok';
