@@ -549,8 +549,7 @@ async function fetchSheet() {
         let quien='Eduardo';
         if(usuario.includes('ZIEGLER')||usuario.includes('ROMINA'))quien='Romina';
         else if(usuario.includes('SEGOVIA')||usuario.includes('ALFREDO'))quien='Padres';
-        return{fecha,fechaDate,comercio,monto,cat,signo,hormiga,quien,esProhibido};
-      })
+        return{fecha,fechaDate,comercio,monto,cat,signo,hormiga,quien,esProhibido,cuenta};
       .filter(g=>g.signo!=='E'&&g.quien!=='Padres');
     aplicarFiltroCiclo();
     setSyncState('ok',`Ciclo: ${gastosMes.length} transacciones`);
