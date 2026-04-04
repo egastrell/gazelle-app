@@ -550,6 +550,7 @@ async function fetchSheet() {
         if(usuario.includes('ZIEGLER')||usuario.includes('ROMINA'))quien='Romina';
         else if(usuario.includes('SEGOVIA')||usuario.includes('ALFREDO'))quien='Padres';
         return{fecha,fechaDate,comercio,monto,cat,signo,hormiga,quien,esProhibido,cuenta};
+      })
       .filter(g=>g.signo!=='E'&&g.quien!=='Padres');
     aplicarFiltroCiclo();
     setSyncState('ok',`Ciclo: ${gastosMes.length} transacciones`);
@@ -558,8 +559,7 @@ async function fetchSheet() {
     setSyncState('error','ERR:'+String(e.message||e).substring(0,40));
     console.error(e);
   }
-  }
-
+}
 function setSyncState(s,m){
   document.getElementById('syncDot').className='sync-dot '+s;
   document.getElementById('syncTxt').textContent=m;
