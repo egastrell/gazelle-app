@@ -3,347 +3,674 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>💰 Modo Gazelle</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>Modo Gazelle</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
-  :root{--bg:#0a0a0f;--surface:#12121a;--surface2:#1a1a26;--border:#2a2a3e;--green:#00e676;--yellow:#ffd740;--red:#ff1744;--orange:#ff6d00;--blue:#448aff;--text:#e8e8f0;--muted:#6b6b88;--accent:#7c4dff;}
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
-  .header{padding:16px 20px 0;display:flex;align-items:center;justify-content:space-between}
-  .logo{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:var(--green);text-shadow:0 0 20px rgba(0,230,118,.4)}
-  .mode-badge{background:linear-gradient(135deg,#ff6d00,#ff1744);color:white;font-size:10px;font-weight:600;letter-spacing:2px;padding:4px 10px;border-radius:20px;text-transform:uppercase}
-  .ciclo-bar{display:flex;align-items:center;gap:8px;padding:10px 20px;font-size:12px;background:var(--surface);margin:10px 20px;border-radius:12px;border:1px solid var(--border)}
-  .ciclo-info{flex:1}
-  .ciclo-titulo{font-weight:600;font-size:13px;color:var(--text)}
-  .ciclo-fechas{color:var(--muted);font-size:11px;margin-top:2px}
-  .ciclo-dias{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--yellow);text-align:right;line-height:1}
-  .ciclo-dias-lbl{font-size:9px;color:var(--muted);text-align:right;letter-spacing:1px}
-  .sync-bar{display:flex;align-items:center;gap:8px;padding:6px 20px;font-size:11px;color:var(--muted)}
-  .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0}
-  .sync-dot.ok{background:var(--green);box-shadow:0 0 6px rgba(0,230,118,.5)}
-  .sync-dot.loading{background:var(--yellow);animation:blink 1s ease infinite}
-  .sync-dot.error{background:var(--red)}
-  @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-  .btn-refresh{margin-left:auto;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:11px;padding:4px 10px;border-radius:20px;cursor:pointer}
-  .tabs{display:flex;padding:0 20px;gap:4px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
-  .tab{padding:7px 14px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:all .2s;white-space:nowrap}
-  .tab.active{background:var(--accent);border-color:var(--accent);color:white}
-  .score-section{padding:0 20px 16px}
-  .score-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:22px;position:relative;overflow:hidden}
-  .score-card::before{content:'';position:absolute;top:-40px;right:-40px;width:150px;height:150px;background:radial-gradient(circle,rgba(0,230,118,.08) 0%,transparent 70%);pointer-events:none}
-  .score-label{font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
-  .score-main{display:flex;align-items:flex-end;gap:12px;margin-bottom:16px;flex-wrap:wrap}
-  .score-amount{font-family:'Bebas Neue',sans-serif;font-size:52px;line-height:1;color:var(--green);text-shadow:0 0 30px rgba(0,230,118,.3)}
-  .score-amount.danger{color:var(--red);text-shadow:0 0 30px rgba(255,23,68,.3)}
-  .score-amount.warning{color:var(--yellow);text-shadow:0 0 30px rgba(255,215,64,.3)}
-  .score-sub{font-size:13px;color:var(--muted);padding-bottom:6px}
-  .judge-msg{background:var(--surface2);border-left:3px solid var(--green);border-radius:0 10px 10px 0;padding:10px 14px;font-size:13px;line-height:1.6;color:var(--text)}
-  .judge-msg.danger{border-left-color:var(--red)}
-  .judge-msg.warning{border-left-color:var(--yellow)}
-  .pagar-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin:0 20px 14px}
-  .pagar-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--muted);margin-bottom:10px}
-  .pagar-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
-  .pagar-row:last-child{border-bottom:none;padding-top:10px;margin-top:2px}
-  .pagar-nombre{font-size:13px}
-  .pagar-vence{font-size:10px;color:var(--muted)}
-  .pagar-monto{font-family:'DM Mono',monospace;font-size:14px;font-weight:500}
-  .pagar-monto.ok{color:var(--green)}
-  .pagar-monto.danger{color:var(--red)}
-  .pagar-total{font-family:'Bebas Neue',sans-serif;font-size:20px}
-  .stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:0 20px 14px}
-  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center}
-  .stat-val{font-family:'Bebas Neue',sans-serif;font-size:20px}
-  .stat-lbl{font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
-  .bars-section{padding:0 20px 16px;display:grid;gap:8px}
-  .bar-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
-  .bar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
-  .bar-name{font-size:12px;font-weight:500;display:flex;align-items:center;gap:7px}
-  .bar-amounts{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-align:right}
-  .bar-amounts .spent{color:var(--text);font-size:12px}
-  .bar-track{height:5px;background:var(--border);border-radius:10px;overflow:hidden}
-  .bar-fill{height:100%;border-radius:10px;transition:width .8s cubic-bezier(.23,1,.32,1);background:var(--green)}
-  .bar-fill.warning{background:var(--yellow)}
-  .bar-fill.danger,.bar-fill.over{background:var(--red)}
-  .section-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--muted);margin-bottom:10px}
-  .hormigas-section{padding:0 20px 16px}
-  .hormigas-card{background:var(--surface);border:1px solid var(--orange);border-radius:12px;padding:14px}
-  .hormiga-total{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--orange)}
-  .hormiga-label{font-size:11px;color:var(--muted);margin-bottom:4px}
-  .hormiga-items{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
-  .hormiga-tag{background:rgba(255,109,0,.12);border:1px solid rgba(255,109,0,.3);color:var(--orange);font-size:10px;padding:2px 7px;border-radius:20px;font-family:'DM Mono',monospace}
-  .prohibidos-section{padding:0 20px 16px}
-  .prohibido-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
-  .prohibido-item.found{border-color:rgba(255,23,68,.4);background:rgba(255,23,68,.05)}
-  .prohibido-name{font-size:12px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-  .prohibido-amount{font-family:'DM Mono',monospace;font-size:12px;color:var(--red);white-space:nowrap}
-  .prohibido-ok{font-size:10px;color:var(--green)}
-  .txn-section{padding:0 20px 16px}
-  .txn-filters{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;scrollbar-width:none}
-  .filter-chip{padding:4px 10px;border-radius:20px;font-size:11px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap}
-  .filter-chip.active{background:var(--surface2);color:var(--text);border-color:var(--accent)}
-  .txn-list{display:grid;gap:5px;max-height:500px;overflow-y:auto}
-  .txn-item{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center}
-  .txn-item.prohibido{border-color:rgba(255,23,68,.3)}
-  .txn-left{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
-  .txn-comercio{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .txn-meta{font-size:10px;color:var(--muted);display:flex;gap:5px;flex-wrap:wrap;margin-top:2px}
-  .txn-monto{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;white-space:nowrap;margin-left:6px}
-  .chip{font-size:9px;padding:2px 5px;border-radius:6px;font-weight:600}
-  .chip-edu{background:rgba(68,138,255,.15);color:var(--blue)}
-  .chip-romi{background:rgba(124,77,255,.15);color:#ce93d8}
-  .chip-otros{background:rgba(107,107,136,.15);color:var(--muted)}
-  .chip-hormiga{background:rgba(255,109,0,.15);color:var(--orange)}
-  .edit-section{padding:0 20px 16px}
-  .edit-row{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:9px 12px;margin-bottom:6px}
-  .edit-row span{flex:1;font-size:12px}
-  .edit-row input{background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;padding:5px 8px;border-radius:6px;width:120px;text-align:right;outline:none}
-  .btn-save{width:100%;background:var(--green);color:#000;font-weight:700;font-size:14px;padding:13px;border:none;border-radius:11px;cursor:pointer;margin-top:4px}
-  .alert-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:100;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s}
-  .alert-overlay.show{opacity:1;pointer-events:all}
-  .alert-panel{background:var(--surface);border:1px solid var(--border);border-radius:20px 20px 0 0;padding:28px 22px 38px;width:100%;max-width:480px;transform:translateY(100%);transition:transform .4s cubic-bezier(.23,1,.32,1)}
-  .alert-overlay.show .alert-panel{transform:translateY(0)}
-  .alert-emoji{font-size:48px;text-align:center;display:block;margin-bottom:14px}
-  .alert-title{font-family:'Bebas Neue',sans-serif;font-size:30px;text-align:center;margin-bottom:8px;letter-spacing:2px}
-  .alert-msg{font-size:14px;color:var(--muted);text-align:center;line-height:1.6;margin-bottom:22px}
-  .btn-close-alert{width:100%;background:var(--surface2);color:var(--text);font-weight:600;font-size:14px;padding:13px;border:1px solid var(--border);border-radius:11px;cursor:pointer}
-  .bottom-pad{height:40px}
-  .empty-state{text-align:center;padding:30px;color:var(--muted);font-size:13px}
-  .progress-ciclo{height:4px;background:var(--border);border-radius:10px;overflow:hidden;margin-top:6px}
-  .progress-ciclo-fill{height:100%;background:var(--yellow);border-radius:10px;transition:width .5s}
+:root {
+  --bg: #F2F4F7;
+  --white: #FFFFFF;
+  --text: #1A1D23;
+  --muted: #8A93A2;
+  --border: #E4E8EF;
+  --green: #00C48C;
+  --green-light: #E6F9F4;
+  --red: #FF5B5B;
+  --red-light: #FFF0F0;
+  --orange: #FF8C42;
+  --orange-light: #FFF4EC;
+  --blue: #4A90D9;
+  --blue-light: #EBF4FF;
+  --purple: #7C5CBF;
+  --purple-light: #F0EBFF;
+  --yellow: #FFB800;
+  --yellow-light: #FFFBEB;
+  --teal: #00B8D4;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 20px rgba(0,0,0,0.10);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,0.14);
+  --radius: 20px;
+  --radius-sm: 12px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',sans-serif; min-height:100vh; overflow-x:hidden; }
+
+/* HEADER */
+.app-header {
+  background: linear-gradient(135deg, #1A1D23 0%, #2D3748 100%);
+  padding: 20px 20px 0;
+  position: relative;
+  overflow: hidden;
+}
+.app-header::before {
+  content:'';
+  position:absolute;
+  top:-60px; right:-60px;
+  width:200px; height:200px;
+  background: radial-gradient(circle, rgba(0,196,140,0.2) 0%, transparent 70%);
+  pointer-events:none;
+}
+.header-top {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:20px;
+}
+.logo-group { display:flex; align-items:center; gap:10px; }
+.logo-icon { font-size:28px; }
+.logo-text { font-size:22px; font-weight:800; color:#fff; letter-spacing:-0.5px; }
+.baby-step-badge {
+  background: linear-gradient(135deg, var(--green), #00A87A);
+  color:#fff; font-size:11px; font-weight:700;
+  padding:6px 14px; border-radius:30px;
+  letter-spacing:0.5px;
+}
+.sync-row {
+  display:flex; align-items:center; gap:8px;
+  padding:10px 0 16px;
+  border-top:1px solid rgba(255,255,255,0.08);
+  margin-top:4px;
+}
+.sync-dot { width:8px; height:8px; border-radius:50%; background:var(--muted); flex-shrink:0; }
+.sync-dot.ok { background:var(--green); box-shadow:0 0 8px rgba(0,196,140,0.6); }
+.sync-dot.loading { background:var(--yellow); animation:blink 1s infinite; }
+.sync-dot.error { background:var(--red); }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.sync-text { font-size:12px; color:rgba(255,255,255,0.5); flex:1; }
+.btn-refresh { background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.15); color:rgba(255,255,255,0.7); font-size:13px; padding:5px 12px; border-radius:20px; cursor:pointer; }
+
+/* CICLO BAR */
+.ciclo-card {
+  background:rgba(255,255,255,0.07);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:16px;
+  padding:14px 16px;
+  margin-bottom:16px;
+  display:flex; align-items:center; gap:10px;
+}
+.ciclo-nav { background:rgba(255,255,255,0.1); border:none; color:rgba(255,255,255,0.8); width:30px; height:30px; border-radius:10px; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.ciclo-info { flex:1; min-width:0; }
+.ciclo-nombre { font-size:14px; font-weight:700; color:#fff; }
+.ciclo-fechas { font-size:11px; color:rgba(255,255,255,0.5); margin-top:2px; }
+.ciclo-progress { height:3px; background:rgba(255,255,255,0.1); border-radius:10px; margin-top:8px; overflow:hidden; }
+.ciclo-progress-fill { height:100%; background:var(--green); border-radius:10px; transition:width .5s; }
+.ciclo-dias-box { text-align:right; flex-shrink:0; }
+.ciclo-dias-num { font-size:24px; font-weight:800; color:var(--yellow); line-height:1; font-family:'Space Mono',monospace; }
+.ciclo-dias-lbl { font-size:9px; color:rgba(255,255,255,0.4); letter-spacing:1px; text-transform:uppercase; }
+
+/* TABS */
+.tabs-wrapper { background:var(--app-header,#1A1D23); padding:0 20px 0; }
+.tabs { display:flex; gap:4px; overflow-x:auto; scrollbar-width:none; padding-bottom:0; }
+.tabs::-webkit-scrollbar { display:none; }
+.tab {
+  padding:10px 16px; border-radius:12px 12px 0 0;
+  font-size:12px; font-weight:600; cursor:pointer;
+  border:none; background:transparent; color:rgba(255,255,255,0.4);
+  transition:all .2s; white-space:nowrap; flex-shrink:0;
+}
+.tab.active { background:var(--bg); color:var(--text); }
+
+/* CONTENT */
+.content { padding:20px 16px; }
+
+/* CARDS */
+.card {
+  background:var(--white); border-radius:var(--radius);
+  padding:20px; box-shadow:var(--shadow-sm);
+  margin-bottom:14px;
+}
+.card-title {
+  font-size:11px; font-weight:700; letter-spacing:1px;
+  text-transform:uppercase; color:var(--muted);
+  margin-bottom:14px;
+}
+
+/* BABY STEPS SECTION */
+.baby-steps-card {
+  background: linear-gradient(135deg, #1A1D23, #2D3748);
+  border-radius:var(--radius); padding:20px;
+  box-shadow:var(--shadow-md); margin-bottom:14px;
+  position:relative; overflow:hidden;
+}
+.baby-steps-card::after {
+  content:'';
+  position:absolute; bottom:-30px; right:-30px;
+  width:120px; height:120px;
+  background:radial-gradient(circle, rgba(0,196,140,0.15), transparent 70%);
+}
+.bs-title { font-size:11px; font-weight:700; letter-spacing:1px; color:rgba(255,255,255,0.4); text-transform:uppercase; margin-bottom:16px; }
+.bs-steps { display:flex; gap:0; position:relative; }
+.bs-steps::before {
+  content:''; position:absolute; top:18px; left:18px; right:18px;
+  height:2px; background:rgba(255,255,255,0.1);
+}
+.bs-step { flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; position:relative; z-index:1; }
+.bs-circle {
+  width:36px; height:36px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; font-weight:800; transition:all .3s;
+}
+.bs-circle.done { background:var(--green); color:#fff; box-shadow:0 0 12px rgba(0,196,140,0.4); }
+.bs-circle.current {
+  background: linear-gradient(135deg, var(--yellow), #FF8C42);
+  color:#fff; box-shadow:0 0 16px rgba(255,184,0,0.5);
+  animation:pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{box-shadow:0 0 16px rgba(255,184,0,0.5)} 50%{box-shadow:0 0 24px rgba(255,184,0,0.8)} }
+.bs-circle.future { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.3); }
+.bs-label { font-size:9px; color:rgba(255,255,255,0.4); text-align:center; line-height:1.3; max-width:48px; }
+.bs-label.current { color:var(--yellow); font-weight:700; }
+.bs-label.done { color:var(--green); }
+
+.bs-current-info {
+  background:rgba(255,184,0,0.1); border:1px solid rgba(255,184,0,0.2);
+  border-radius:12px; padding:12px 14px; margin-top:16px;
+}
+.bs-current-name { font-size:13px; font-weight:700; color:var(--yellow); margin-bottom:4px; }
+.bs-current-desc { font-size:11px; color:rgba(255,255,255,0.5); line-height:1.5; }
+
+/* DEUDA PROGRESS */
+.deuda-card { background:var(--white); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow-sm); margin-bottom:14px; }
+.deuda-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px; }
+.deuda-label { font-size:11px; font-weight:700; letter-spacing:1px; color:var(--muted); text-transform:uppercase; }
+.deuda-pct { font-size:12px; font-weight:700; color:var(--green); background:var(--green-light); padding:4px 10px; border-radius:20px; }
+.deuda-amounts { display:flex; justify-content:space-between; margin-bottom:10px; }
+.deuda-amount-box { text-align:center; }
+.deuda-amount-num { font-size:20px; font-weight:800; font-family:'Space Mono',monospace; }
+.deuda-amount-num.red { color:var(--red); }
+.deuda-amount-num.green { color:var(--green); }
+.deuda-amount-lbl { font-size:10px; color:var(--muted); margin-top:2px; }
+.deuda-bar-track { height:12px; background:var(--border); border-radius:30px; overflow:hidden; margin-bottom:10px; }
+.deuda-bar-fill { height:100%; background:linear-gradient(90deg, var(--green), #00A87A); border-radius:30px; transition:width 1s cubic-bezier(.23,1,.32,1); }
+.deuda-items { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.deuda-item { background:var(--bg); border-radius:12px; padding:10px 12px; }
+.deuda-item-name { font-size:10px; color:var(--muted); margin-bottom:4px; }
+.deuda-item-amount { font-size:14px; font-weight:700; font-family:'Space Mono',monospace; color:var(--text); }
+.deuda-item-sub { font-size:10px; color:var(--muted); }
+
+/* DISPONIBLE */
+.disponible-card {
+  border-radius:var(--radius); padding:22px; margin-bottom:14px;
+  position:relative; overflow:hidden;
+}
+.disponible-card.ok { background:linear-gradient(135deg, var(--green), #00A87A); }
+.disponible-card.warning { background:linear-gradient(135deg, var(--yellow), #FF8C42); }
+.disponible-card.danger { background:linear-gradient(135deg, var(--red), #D63031); }
+.disponible-card::before {
+  content:''; position:absolute; top:-40px; right:-40px;
+  width:150px; height:150px;
+  background:rgba(255,255,255,0.1); border-radius:50%;
+}
+.disp-label { font-size:11px; font-weight:700; letter-spacing:1px; color:rgba(255,255,255,0.7); text-transform:uppercase; margin-bottom:6px; }
+.disp-amount { font-size:46px; font-weight:800; color:#fff; line-height:1; font-family:'Space Mono',monospace; margin-bottom:6px; }
+.disp-sub { font-size:12px; color:rgba(255,255,255,0.7); margin-bottom:14px; }
+.disp-msg { background:rgba(255,255,255,0.15); border-radius:12px; padding:10px 14px; font-size:12px; color:#fff; line-height:1.5; }
+
+/* STATS ROW */
+.stats-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:14px; }
+.stat-card { background:var(--white); border-radius:var(--radius-sm); padding:14px; text-align:center; box-shadow:var(--shadow-sm); }
+.stat-val { font-size:22px; font-weight:800; font-family:'Space Mono',monospace; }
+.stat-lbl { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-top:4px; }
+
+/* PERSONAS */
+.personas-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+.persona-card { background:var(--white); border-radius:var(--radius-sm); padding:16px; box-shadow:var(--shadow-sm); cursor:pointer; transition:transform .2s; }
+.persona-card:active { transform:scale(0.98); }
+.persona-badge { font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; }
+.persona-amount { font-size:22px; font-weight:800; font-family:'Space Mono',monospace; line-height:1; margin-bottom:4px; }
+.persona-pct { font-size:11px; color:var(--muted); margin-bottom:10px; }
+.persona-bar-track { height:4px; background:var(--border); border-radius:10px; overflow:hidden; }
+.persona-bar-fill { height:100%; border-radius:10px; transition:width .8s; }
+.persona-detalle { margin-top:12px; border-top:1px solid var(--border); padding-top:10px; max-height:160px; overflow-y:auto; display:none; }
+.persona-detalle-item { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid var(--border); font-size:11px; }
+
+/* HORMIGAS */
+.hormigas-card { background:var(--orange-light); border:1px solid rgba(255,140,66,0.2); border-radius:var(--radius); padding:18px; margin-bottom:14px; }
+.hormiga-total { font-size:32px; font-weight:800; color:var(--orange); font-family:'Space Mono',monospace; }
+.hormiga-label { font-size:11px; color:var(--orange); font-weight:600; margin-bottom:6px; }
+.hormiga-items { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+.hormiga-tag { background:rgba(255,140,66,0.15); border:1px solid rgba(255,140,66,0.3); color:var(--orange); font-size:10px; padding:3px 8px; border-radius:20px; font-family:'Space Mono',monospace; }
+
+/* RAMSEY QUOTE */
+.quote-card { background:linear-gradient(135deg, #667eea, #764ba2); border-radius:var(--radius); padding:20px; margin-bottom:14px; }
+.quote-mark { font-size:40px; color:rgba(255,255,255,0.3); line-height:1; margin-bottom:6px; font-family:Georgia,serif; }
+.quote-text { font-size:13px; color:#fff; line-height:1.6; font-style:italic; }
+.quote-author { font-size:11px; color:rgba(255,255,255,0.6); margin-top:10px; font-weight:600; }
+
+/* CATEGORIAS */
+.cat-list { display:grid; gap:10px; }
+.cat-card { background:var(--white); border-radius:var(--radius-sm); padding:14px 16px; box-shadow:var(--shadow-sm); cursor:pointer; }
+.cat-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.cat-name { font-size:13px; font-weight:600; display:flex; align-items:center; gap:8px; }
+.cat-amounts { text-align:right; }
+.cat-spent { font-size:14px; font-weight:700; font-family:'Space Mono',monospace; }
+.cat-limit { font-size:10px; color:var(--muted); }
+.cat-bar-track { height:6px; background:var(--border); border-radius:10px; overflow:hidden; }
+.cat-bar-fill { height:100%; border-radius:10px; transition:width .8s; }
+.cat-bar-fill.ok { background:var(--green); }
+.cat-bar-fill.warning { background:var(--yellow); }
+.cat-bar-fill.danger { background:var(--red); }
+.cat-detalle { margin-top:10px; border-top:1px solid var(--border); padding-top:8px; display:none; }
+.cat-detalle-item { display:flex; justify-content:space-between; align-items:center; padding:4px 0; font-size:11px; border-bottom:1px solid var(--border); }
+
+/* PROHIBIDOS */
+.prohibido-item { background:var(--white); border-radius:var(--radius-sm); padding:14px 16px; margin-bottom:10px; box-shadow:var(--shadow-sm); display:flex; justify-content:space-between; align-items:center; }
+.prohibido-item.found { background:var(--red-light); border-left:4px solid var(--red); }
+.prohibido-name { font-size:13px; font-weight:600; display:flex; align-items:center; gap:8px; }
+.prohibido-ok { font-size:11px; color:var(--green); font-weight:600; }
+.prohibido-amount { font-size:14px; font-weight:700; color:var(--red); font-family:'Space Mono',monospace; }
+
+/* MOVIMIENTOS */
+.txn-filters { display:flex; gap:6px; margin-bottom:12px; overflow-x:auto; scrollbar-width:none; padding-bottom:4px; }
+.filter-chip { padding:6px 14px; border-radius:20px; font-size:11px; font-weight:600; border:1.5px solid var(--border); background:var(--white); color:var(--muted); cursor:pointer; white-space:nowrap; transition:all .2s; }
+.filter-chip.active { background:var(--text); color:#fff; border-color:var(--text); }
+.txn-list { display:grid; gap:8px; max-height:500px; overflow-y:auto; }
+.txn-item { background:var(--white); border-radius:var(--radius-sm); padding:12px 14px; display:flex; justify-content:space-between; align-items:center; box-shadow:var(--shadow-sm); }
+.txn-item.prohibido { border-left:3px solid var(--red); }
+.txn-left { flex:1; min-width:0; }
+.txn-comercio { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.txn-meta { display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
+.chip { font-size:9px; padding:2px 7px; border-radius:6px; font-weight:700; }
+.chip-edu { background:var(--blue-light); color:var(--blue); }
+.chip-romi { background:var(--purple-light); color:var(--purple); }
+.chip-otros { background:var(--border); color:var(--muted); }
+.chip-hormiga { background:var(--orange-light); color:var(--orange); }
+.chip-cat { background:var(--bg); color:var(--muted); }
+.txn-monto { font-size:14px; font-weight:700; font-family:'Space Mono',monospace; margin-left:8px; white-space:nowrap; }
+
+/* A PAGAR */
+.pagar-seccion { margin-bottom:14px; }
+.pagar-row { display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-bottom:1px solid var(--border); }
+.pagar-row:last-child { border-bottom:none; }
+.pagar-nombre { font-size:14px; font-weight:600; }
+.pagar-vence { font-size:11px; color:var(--muted); margin-top:2px; }
+.pagar-monto { font-size:16px; font-weight:700; font-family:'Space Mono',monospace; }
+.pagar-monto.ok { color:var(--green); }
+.pagar-monto.danger { color:var(--red); }
+.pagar-total-row { background:var(--bg); border-radius:12px; padding:14px 16px; display:flex; justify-content:space-between; align-items:center; margin-top:8px; }
+.pagar-total-lbl { font-size:13px; font-weight:700; }
+.pagar-total-num { font-size:22px; font-weight:800; font-family:'Space Mono',monospace; }
+
+.capacidad-row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border); }
+.capacidad-row:last-child { border-bottom:none; }
+.cap-lbl { font-size:13px; color:var(--muted); }
+.cap-val { font-size:14px; font-weight:700; font-family:'Space Mono',monospace; }
+.cap-val.green { color:var(--green); }
+.cap-val.red { color:var(--red); }
+.diferencia-box { border-radius:12px; padding:14px 16px; display:flex; justify-content:space-between; align-items:center; margin-top:10px; }
+.diferencia-box.ok { background:var(--green-light); }
+.diferencia-box.danger { background:var(--red-light); }
+
+/* CONFIG */
+.cfg-section-title { font-size:13px; font-weight:700; color:var(--text); margin:18px 0 10px; display:flex; align-items:center; gap:8px; }
+.cfg-row { display:flex; align-items:center; gap:10px; background:var(--white); border-radius:12px; padding:12px 14px; margin-bottom:8px; box-shadow:var(--shadow-sm); }
+.cfg-row span { flex:1; font-size:13px; }
+.cfg-row input { background:var(--bg); border:1.5px solid var(--border); color:var(--text); font-family:'Space Mono',monospace; font-size:13px; padding:6px 10px; border-radius:8px; width:130px; text-align:right; outline:none; }
+.cfg-row input:focus { border-color:var(--blue); }
+.cfg-locked { opacity:0.6; }
+.btn-guardar { width:100%; background:var(--text); color:#fff; font-weight:700; font-size:15px; padding:16px; border:none; border-radius:14px; cursor:pointer; margin-top:10px; transition:opacity .2s; }
+.btn-guardar:hover { opacity:0.85; }
+.cfg-balance-row { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-top:2px solid var(--border); margin-top:8px; }
+
+/* ALERT */
+.alert-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100; display:flex; align-items:flex-end; justify-content:center; opacity:0; pointer-events:none; transition:opacity .3s; }
+.alert-overlay.show { opacity:1; pointer-events:all; }
+.alert-panel { background:var(--white); border-radius:24px 24px 0 0; padding:28px 24px 40px; width:100%; max-width:480px; transform:translateY(100%); transition:transform .4s cubic-bezier(.23,1,.32,1); }
+.alert-overlay.show .alert-panel { transform:translateY(0); }
+.alert-emoji { font-size:48px; text-align:center; display:block; margin-bottom:12px; }
+.alert-title { font-size:22px; font-weight:800; text-align:center; margin-bottom:8px; }
+.alert-msg { font-size:14px; color:var(--muted); text-align:center; line-height:1.6; margin-bottom:20px; }
+.btn-close-alert { width:100%; background:var(--bg); color:var(--text); font-weight:700; font-size:14px; padding:14px; border:none; border-radius:12px; cursor:pointer; }
+
+.empty-state { text-align:center; padding:30px; color:var(--muted); font-size:13px; }
+.bottom-pad { height:40px; }
+.section-divider { font-size:13px; font-weight:700; color:var(--muted); margin:6px 0 12px; display:flex; align-items:center; gap:8px; }
+.section-divider::after { content:''; flex:1; height:1px; background:var(--border); }
 </style>
 </head>
 <body>
 
-<div class="header">
-  <div class="logo">🦌 GAZELLE</div>
-  <div class="mode-badge">Baby Step 2</div>
-</div>
+<!-- HEADER -->
+<div class="app-header">
+  <div class="header-top">
+    <div class="logo-group">
+      <span class="logo-icon">🦌</span>
+      <span class="logo-text">Gazelle</span>
+    </div>
+    <div class="baby-step-badge">Baby Step 2 🔥</div>
+  </div>
 
-<div class="ciclo-bar" style="flex-direction:column;gap:8px">
-  <div style="display:flex;align-items:center;width:100%;gap:8px">
-    <button onclick="navegarCiclo(-1)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:4px 10px;border-radius:8px;cursor:pointer;font-size:16px">‹</button>
-    <div class="ciclo-info" style="flex:1">
-      <div class="ciclo-titulo" id="cicloTitulo">Ciclo Marzo</div>
-      <div class="ciclo-fechas" id="cicloFechas">20/02 → 19/03/2026</div>
-      <div class="progress-ciclo"><div class="progress-ciclo-fill" id="cicloPct" style="width:0%"></div></div>
+  <!-- CICLO -->
+  <div class="ciclo-card">
+    <button class="ciclo-nav" onclick="navegarCiclo(-1)">‹</button>
+    <div class="ciclo-info">
+      <div class="ciclo-nombre" id="cicloTitulo">Ciclo Abril 2026</div>
+      <div class="ciclo-fechas" id="cicloFechas">20/03 → 23/04/2026</div>
+      <div class="ciclo-progress"><div class="ciclo-progress-fill" id="cicloPct" style="width:0%"></div></div>
     </div>
-    <div style="text-align:right">
-      <div class="ciclo-dias" id="cicloDias">—</div>
-      <div class="ciclo-dias-lbl" id="cicloLbl">DÍAS REST.</div>
+    <div class="ciclo-dias-box">
+      <div class="ciclo-dias-num" id="cicloDias">—</div>
+      <div class="ciclo-dias-lbl" id="cicloLbl">DÍAS</div>
     </div>
-    <button onclick="navegarCiclo(1)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:4px 10px;border-radius:8px;cursor:pointer;font-size:16px">›</button>
+    <button class="ciclo-nav" onclick="navegarCiclo(1)">›</button>
+  </div>
+
+  <div class="sync-row">
+    <div class="sync-dot loading" id="syncDot"></div>
+    <span class="sync-text" id="syncTxt">Conectando...</span>
+    <button class="btn-refresh" onclick="fetchSheet()">↺ Actualizar</button>
   </div>
 </div>
 
-<div class="sync-bar">
-  <div class="sync-dot loading" id="syncDot"></div>
-  <span id="syncTxt">Conectando...</span>
-  <button class="btn-refresh" onclick="fetchSheet()">↺</button>
-</div>
-
-<div class="tabs">
-  <div class="tab active" onclick="showTab('resumen',this)">Resumen</div>
-  <div class="tab" onclick="showTab('pagar',this)">💳 A Pagar</div>
-  <div class="tab" onclick="showTab('categorias',this)">Categorías</div>
-  <div class="tab" onclick="showTab('prohibidos',this)">🚫 Prohibidos</div>
-  <div class="tab" onclick="showTab('transacciones',this)">Movimientos</div>
-  <div class="tab" onclick="showTab('presupuesto',this)">⚙️ Config</div>
-</div>
-
-<!-- RESUMEN -->
-<div id="tab-resumen">
-  <div class="score-section">
-    <div class="score-card">
-      <div class="score-label">Disponible este ciclo — Núcleo</div>
-      <div class="score-main">
-        <div class="score-amount" id="disponibleAmt">—</div>
-        <div class="score-sub" id="disponibleSub">sincronizando...</div>
-      </div>
-      <div class="judge-msg" id="judgeMsg">Conectando con Google Sheets...</div>
-    </div>
+<!-- TABS -->
+<div class="tabs-wrapper" style="background:#1A1D23">
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('resumen',this)">📊 Resumen</div>
+    <div class="tab" onclick="showTab('ramsey',this)">🎯 Mi Plan</div>
+    <div class="tab" onclick="showTab('pagar',this)">💳 A Pagar</div>
+    <div class="tab" onclick="showTab('categorias',this)">📂 Categorías</div>
+    <div class="tab" onclick="showTab('prohibidos',this)">🚫 Prohibidos</div>
+    <div class="tab" onclick="showTab('transacciones',this)">📋 Movimientos</div>
+    <div class="tab" onclick="showTab('presupuesto',this)">⚙️ Config</div>
   </div>
+</div>
+
+<!-- TAB RESUMEN -->
+<div id="tab-resumen" class="content">
+
+  <div class="disponible-card ok" id="disponibleCard">
+    <div class="disp-label">Disponible este ciclo — Núcleo</div>
+    <div class="disp-amount" id="disponibleAmt">—</div>
+    <div class="disp-sub" id="disponibleSub">sincronizando...</div>
+    <div class="disp-msg" id="judgeMsg">Conectando con Google Sheets...</div>
+  </div>
+
   <div class="stats-row">
-    <div class="stat-card"><div class="stat-val" id="statTxn" style="color:var(--blue)">—</div><div class="stat-lbl">Gastos</div></div>
-    <div class="stat-card"><div class="stat-val" id="statHormigas" style="color:var(--orange)">—</div><div class="stat-lbl">Hormigas</div></div>
-    <div class="stat-card"><div class="stat-val" id="statProhibidos" style="color:var(--red)">—</div><div class="stat-lbl">Prohibidos</div></div>
+    <div class="stat-card">
+      <div class="stat-val" id="statTxn" style="color:var(--blue)">—</div>
+      <div class="stat-lbl">Gastos</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="statHormigas" style="color:var(--orange)">—</div>
+      <div class="stat-lbl">Hormigas</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="statProhibidos" style="color:var(--red)">—</div>
+      <div class="stat-lbl">Prohibidos</div>
+    </div>
   </div>
-  <div style="padding:0 20px 14px">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-      <div onclick="toggleDetalle('edu')" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:border-color .2s" id="cardEdu">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start">
-          <div style="font-size:10px;color:var(--blue);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">🧔 Eduardo</div>
-          <div style="font-size:10px;color:var(--muted)" id="arrowEdu">▼</div>
-        </div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--blue);line-height:1" id="totalEdu">—</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:4px" id="pctEdu">— del ingreso</div>
-        <div style="height:3px;background:var(--border);border-radius:10px;margin-top:8px;overflow:hidden"><div id="barEdu" style="height:100%;background:var(--blue);border-radius:10px;width:0%;transition:width .8s"></div></div>
-        <div id="detalleEdu" style="display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px;max-height:200px;overflow-y:auto"></div>
+
+  <div class="personas-grid">
+    <div class="persona-card" onclick="toggleDetalle('edu')" id="cardEdu">
+      <div class="persona-badge" style="color:var(--blue)">🧔 Eduardo <span id="arrowEdu" style="color:var(--muted)">▼</span></div>
+      <div class="persona-amount" id="totalEdu" style="color:var(--blue)">—</div>
+      <div class="persona-pct" id="pctEdu">— del ingreso</div>
+      <div class="persona-bar-track"><div class="persona-bar-fill" id="barEdu" style="background:var(--blue);width:0%"></div></div>
+      <div class="persona-detalle" id="detalleEdu"></div>
+    </div>
+    <div class="persona-card" onclick="toggleDetalle('romi')" id="cardRomi">
+      <div class="persona-badge" style="color:var(--purple)">👩 Romina <span id="arrowRomi" style="color:var(--muted)">▼</span></div>
+      <div class="persona-amount" id="totalRomi" style="color:var(--purple)">—</div>
+      <div class="persona-pct" id="pctRomi">— del ingreso</div>
+      <div class="persona-bar-track"><div class="persona-bar-fill" id="barRomi" style="background:var(--purple);width:0%"></div></div>
+      <div class="persona-detalle" id="detalleRomi"></div>
+    </div>
+  </div>
+
+  <div class="hormigas-card">
+    <div class="hormiga-label">☕ Gastos Hormiga del ciclo</div>
+    <div class="hormiga-total" id="hormigaTotal">$0</div>
+    <div class="hormiga-items" id="hormigaItems"></div>
+  </div>
+
+  <div class="quote-card">
+    <div class="quote-mark">"</div>
+    <div class="quote-text" id="ramseyCitaResumen">Cargando frase motivacional...</div>
+    <div class="quote-author">— Dave Ramsey</div>
+  </div>
+
+</div>
+
+<!-- TAB MI PLAN RAMSEY -->
+<div id="tab-ramsey" class="content" style="display:none">
+
+  <div class="baby-steps-card">
+    <div class="bs-title">📍 Tu posición en el método</div>
+    <div class="bs-steps">
+      <div class="bs-step">
+        <div class="bs-circle done">✓</div>
+        <div class="bs-label done">Fondo<br>emergencia<br>$1.000</div>
       </div>
-      <div onclick="toggleDetalle('romi')" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:border-color .2s" id="cardRomi">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start">
-          <div style="font-size:10px;color:#ce93d8;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">👩 Romina</div>
-          <div style="font-size:10px;color:var(--muted)" id="arrowRomi">▼</div>
-        </div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:#ce93d8;line-height:1" id="totalRomi">—</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:4px" id="pctRomi">— del ingreso</div>
-        <div style="height:3px;background:var(--border);border-radius:10px;margin-top:8px;overflow:hidden"><div id="barRomi" style="height:100%;background:#ce93d8;border-radius:10px;width:0%;transition:width .8s"></div></div>
-        <div id="detalleRomi" style="display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px;max-height:200px;overflow-y:auto"></div>
+      <div class="bs-step">
+        <div class="bs-circle current">2</div>
+        <div class="bs-label current">Pagar<br>todas las<br>deudas ←</div>
+      </div>
+      <div class="bs-step">
+        <div class="bs-circle future">3</div>
+        <div class="bs-label">Fondo<br>3-6<br>meses</div>
+      </div>
+      <div class="bs-step">
+        <div class="bs-circle future">4</div>
+        <div class="bs-label">Inversión<br>15%<br>retiro</div>
+      </div>
+      <div class="bs-step">
+        <div class="bs-circle future">5</div>
+        <div class="bs-label">Educación<br>hijos</div>
+      </div>
+      <div class="bs-step">
+        <div class="bs-circle future">6</div>
+        <div class="bs-label">Casa<br>propia</div>
+      </div>
+      <div class="bs-step">
+        <div class="bs-circle future">7</div>
+        <div class="bs-label">Dar &<br>invertir</div>
+      </div>
+    </div>
+    <div class="bs-current-info">
+      <div class="bs-current-name">🔥 Baby Step 2 — La Bola de Nieve</div>
+      <div class="bs-current-desc">Listá todas tus deudas del menor al mayor. Pagá mínimos en todas menos en la más chica — a esa tirále todo lo que puedas. Cuando la elimines, pasá a la siguiente. ¡Modo Gazelle activado!</div>
+    </div>
+  </div>
+
+  <!-- DEUDA PROGRESO -->
+  <div class="deuda-card">
+    <div class="deuda-header">
+      <div class="deuda-label">📉 Progreso de deuda</div>
+      <div class="deuda-pct" id="deudaPct">0% pagado</div>
+    </div>
+    <div class="deuda-amounts">
+      <div class="deuda-amount-box">
+        <div class="deuda-amount-num red" id="deudaActual">$3.592.873</div>
+        <div class="deuda-amount-lbl">Deuda actual</div>
+      </div>
+      <div class="deuda-amount-box" style="text-align:center">
+        <div style="font-size:28px">🎯</div>
+        <div class="deuda-amount-lbl">Meta</div>
+      </div>
+      <div class="deuda-amount-box" style="text-align:right">
+        <div class="deuda-amount-num green" id="deudaPagado">$0</div>
+        <div class="deuda-amount-lbl">Pagado</div>
+      </div>
+    </div>
+    <div class="deuda-bar-track">
+      <div class="deuda-bar-fill" id="deudaBar" style="width:0%"></div>
+    </div>
+    <div class="deuda-items">
+      <div class="deuda-item">
+        <div class="deuda-item-name">💳 Visa Galicia</div>
+        <div class="deuda-item-amount" style="color:var(--red)">$681.704</div>
+        <div class="deuda-item-sub">Vence 01/Abr</div>
+      </div>
+      <div class="deuda-item">
+        <div class="deuda-item-name">💳 Mastercard BNA</div>
+        <div class="deuda-item-amount" style="color:var(--red)">$2.911.169</div>
+        <div class="deuda-item-sub">Vence 01/Abr</div>
       </div>
     </div>
   </div>
-  <div class="hormigas-section">
-    <div class="section-title">☕ Gastos Hormiga</div>
-    <div class="hormigas-card">
-      <div class="hormiga-label">Pequeños gastos acumulados este ciclo</div>
-      <div class="hormiga-total" id="hormigaTotal">$0</div>
-      <div class="hormiga-items" id="hormigaItems"></div>
+
+  <!-- BOLA DE NIEVE -->
+  <div class="card">
+    <div class="card-title">❄️ Bola de Nieve — Orden de ataque</div>
+    <div style="background:var(--yellow-light);border-radius:12px;padding:14px;margin-bottom:10px;border-left:4px solid var(--yellow)">
+      <div style="font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:4px">① PRIMERO — Visa Galicia</div>
+      <div style="font-size:13px;font-weight:600">$681.704</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Pagá mínimo en Mastercard + todo el excedente acá</div>
+    </div>
+    <div style="background:var(--bg);border-radius:12px;padding:14px;border-left:4px solid var(--border)">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:4px">② DESPUÉS — Mastercard BNA</div>
+      <div style="font-size:13px;font-weight:600;color:var(--muted)">$2.911.169</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Una vez eliminada Visa, toda la fuerza acá</div>
+    </div>
+    <div style="background:var(--green-light);border-radius:12px;padding:14px;margin-top:10px;border-left:4px solid var(--green)">
+      <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:4px">🏡 DESPUÉS — Santa Anita</div>
+      <div style="font-size:13px;font-weight:600;color:var(--muted)">Bloqueado hasta Baby Step 6</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">"El rico gobierna al pobre; el que pide prestado es esclavo del que presta." — Proverbios 22:7</div>
+    </div>
+  </div>
+
+  <!-- FRASES RAMSEY -->
+  <div class="card">
+    <div class="card-title">💬 El método en palabras de Ramsey</div>
+    <div style="display:grid;gap:10px" id="ramseyFrases"></div>
+  </div>
+
+</div>
+
+<!-- TAB A PAGAR -->
+<div id="tab-pagar" class="content" style="display:none">
+  <div class="card">
+    <div class="card-title">💳 Proyección de pagos del ciclo</div>
+    <div class="pagar-seccion">
+      <div class="pagar-row">
+        <div>
+          <div class="pagar-nombre">Visa Galicia</div>
+          <div class="pagar-vence">Vence 01/Abr/2026</div>
+        </div>
+        <div class="pagar-monto" id="pagarVisa">—</div>
+      </div>
+      <div class="pagar-row">
+        <div>
+          <div class="pagar-nombre">Mastercard BNA</div>
+          <div class="pagar-vence">Vence 01/Abr/2026</div>
+        </div>
+        <div class="pagar-monto" id="pagarMaster">—</div>
+      </div>
+    </div>
+    <div class="pagar-total-row">
+      <div class="pagar-total-lbl">Total a pagar</div>
+      <div class="pagar-total-num" id="pagarTotal">—</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">💰 Tu capacidad de pago</div>
+    <div class="capacidad-row">
+      <div class="cap-lbl">Ingreso neto</div>
+      <div class="cap-val green">$3.800.000</div>
+    </div>
+    <div class="capacidad-row">
+      <div class="cap-lbl">(-) Diezmo 10%</div>
+      <div class="cap-val">$380.000</div>
+    </div>
+    <div class="capacidad-row">
+      <div class="cap-lbl">(-) Fijos + Variables</div>
+      <div class="cap-val">$1.875.784</div>
+    </div>
+    <div class="capacidad-row">
+      <div class="cap-lbl" style="font-weight:700">Disponible para tarjetas</div>
+      <div class="cap-val" style="font-size:18px;color:var(--blue)" id="capacidadPago">$1.544.216</div>
+    </div>
+    <div class="diferencia-box ok" id="diferenciaBox">
+      <div style="font-size:13px;font-weight:700">Diferencia</div>
+      <div style="font-size:20px;font-weight:800;font-family:'Space Mono',monospace" id="diferenciaPago">—</div>
     </div>
   </div>
 </div>
 
-<!-- A PAGAR -->
-<div id="tab-pagar" style="display:none">
-  <div class="pagar-card">
-    <div class="pagar-title">💳 Proyección de Pagos</div>
-    <div class="pagar-row">
-      <div><div class="pagar-nombre">Visa Galicia</div><div class="pagar-vence">Vence 02/04/2026</div></div>
-      <div class="pagar-monto" id="pagarVisa">—</div>
-    </div>
-    <div class="pagar-row">
-      <div><div class="pagar-nombre">Mastercard BNA</div><div class="pagar-vence">Vence 04/04/2026</div></div>
-      <div class="pagar-monto" id="pagarMaster">—</div>
-    </div>
-    <div class="pagar-row">
-      <div><div class="pagar-nombre" style="font-weight:700">Total a pagar</div></div>
-      <div class="pagar-total" id="pagarTotal">—</div>
-    </div>
-  </div>
-  <div class="pagar-card" style="margin-top:0">
-    <div class="pagar-title">💰 Tu Capacidad de Pago</div>
-    <div class="pagar-row">
-      <div><div class="pagar-nombre">Ingreso neto</div></div>
-      <div class="pagar-monto ok">$3.800.000</div>
-    </div>
-    <div class="pagar-row">
-      <div><div class="pagar-nombre">(-) Diezmo 10%</div></div>
-      <div class="pagar-monto">$380.000</div>
-    </div>
-    <div class="pagar-row">
-      <div><div class="pagar-nombre">(-) Fijos + Variables</div></div>
-      <div class="pagar-monto">$1.875.784</div>
-    </div>
-    <div class="pagar-row">
-      <div><div class="pagar-nombre" style="font-weight:700">Disponible para tarjetas</div></div>
-      <div class="pagar-total ok" id="capacidadPago">$1.544.216</div>
-    </div>
-    <div class="pagar-row">
-      <div><div class="pagar-nombre" style="font-weight:700">Diferencia</div></div>
-      <div class="pagar-total" id="diferenciaPago">—</div>
-    </div>
-  </div>
-</div>
-
-<!-- CATEGORÍAS -->
-<div id="tab-categorias" style="display:none">
-  <div class="bars-section" id="barsContainer">
+<!-- TAB CATEGORIAS -->
+<div id="tab-categorias" class="content" style="display:none">
+  <div class="cat-list" id="barsContainer">
     <div class="empty-state">Cargando...</div>
   </div>
 </div>
 
-<!-- PROHIBIDOS -->
-<div id="tab-prohibidos" style="display:none">
-  <div class="prohibidos-section">
-    <div class="section-title">🚫 Modo Gazelle</div>
-    <div id="prohibidoList"></div>
+<!-- TAB PROHIBIDOS -->
+<div id="tab-prohibidos" class="content" style="display:none">
+  <div style="background:var(--red-light);border-radius:var(--radius);padding:16px;margin-bottom:14px;border-left:4px solid var(--red)">
+    <div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:4px">🚫 Modo Gazelle — Gastos prohibidos</div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.5">Estos gastos están bloqueados hasta eliminar todas las deudas. Cada peso aquí es un peso menos para la libertad financiera.</div>
   </div>
+  <div id="prohibidoList"></div>
 </div>
 
-<!-- TRANSACCIONES -->
-<div id="tab-transacciones" style="display:none">
-  <div class="txn-section">
-    <div class="section-title">Movimientos del Ciclo</div>
-    <div class="txn-filters">
-      <div class="filter-chip active" onclick="filtrarTxn('todos',this)">Todos</div>
-      <div class="filter-chip" onclick="filtrarTxn('Eduardo',this)">Eduardo</div>
-      <div class="filter-chip" onclick="filtrarTxn('Romina',this)">Romina</div>
-      <div class="filter-chip" onclick="filtrarTxn('prohibido',this)">🚫 Prohibidos</div>
-      <div class="filter-chip" onclick="filtrarTxn('hormiga',this)">🐜 Hormiga</div>
-    </div>
-    <div class="txn-list" id="txnList"></div>
+<!-- TAB MOVIMIENTOS -->
+<div id="tab-transacciones" class="content" style="display:none">
+  <div class="txn-filters">
+    <div class="filter-chip active" onclick="filtrarTxn('todos',this)">Todos</div>
+    <div class="filter-chip" onclick="filtrarTxn('Eduardo',this)">🧔 Eduardo</div>
+    <div class="filter-chip" onclick="filtrarTxn('Romina',this)">👩 Romina</div>
+    <div class="filter-chip" onclick="filtrarTxn('prohibido',this)">🚫 Prohibidos</div>
+    <div class="filter-chip" onclick="filtrarTxn('hormiga',this)">🐜 Hormigas</div>
   </div>
+  <div class="txn-list" id="txnList"></div>
 </div>
 
-<!-- CONFIG -->
-<div id="tab-presupuesto" style="display:none">
-  <div class="edit-section">
-
-    <!-- Frase Ramsey -->
-    <div id="ramseyCita" style="background:var(--surface2);border-left:3px solid var(--green);border-radius:0 10px 10px 0;padding:12px 14px;margin-bottom:16px;font-size:13px;font-style:italic;color:var(--text);line-height:1.6"></div>
-
-    <!-- INGRESO -->
-    <div class="section-title">💰 Ingreso Mensual</div>
-    <div class="edit-row">
-      <span>Ingreso neto promedio</span>
-      <input type="number" id="cfg_ingreso" value="3800000" onchange="recalcularConfig()">
-    </div>
-
-    <!-- DIEZMO - BLOQUEADO -->
-    <div class="section-title" style="margin-top:14px">🙏 Diezmo (10% — inamovible)</div>
-    <div class="edit-row" style="border-color:var(--green);opacity:0.8">
-      <span style="color:var(--green)">Diezmo automático</span>
-      <div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--green)" id="cfg_diezmo_calc">$380.000</div>
-    </div>
-    <div style="font-size:11px;color:var(--muted);padding:0 4px 10px;font-style:italic">"Honra al Señor con tus riquezas y con las primicias de todos tus frutos." — Proverbios 3:9</div>
-
-    <!-- GASTOS FIJOS -->
-    <div class="section-title" style="margin-top:4px">🔒 Gastos Fijos (actualizá cuando suban)</div>
-    <div class="edit-row"><span>Swiss Medical Prepago</span><input type="number" id="cfg_swiss" value="405000" onchange="recalcularConfig()"></div>
-    <div class="edit-row"><span>EDENOR (luz)</span><input type="number" id="cfg_edenor" value="122000" onchange="recalcularConfig()"></div>
-    <div class="edit-row"><span>Gas Natural FENO</span><input type="number" id="cfg_gas" value="45000" onchange="recalcularConfig()"></div>
-    <div class="edit-row"><span>Claro (telefonía)</span><input type="number" id="cfg_claro" value="36000" onchange="recalcularConfig()"></div>
-    <div class="edit-row"><span>Zurich (seguro vida/auto)</span><input type="number" id="cfg_zurich" value="146000" onchange="recalcularConfig()"></div>
-    <div class="edit-row"><span>Provincia Seguros</span><input type="number" id="cfg_provseg" value="147000" onchange="recalcularConfig()"></div>
-    <div class="edit-row"><span>ARBA</span><input type="number" id="cfg_arba" value="13000" onchange="recalcularConfig()"></div>
-    <div class="edit-row"><span>Municipalidad Morón</span><input type="number" id="cfg_munici" value="7000" onchange="recalcularConfig()"></div>
-    <div class="edit-row"><span>Colegio G. Belgrano</span><input type="number" id="cfg_colegio" value="200000" onchange="recalcularConfig()"></div>
-    <div class="edit-row"><span>AySA (agua)</span><input type="number" id="cfg_aysa" value="20000" onchange="recalcularConfig()"></div>
-
-    <!-- GASTOS VARIABLES -->
-    <div class="section-title" style="margin-top:14px">🛒 Variables (techos máximos)</div>
-    <div class="edit-row"><span>Supermercado</span><input type="number" id="cfg_super" value="450000" onchange="recalcularConfig()"></div>
-    <div class="edit-row"><span>Combustible</span><input type="number" id="cfg_nafta" value="130000" onchange="recalcularConfig()"></div>
-    <div class="edit-row"><span>Transporte público</span><input type="number" id="cfg_transp" value="30000" onchange="recalcularConfig()"></div>
-    <div class="edit-row"><span>Farmacia / Salud extra</span><input type="number" id="cfg_farma" value="25000" onchange="recalcularConfig()"></div>
-
-    <!-- BOLA DE NIEVE -->
-    <div class="section-title" style="margin-top:14px">❄️ Bola de Nieve (deudas)</div>
-    <div class="edit-row" style="border-color:var(--red)">
-      <span style="color:var(--red)">Disponible para tarjetas</span>
-      <div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--red)" id="cfg_bolanieve">—</div>
-    </div>
-    <div style="font-size:11px;color:var(--muted);padding:0 4px 10px;font-style:italic">"Paguen todo lo que deban." — Romanos 13:8 | Cada peso extra va a la deuda más chica primero.</div>
-
-    <!-- SANTA ANITA -->
-    <div class="section-title" style="margin-top:4px">🏡 Ahorro Santa Anita</div>
-    <div class="edit-row" style="border-color:var(--muted);opacity:0.5">
-      <span style="color:var(--muted)">Bloqueado hasta terminar deudas</span>
-      <div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--muted)">$0</div>
-    </div>
-    <div style="font-size:11px;color:var(--muted);padding:0 4px 10px;font-style:italic">"El rico gobierna al pobre; el que pide prestado es esclavo del que presta." — Proverbios 22:7 | Primero libertad, luego el sueño.</div>
-
-    <!-- RESUMEN TOTAL -->
-    <div style="background:var(--surface);border:1px solid var(--accent);border-radius:14px;padding:16px;margin-top:8px">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--muted);margin-bottom:12px">📊 RESUMEN DEL CICLO</div>
-      <div id="cfg_resumen_rows"></div>
-      <div style="border-top:1px solid var(--border);margin-top:10px;padding-top:10px;display:flex;justify-content:space-between;align-items:center">
-        <span style="font-weight:600">BALANCE</span>
-        <span style="font-family:'Bebas Neue',sans-serif;font-size:22px" id="cfg_balance">—</span>
-      </div>
-    </div>
-
-    <button class="btn-save" onclick="guardarConfig()" style="margin-top:12px">💾 Guardar Presupuesto</button>
-    <div style="height:20px"></div>
+<!-- TAB CONFIG -->
+<div id="tab-presupuesto" class="content" style="display:none">
+  <div class="quote-card" style="margin-bottom:16px">
+    <div class="quote-mark">"</div>
+    <div class="quote-text" id="ramseyCita">Cargando...</div>
+    <div class="quote-author">— Dave Ramsey</div>
   </div>
+
+  <div class="cfg-section-title">💰 Ingreso mensual</div>
+  <div class="cfg-row"><span>Ingreso neto promedio</span><input type="number" id="cfg_ingreso" value="3800000" onchange="recalcularConfig()"></div>
+
+  <div class="cfg-section-title">🙏 Diezmo (10% — inamovible)</div>
+  <div class="cfg-row cfg-locked" style="border-left:4px solid var(--green)">
+    <span style="color:var(--green);font-weight:600">Diezmo automático</span>
+    <div style="font-family:'Space Mono',monospace;font-size:14px;color:var(--green)" id="cfg_diezmo_calc">$380.000</div>
+  </div>
+
+  <div class="cfg-section-title">🔒 Gastos fijos</div>
+  <div class="cfg-row"><span>Swiss Medical</span><input type="number" id="cfg_swiss" value="405000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>EDENOR</span><input type="number" id="cfg_edenor" value="122000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>Gas Natural FENO</span><input type="number" id="cfg_gas" value="45000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>Claro</span><input type="number" id="cfg_claro" value="36000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>Zurich</span><input type="number" id="cfg_zurich" value="146000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>Provincia Seguros</span><input type="number" id="cfg_provseg" value="147000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>ARBA</span><input type="number" id="cfg_arba" value="13000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>Municipalidad Morón</span><input type="number" id="cfg_munici" value="7000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>Colegio G. Belgrano</span><input type="number" id="cfg_colegio" value="200000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>AySA</span><input type="number" id="cfg_aysa" value="20000" onchange="recalcularConfig()"></div>
+
+  <div class="cfg-section-title">🛒 Variables (techos máximos)</div>
+  <div class="cfg-row"><span>Supermercado</span><input type="number" id="cfg_super" value="450000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>Combustible</span><input type="number" id="cfg_nafta" value="130000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>Transporte público</span><input type="number" id="cfg_transp" value="30000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>Farmacia / Salud extra</span><input type="number" id="cfg_farma" value="25000" onchange="recalcularConfig()"></div>
+
+  <div class="cfg-section-title">❄️ Bola de nieve</div>
+  <div class="cfg-row" style="border-left:4px solid var(--red)">
+    <span style="color:var(--red);font-weight:600">Para pagar deudas</span>
+    <div style="font-family:'Space Mono',monospace;font-size:14px;color:var(--red)" id="cfg_bolanieve">—</div>
+  </div>
+
+  <div class="cfg-section-title">🏡 Santa Anita</div>
+  <div class="cfg-row cfg-locked" style="border-left:4px solid var(--muted)">
+    <span style="color:var(--muted)">Bloqueado hasta Baby Step 6</span>
+    <div style="font-family:'Space Mono',monospace;font-size:14px;color:var(--muted)">$0</div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <div class="card-title">📊 Resumen del ciclo</div>
+    <div id="cfg_resumen_rows"></div>
+    <div class="cfg-balance-row">
+      <span style="font-weight:700;font-size:15px">BALANCE</span>
+      <span style="font-family:'Space Mono',monospace;font-size:20px;font-weight:800" id="cfg_balance">—</span>
+    </div>
+  </div>
+
+  <button class="btn-guardar" onclick="guardarConfig()">💾 Guardar presupuesto</button>
+  <div class="bottom-pad"></div>
 </div>
 
 <div class="bottom-pad"></div>
@@ -365,8 +692,9 @@ const SHEET_ID='1GnmI8m9OaJAyNMSiho5SNomFxpWXjYtXF_vpFHPWg08';
 const SHEET_NAME='Tarjetas';
 const SHEETS_API_KEY='AIzaSyD3QpBs7qRD3bpO00zjIPzXOXbU3Z7o7mA';
 const API_URL=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(SHEET_NAME)}?key=${SHEETS_API_KEY}`;
+const PARA_TARJETAS = 1544216;
+const DEUDA_INICIAL = 3592872;
 
-// Calcular anteúltimo jueves de cada mes dinámicamente
 function anteultimoJueves(year, month) {
   const jueves = [];
   const d = new Date(year, month - 1, 1);
@@ -379,28 +707,20 @@ function anteultimoJueves(year, month) {
 
 function generarCiclos(desde, hasta) {
   const ciclos = [];
-  const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
-                 'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   let prev = anteultimoJueves(desde.getFullYear(), desde.getMonth() + 1);
-  
   let y = desde.getFullYear();
-  let m = desde.getMonth() + 2; // empezamos desde el siguiente mes
-  
+  let m = desde.getMonth() + 2;
   while (true) {
     if (m > 12) { m = 1; y++; }
     const fin = anteultimoJueves(y, m);
     const ini = new Date(prev);
     ini.setDate(ini.getDate() + 1);
-    
-    const finDate = new Date(fin);
-    const iniDate = new Date(ini);
-    
     ciclos.push({
       nombre: meses[m-1] + ' ' + y,
-      inicio: iniDate.toISOString().split('T')[0],
-      fin: finDate.toISOString().split('T')[0],
+      inicio: ini.toISOString().split('T')[0],
+      fin: fin.toISOString().split('T')[0],
     });
-    
     prev = fin;
     if (fin > hasta) break;
     m++;
@@ -408,13 +728,12 @@ function generarCiclos(desde, hasta) {
   return ciclos;
 }
 
-// Generar ciclos desde Sep 2024 hasta fin de 2027
 const CICLOS = generarCiclos(new Date(2024, 8, 1), new Date(2027, 11, 31));
 
 let gastosMes = [];
 let todosLosGastos = [];
 let cicloActual = null;
-let cicloIndex = -1;  // índice del ciclo mostrado actualmente
+let cicloIndex = -1;
 let filtroActual = 'todos';
 
 let presupuesto = JSON.parse(localStorage.getItem('gazelle_presupuesto')||'null') || {
@@ -430,7 +749,7 @@ let presupuesto = JSON.parse(localStorage.getItem('gazelle_presupuesto')||'null'
   "Belleza":      { icon:"💅", limite:40000  },
   "Otros":        { icon:"📦", limite:80000  },
 };
-const PARA_TARJETAS = 1544216;
+
 const PROHIBIDOS_DEF = [
   { nombre:"Delivery (PedidosYa/Rappi)", keys:["pedidosya","rappi","dlo*pedidos"] },
   { nombre:"Fast Food (Mostaza/KFC)",    keys:["mostaza","kfc","burger","mcdonalds"] },
@@ -441,19 +760,26 @@ const PROHIBIDOS_DEF = [
   { nombre:"Juguetería",                 keys:["kinderland","elmundodeljug","juguet"] },
 ];
 
+const RAMSEY_FRASES = [
+  { texto: "Vivir como nadie hoy para poder vivir como nadie mañana.", icono:"🔥" },
+  { texto: "La deuda no es una herramienta, es un producto que te venden los ricos.", icono:"⚠️" },
+  { texto: "Si sacrificás hoy, podés ganar mañana. La intensidad gana.", icono:"💪" },
+  { texto: "El plan de cuotas es la manera más cara de comprar algo.", icono:"💳" },
+  { texto: "Tus ingresos son tu herramienta más poderosa para construir riqueza.", icono:"🛠️" },
+  { texto: "Actúa tu edad financiera, no tu edad emocional.", icono:"🧠" },
+  { texto: "El Modo Gazelle no es una dieta, es un estilo de vida.", icono:"🦌" },
+  { texto: "La disciplina financiera hoy = libertad mañana.", icono:"🏆" },
+];
+
 // ============================================================
 // CICLO
 // ============================================================
 function detectarCicloActual() {
-  const hoy = new Date();
-  hoy.setHours(0,0,0,0);
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
   for(let i = 0; i < CICLOS.length; i++) {
     const ini = parseFechaISO(CICLOS[i].inicio);
     const fin = parseFechaISO(CICLOS[i].fin);
-    if(hoy >= ini && hoy <= fin) {
-      cicloIndex = i;
-      return CICLOS[i];
-    }
+    if(hoy >= ini && hoy <= fin) { cicloIndex = i; return CICLOS[i]; }
   }
   cicloIndex = CICLOS.length - 1;
   return CICLOS[CICLOS.length-1];
@@ -481,15 +807,12 @@ function parseFechaStr(f) {
   const p = String(f).split('/');
   if(p.length===3) {
     let y = parseInt(p[2].trim()); if(y < 100) y += 2000;
-    const m = parseInt(p[1].trim()) - 1;
-    const d = parseInt(p[0].trim());
-    return new Date(y, m, d); // local, no UTC
+    return new Date(parseInt(p[2].trim().length===4?p[2]:p[2]), parseInt(p[1].trim()) - 1, parseInt(p[0].trim()));
   }
   return null;
 }
 
 function parseFechaISO(s) {
-  // Parsear YYYY-MM-DD como fecha local (no UTC)
   const p = s.split('-');
   return new Date(parseInt(p[0]), parseInt(p[1])-1, parseInt(p[2]));
 }
@@ -498,15 +821,12 @@ function actualizarCicloUI() {
   const hoy = new Date(); hoy.setHours(0,0,0,0);
   const fin = parseFechaISO(cicloActual.fin);
   const ini = parseFechaISO(cicloActual.inicio);
-  const diasRestantes = Math.ceil((fin - hoy) / (1000*60*60*24)) + 1; // +1 para incluir el día de cierre
+  const diasRestantes = Math.ceil((fin - hoy) / (1000*60*60*24)) + 1;
   const totalDias = Math.ceil((fin - ini) / (1000*60*60*24)) + 1;
   const diasPasados = totalDias - diasRestantes;
   const pct = Math.min((diasPasados/totalDias)*100, 100);
-  
-  // Detectar si es ciclo actual, pasado o futuro
   const esPasado = fin < hoy;
   const esFuturo = ini > hoy;
-  
   document.getElementById('cicloTitulo').textContent = 'Ciclo ' + cicloActual.nombre + (esPasado ? ' 📁' : esFuturo ? ' 🔮' : ' ✦');
   const fmtIni = cicloActual.inicio.split('-').reverse().join('/').substring(0,5);
   const fmtFin = cicloActual.fin.split('-').reverse().join('/');
@@ -560,6 +880,7 @@ async function fetchSheet() {
     console.error(e);
   }
 }
+
 function setSyncState(s,m){
   document.getElementById('syncDot').className='sync-dot '+s;
   document.getElementById('syncTxt').textContent=m;
@@ -576,6 +897,7 @@ function renderAll(){
   renderProhibidos();
   renderTxn();
   renderPresupuesto();
+  renderRamsey();
 }
 
 function renderResumen(){
@@ -583,6 +905,7 @@ function renderResumen(){
   const limite=Object.values(presupuesto).reduce((s,c)=>s+c.limite,0);
   const disponible=limite-total;
   const pct=(total/limite)*100;
+  const card=document.getElementById('disponibleCard');
   const el=document.getElementById('disponibleAmt');
   const sub=document.getElementById('disponibleSub');
   const msg=document.getElementById('judgeMsg');
@@ -594,22 +917,18 @@ function renderResumen(){
   document.getElementById('statHormigas').textContent=hormigas.length;
   document.getElementById('statProhibidos').textContent=prohibidos.length;
   if(disponible<0){
-    el.className='score-amount danger';
+    card.className='disponible-card danger';
     el.textContent='-'+el.textContent;
-    msg.className='judge-msg danger';
-    msg.innerHTML=`😤 <strong>¡Alerta!</strong> Se pasaron ${fp(Math.abs(disponible))} del presupuesto. Cada peso extra es un mes más vendiendo dólares para pagar tarjetas.`;
+    msg.textContent=`😤 ¡Alerta! Se pasaron ${fp(Math.abs(disponible))} del presupuesto. Modo Gazelle requiere intensidad total.`;
   } else if(pct>80){
-    el.className='score-amount warning';
-    msg.className='judge-msg warning';
-    msg.innerHTML=`⚠️ Van en el ${Math.round(pct)}% del presupuesto del ciclo. Cuidado con los gastos que faltan hasta el cierre.`;
+    card.className='disponible-card warning';
+    msg.textContent=`⚠️ Van en el ${Math.round(pct)}% del presupuesto. Cuidado con los gastos que faltan hasta el cierre.`;
   } else if(pct>50){
-    el.className='score-amount';
-    msg.className='judge-msg';
-    msg.innerHTML=`📊 Van en el ${Math.round(pct)}% del presupuesto. Bien encaminados. Ojo con fin de ciclo.`;
+    card.className='disponible-card ok';
+    msg.textContent=`📊 Van en el ${Math.round(pct)}% del presupuesto. Bien encaminados. Ojo con fin de ciclo.`;
   } else {
-    el.className='score-amount';
-    msg.className='judge-msg';
-    msg.innerHTML=`✅ <strong>¡Excelente!</strong> Solo usaron el ${Math.round(pct)}% del presupuesto. Si siguen así, pagan las tarjetas sin vender dólares. ¡Modo Gazelle funciona!`;
+    card.className='disponible-card ok';
+    msg.textContent=`✅ ¡Excelente! Solo usaron el ${Math.round(pct)}% del presupuesto. ¡Modo Gazelle funcionando!`;
   }
   const totalH=hormigas.reduce((s,g)=>s+g.monto,0);
   document.getElementById('hormigaTotal').textContent=fp(totalH);
@@ -621,29 +940,72 @@ function renderResumen(){
     t.textContent=h.comercio.substring(0,16)+' '+fp(h.monto);
     tags.appendChild(t);
   });
+  // Quote aleatoria en resumen
+  const cita = RAMSEY_FRASES[Math.floor(Math.random()*RAMSEY_FRASES.length)];
+  document.getElementById('ramseyCitaResumen').textContent = cita.texto;
+}
+
+function renderResumenPersonas(){
+  const edu = gastosMes.filter(g=>g.quien==='Eduardo').reduce((s,g)=>s+g.monto,0);
+  const romi = gastosMes.filter(g=>g.quien==='Romina').reduce((s,g)=>s+g.monto,0);
+  const INGRESO_BASE = 3800000;
+  document.getElementById('totalEdu').textContent = fp(edu);
+  document.getElementById('totalRomi').textContent = fp(romi);
+  document.getElementById('pctEdu').textContent = Math.round(edu/INGRESO_BASE*100)+'% del ingreso';
+  document.getElementById('pctRomi').textContent = Math.round(romi/INGRESO_BASE*100)+'% del ingreso';
+  setTimeout(()=>{
+    document.getElementById('barEdu').style.width = Math.min(edu/INGRESO_BASE*100,100)+'%';
+    document.getElementById('barRomi').style.width = Math.min(romi/INGRESO_BASE*100,100)+'%';
+  },50);
+  const llenarDetalle = (elId, quien, color) => {
+    const el = document.getElementById(elId);
+    const gastos = gastosMes.filter(g=>g.quien===quien).sort((a,b)=>b.monto-a.monto);
+    el.innerHTML = gastos.map(g=>`
+      <div class="persona-detalle-item">
+        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%">${g.esProhibido?'🚫 ':''}${g.comercio}</span>
+        <span style="font-family:'Space Mono',monospace;color:${color};white-space:nowrap">${fp(g.monto)}</span>
+      </div>`).join('');
+  };
+  llenarDetalle('detalleEdu', 'Eduardo', 'var(--blue)');
+  llenarDetalle('detalleRomi', 'Romina', 'var(--purple)');
+}
+
+function toggleDetalle(quien) {
+  const id = quien === 'edu' ? 'detalleEdu' : 'detalleRomi';
+  const arrow = quien === 'edu' ? 'arrowEdu' : 'arrowRomi';
+  const el = document.getElementById(id);
+  const isOpen = el.style.display !== 'none';
+  el.style.display = isOpen ? 'none' : 'block';
+  document.getElementById(arrow).textContent = isOpen ? '▼' : '▲';
 }
 
 function renderPagar(){
-  const totalGastado=gastosMes.reduce((s,g)=>s+g.monto,0);
-  // Proyección simple: lo gastado en el ciclo = lo que vas a deber
-  // Visa Galicia no está en Sheets aún, se muestra como pendiente
-  const estimadoMaster = totalGastado;
+  const estimadoMaster = gastosMes.filter(g=>g.cuenta&&g.cuenta.toLowerCase().includes('mastercard')).reduce((s,g)=>s+g.monto,0);
   const estimadoVisa = gastosMes.filter(g=>g.cuenta&&g.cuenta.toLowerCase().includes('visa')).reduce((s,g)=>s+g.monto,0);
+  const total = estimadoMaster + estimadoVisa;
 
-  document.getElementById('pagarMaster').textContent = fp(estimadoMaster);
-  document.getElementById('pagarMaster').className = estimadoMaster > PARA_TARJETAS ? 'pagar-monto danger' : 'pagar-monto ok';
-  document.getElementById('pagarVisa').textContent = estimadoVisa > 0 ? fp(estimadoVisa) : 'Pendiente (sin datos Visa)';
-  document.getElementById('pagarVisa').className = 'pagar-monto';
-  document.getElementById('pagarTotal').textContent = fp(estimadoMaster);
+  const pagarVisa = document.getElementById('pagarVisa');
+  const pagarMaster = document.getElementById('pagarMaster');
 
-  const diferencia = PARA_TARJETAS - estimadoMaster;
-  const difEl = document.getElementById('diferenciaPago');
-  difEl.textContent = (diferencia >= 0 ? '+' : '') + fp(diferencia);
-  difEl.className = 'pagar-total ' + (diferencia >= 0 ? 'ok' : 'danger');
-
-  if(diferencia < 0) {
-    difEl.title = `⚠️ Necesitás ${fp(Math.abs(diferencia))} extra (dólares)`;
+  if(estimadoVisa > 0) {
+    pagarVisa.textContent = fp(estimadoVisa);
+    pagarVisa.className = estimadoVisa > PARA_TARJETAS ? 'pagar-monto danger' : 'pagar-monto ok';
+  } else {
+    pagarVisa.textContent = 'Sin movimientos';
+    pagarVisa.className = 'pagar-monto';
   }
+
+  pagarMaster.textContent = fp(estimadoMaster);
+  pagarMaster.className = estimadoMaster > PARA_TARJETAS ? 'pagar-monto danger' : 'pagar-monto ok';
+
+  document.getElementById('pagarTotal').textContent = fp(total);
+
+  const diferencia = PARA_TARJETAS - total;
+  const difEl = document.getElementById('diferenciaPago');
+  const difBox = document.getElementById('diferenciaBox');
+  difEl.textContent = (diferencia >= 0 ? '+' : '') + fp(diferencia);
+  difEl.style.color = diferencia >= 0 ? 'var(--green)' : 'var(--red)';
+  difBox.className = 'diferencia-box ' + (diferencia >= 0 ? 'ok' : 'danger');
 }
 
 function renderCategorias(){
@@ -656,22 +1018,32 @@ function renderCategorias(){
     const cfg=presupuesto[cat]||{icon:'📦',limite:50000};
     const gastado=totCat[cat]||0;
     const pct=Math.min((gastado/cfg.limite)*100,100);
-    let cl='';
-    if(pct>=100)cl='over';
+    let cl='ok';
+    if(pct>=100)cl='danger';
     else if(pct>=80)cl='danger';
     else if(pct>=60)cl='warning';
-    const div=document.createElement('div');
-    div.className='bar-card';
     const idCat='cat-'+cat.replace(/[^a-z0-9]/gi,'');
-div.id=idCat;
-div.onclick=()=>{
-  const det=document.getElementById('det-'+idCat);
-  if(det)det.style.display=det.style.display==='none'?'block':'none';
-};
-div.innerHTML=`<div class="bar-header"><div class="bar-name"><span>${cfg.icon}</span>${cat}</div><div class="bar-amounts"><div class="spent">${fp(gastado)}</div><div>de ${fp(cfg.limite)}</div></div></div><div class="bar-track"><div class="bar-fill ${cl}" style="width:0%" data-pct="${pct}"></div></div><div id="det-${idCat}" style="display:none;margin-top:8px;border-top:1px solid var(--border);padding-top:8px">${gastosMes.filter(g=>g.cat===cat).sort((a,b)=>b.monto-a.monto).map(g=>`<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:11px"><span style="color:var(--muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${g.comercio.substring(0,20)} <span class="chip ${g.quien==='Romina'?'chip-romi':'chip-edu'}">${g.quien.substring(0,3).toUpperCase()}</span></span><span style="font-family:DM Mono,monospace;color:var(--text);white-space:nowrap;margin-left:6px">${fp(g.monto)}</span></div>`).join('')||'<div style="color:var(--muted);font-size:11px">Sin movimientos</div>'}</div>`;
+    const div=document.createElement('div');
+    div.className='cat-card';
+    div.id=idCat;
+    div.onclick=()=>{
+      const det=document.getElementById('det-'+idCat);
+      if(det)det.style.display=det.style.display==='none'?'block':'none';
+    };
+    const gastosCat = gastosMes.filter(g=>g.cat===cat).sort((a,b)=>b.monto-a.monto);
+    div.innerHTML=`
+      <div class="cat-header">
+        <div class="cat-name">${cfg.icon} ${cat}</div>
+        <div class="cat-amounts">
+          <div class="cat-spent" style="color:${pct>=80?'var(--red)':pct>=60?'var(--yellow)':'var(--text)'}">${fp(gastado)}</div>
+          <div class="cat-limit">de ${fp(cfg.limite)}</div>
+        </div>
+      </div>
+      <div class="cat-bar-track"><div class="cat-bar-fill ${cl}" style="width:0%" data-pct="${pct}"></div></div>
+      <div class="cat-detalle" id="det-${idCat}">${gastosCat.map(g=>`<div class="cat-detalle-item"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:65%">${g.esProhibido?'🚫 ':''}${g.comercio} <span class="chip ${g.quien==='Romina'?'chip-romi':'chip-edu'}">${g.quien.substring(0,3).toUpperCase()}</span></span><span style="font-family:'Space Mono',monospace;white-space:nowrap">${fp(g.monto)}</span></div>`).join('')||'<div style="color:var(--muted);font-size:11px;padding:4px 0">Sin movimientos</div>'}</div>`;
     c.appendChild(div);
   });
-  setTimeout(()=>{document.querySelectorAll('.bar-fill[data-pct]').forEach(el=>{el.style.width=el.dataset.pct+'%'})},50);
+  setTimeout(()=>{document.querySelectorAll('.cat-bar-fill[data-pct]').forEach(el=>{el.style.width=el.dataset.pct+'%'})},50);
 }
 
 function renderProhibidos(){
@@ -689,58 +1061,11 @@ function renderProhibidos(){
   });
 }
 
-// Comercios que son gastos fijos (no discrecionales)
-const FIJOS_KEYS = ['swiss medical','edenor','gas natural','claro deb','zurich','provincia segu','arba','municipali','colegio g belgrano','colegio mord','aysa','eminent'];
-
-function esFijo(comercio) {
-  const c = comercio.toLowerCase();
-  return FIJOS_KEYS.some(k => c.includes(k));
-}
-
-function toggleDetalle(quien) {
-  const id = quien === 'edu' ? 'detalleEdu' : 'detalleRomi';
-  const arrow = quien === 'edu' ? 'arrowEdu' : 'arrowRomi';
-  const card = quien === 'edu' ? 'cardEdu' : 'cardRomi';
-  const el = document.getElementById(id);
-  const isOpen = el.style.display !== 'none';
-  el.style.display = isOpen ? 'none' : 'block';
-  document.getElementById(arrow).textContent = isOpen ? '▼' : '▲';
-  document.getElementById(card).style.borderColor = isOpen ? 'var(--border)' : (quien==='edu'?'var(--blue)':'#ce93d8');
-}
-
-function renderResumenPersonas(){
-  const edu = gastosMes.filter(g=>g.quien==='Eduardo').reduce((s,g)=>s+g.monto,0);
-  const romi = gastosMes.filter(g=>g.quien==='Romina').reduce((s,g)=>s+g.monto,0);
-  const total = edu + romi || 1;
-  const pEdu = Math.round(edu/total*100);
-  const pRomi = Math.round(romi/total*100);
-  const INGRESO_BASE = 3800000;
-  document.getElementById('totalEdu').textContent = fp(edu);
-  document.getElementById('totalRomi').textContent = fp(romi);
-  document.getElementById('pctEdu').textContent = Math.round(edu/INGRESO_BASE*100)+'% del ingreso';
-  document.getElementById('pctRomi').textContent = Math.round(romi/INGRESO_BASE*100)+'% del ingreso';
-  setTimeout(()=>{
-    document.getElementById('barEdu').style.width = Math.min(edu/INGRESO_BASE*100,100)+'%';
-    document.getElementById('barRomi').style.width = Math.min(romi/INGRESO_BASE*100,100)+'%';
-  },50);
-
-  // Llenar detalles expandibles
-  const llenarDetalle = (elId, quien, color) => {
-    const el = document.getElementById(elId);
-    const gastos = gastosMes.filter(g=>g.quien===quien).sort((a,b)=>b.monto-a.monto);
-    el.innerHTML = gastos.map(g=>`
-      <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)">
-        <div style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%">${g.esProhibido?'🚫 ':''}${g.comercio}</div>
-        <div style="font-family:DM Mono,monospace;font-size:11px;color:${color};white-space:nowrap">${fp(g.monto)}</div>
-      </div>`).join('');
-  };
-  llenarDetalle('detalleEdu', 'Eduardo', 'var(--blue)');
-  llenarDetalle('detalleRomi', 'Romina', '#ce93d8');
-}
+const FIJOS_KEYS = ['swiss medical','edenor','gas natural','claro deb','zurich','provincia segu','arba','municipali','colegio g belgrano','aysa'];
+function esFijo(comercio) { return FIJOS_KEYS.some(k=>comercio.toLowerCase().includes(k)); }
 
 function renderTxn(filtro){
   if(filtro)filtroActual=filtro;
-  // Actualizar resumen personas cada vez que se renderiza
   renderResumenPersonas();
   const list=document.getElementById('txnList');
   list.innerHTML='';
@@ -749,12 +1074,12 @@ function renderTxn(filtro){
   else if(filtroActual==='Romina')datos=datos.filter(g=>g.quien==='Romina');
   else if(filtroActual==='prohibido')datos=datos.filter(g=>g.esProhibido);
   else if(filtroActual==='hormiga')datos=datos.filter(g=>g.hormiga);
-  if(!datos.length){list.innerHTML='<div class="empty-state">No hay transacciones</div>';return}
+  if(!datos.length){list.innerHTML='<div class="empty-state">No hay transacciones</div>';return;}
   datos.slice(0,100).forEach(g=>{
     const div=document.createElement('div');
     div.className='txn-item'+(g.esProhibido?' prohibido':'');
     const qc=g.quien==='Eduardo'?'chip-edu':g.quien==='Romina'?'chip-romi':'chip-otros';
-    div.innerHTML=`<div class="txn-left"><div class="txn-comercio">${g.esProhibido?'🚫 ':''}${g.comercio}</div><div class="txn-meta"><span class="chip ${qc}">${g.quien.substring(0,3).toUpperCase()}</span><span>${g.cat}</span>${g.hormiga?'<span class="chip chip-hormiga">🐜</span>':''}<span>${g.fecha}</span></div></div><div class="txn-monto">${fp(g.monto)}</div>`;
+    div.innerHTML=`<div class="txn-left"><div class="txn-comercio">${g.esProhibido?'🚫 ':''}${g.comercio}</div><div class="txn-meta"><span class="chip ${qc}">${g.quien.substring(0,3).toUpperCase()}</span><span class="chip chip-cat">${g.cat}</span>${g.hormiga?'<span class="chip chip-hormiga">🐜</span>':''}<span style="font-size:10px;color:var(--muted)">${g.fecha}</span></div></div><div class="txn-monto">${fp(g.monto)}</div>`;
     list.appendChild(div);
   });
 }
@@ -765,21 +1090,19 @@ function filtrarTxn(f,el){
   renderTxn(f);
 }
 
-const RAMSEY_CITAS = [
-  '"Actúa tu edad financiera, no tu edad emocional." — Dave Ramsey',
-  '"La deuda no es una herramienta, es un producto que te venden los ricos." — Dave Ramsey',
-  '"Vivir como nadie hoy para poder vivir como nadie mañana." — Dave Ramsey',
-  '"El plan de cuotas es la manera más cara de comprar algo." — Dave Ramsey',
-  '"Si sacrificás hoy, podés ganar mañana." — Dave Ramsey',
-  '"La intensidad gana. El Modo Gazelle no es una dieta, es un estilo de vida." — Dave Ramsey',
-  '"Tus ingresos son tu herramienta más poderosa para construir riqueza." — Dave Ramsey',
-  '"La disciplina financiera hoy = libertad mañana." — Dave Ramsey',
-];
+function renderRamsey(){
+  const container = document.getElementById('ramseyFrases');
+  if(!container) return;
+  container.innerHTML = RAMSEY_FRASES.map(f=>`
+    <div style="background:var(--bg);border-radius:12px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start">
+      <span style="font-size:20px;flex-shrink:0">${f.icono}</span>
+      <span style="font-size:12px;color:var(--muted);line-height:1.6;font-style:italic">"${f.texto}"</span>
+    </div>`).join('');
+}
 
 function recalcularConfig() {
   const ingreso = parseInt(document.getElementById('cfg_ingreso').value)||3800000;
   const diezmo = Math.round(ingreso * 0.10);
-  
   const swiss    = parseInt(document.getElementById('cfg_swiss').value)||0;
   const edenor   = parseInt(document.getElementById('cfg_edenor').value)||0;
   const gas      = parseInt(document.getElementById('cfg_gas').value)||0;
@@ -791,21 +1114,15 @@ function recalcularConfig() {
   const colegio  = parseInt(document.getElementById('cfg_colegio').value)||0;
   const aysa     = parseInt(document.getElementById('cfg_aysa').value)||0;
   const totalFijos = swiss+edenor+gas+claro+zurich+provseg+arba+munici+colegio+aysa;
-
   const superM   = parseInt(document.getElementById('cfg_super').value)||0;
   const nafta    = parseInt(document.getElementById('cfg_nafta').value)||0;
   const transp   = parseInt(document.getElementById('cfg_transp').value)||0;
   const farma    = parseInt(document.getElementById('cfg_farma').value)||0;
   const totalVar = superM+nafta+transp+farma;
-
   const disponible = ingreso - diezmo - totalFijos - totalVar;
-  const balance = ingreso - diezmo - totalFijos - totalVar;
-
   document.getElementById('cfg_diezmo_calc').textContent = fp(diezmo);
-  document.getElementById('cfg_bolanieve').textContent = disponible > 0 ? fp(disponible) : '⚠️ '+fp(Math.abs(disponible))+' de déficit';
-  document.getElementById('cfg_bolanieve').style.color = disponible > 0 ? 'var(--green)' : 'var(--red)';
-
-  // Resumen
+  document.getElementById('cfg_bolanieve').textContent = disponible > 0 ? fp(disponible) : '⚠️ '+fp(Math.abs(disponible))+' déficit';
+  document.getElementById('cfg_bolanieve').style.color = disponible > 0 ? 'var(--red)' : 'var(--red)';
   const rows = [
     ['Ingreso neto', ingreso, 'var(--text)', false],
     ['(-) Diezmo 10%', diezmo, 'var(--green)', true],
@@ -814,15 +1131,12 @@ function recalcularConfig() {
     ['(-) Ahorro Santa Anita', 0, 'var(--muted)', true],
   ];
   document.getElementById('cfg_resumen_rows').innerHTML = rows.map(([lbl,val,color,minus])=>`
-    <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px">
+    <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border)">
       <span style="color:var(--muted)">${lbl}</span>
-      <span style="font-family:DM Mono,monospace;color:${color}">${minus?'-':''} ${fp(val)}</span>
+      <span style="font-family:'Space Mono',monospace;color:${color}">${minus?'-':''} ${fp(val)}</span>
     </div>`).join('');
-
-  document.getElementById('cfg_balance').textContent = fp(Math.abs(balance)) + (balance >= 0 ? ' ✅' : ' ⚠️');
-  document.getElementById('cfg_balance').style.color = balance >= 0 ? 'var(--green)' : 'var(--red)';
-
-  // Actualizar presupuesto interno
+  document.getElementById('cfg_balance').textContent = fp(Math.abs(disponible)) + (disponible >= 0 ? ' ✅' : ' ⚠️');
+  document.getElementById('cfg_balance').style.color = disponible >= 0 ? 'var(--green)' : 'var(--red)';
   presupuesto['Alimentación'].limite = superM;
   presupuesto['Transporte'].limite = nafta + transp;
   presupuesto['Salud'].limite = swiss + farma;
@@ -832,17 +1146,14 @@ function recalcularConfig() {
 }
 
 function renderPresupuesto(){
-  // Mostrar cita aleatoria
-  const cita = RAMSEY_CITAS[Math.floor(Math.random()*RAMSEY_CITAS.length)];
-  document.getElementById('ramseyCita').textContent = cita;
-  // Recalcular totales
+  const cita = RAMSEY_FRASES[Math.floor(Math.random()*RAMSEY_FRASES.length)];
+  document.getElementById('ramseyCita').textContent = cita.texto;
   recalcularConfig();
 }
 
 function guardarConfig(){
   recalcularConfig();
   localStorage.setItem('gazelle_presupuesto',JSON.stringify(presupuesto));
-  // Guardar valores fijos
   const cfg = {
     ingreso: parseInt(document.getElementById('cfg_ingreso').value)||3800000,
     swiss: parseInt(document.getElementById('cfg_swiss').value)||0,
@@ -862,7 +1173,7 @@ function guardarConfig(){
   };
   localStorage.setItem('gazelle_config',JSON.stringify(cfg));
   renderAll();
-  mostrarAlert('💾','Presupuesto Guardado','Los valores se guardaron. Cuando suba Swiss Medical o EDENOR, actualizalos acá y el sistema se recalcula solo.');
+  mostrarAlert('💾','Presupuesto Guardado','Los valores se guardaron correctamente.');
 }
 
 function cargarConfigGuardada(){
@@ -874,15 +1185,14 @@ function cargarConfigGuardada(){
   });
 }
 
-function guardarPresupuesto(){ guardarConfig(); }
-
 function mostrarAlert(emoji,titulo,msg){
   document.getElementById('alertEmoji').textContent=emoji;
   document.getElementById('alertTitle').textContent=titulo;
   document.getElementById('alertMsg').textContent=msg;
   document.getElementById('alertOverlay').classList.add('show');
 }
-function cerrarAlert(){document.getElementById('alertOverlay').classList.remove('show')}
+function cerrarAlert(){document.getElementById('alertOverlay').classList.remove('show');}
+
 function showTab(name,el){
   document.querySelectorAll('[id^="tab-"]').forEach(t=>t.style.display='none');
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
