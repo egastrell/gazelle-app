@@ -632,7 +632,7 @@ function renderPagar(){
 
   document.getElementById('pagarMaster').textContent = fp(estimadoMaster);
   document.getElementById('pagarMaster').className = estimadoMaster > PARA_TARJETAS ? 'pagar-monto danger' : 'pagar-monto ok';
-  document.getElementById('pagarVisa').textContent = 'Pendiente (sin datos Visa)';
+  document.getElementById('pagarVisa').textContent = estimadoVisa > 0 ? fp(estimadoVisa) : 'Pendiente (sin datos Visa)';
   document.getElementById('pagarVisa').className = 'pagar-monto';
   document.getElementById('pagarTotal').textContent = fp(estimadoMaster);
 
