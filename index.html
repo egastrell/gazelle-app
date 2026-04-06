@@ -807,7 +807,7 @@ function parseFechaStr(f) {
   const p = String(f).split('/');
   if(p.length===3) {
     let y = parseInt(p[2].trim()); if(y < 100) y += 2000;
-    return new Date(parseInt(p[2].trim().length===4?p[2]:p[2]), parseInt(p[1].trim()) - 1, parseInt(p[0].trim()));
+  return new Date(y, parseInt(p[1].trim()) - 1, parseInt(p[0].trim()));
   }
   return null;
 }
