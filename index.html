@@ -737,17 +737,38 @@ let cicloIndex = -1;
 let filtroActual = 'todos';
 
 let presupuesto = JSON.parse(localStorage.getItem('gazelle_presupuesto')||'null') || {
-  "Alimentación": { icon:"🛒", limite:450000 },
-  "Salud":        { icon:"🏥", limite:420000 },
-  "Servicios":    { icon:"💡", limite:280000 },
-  "Educación":    { icon:"📚", limite:200000 },
-  "Transporte":   { icon:"🚇", limite:160000 },
-  "Diezmo":       { icon:"🙏", limite:380000 },
-  "Hogar":        { icon:"🏠", limite:100000 },
-  "Indumentaria": { icon:"👕", limite:50000  },
-  "Entretenimiento":{ icon:"🎭", limite:30000 },
-  "Belleza":      { icon:"💅", limite:40000  },
-  "Otros":        { icon:"📦", limite:80000  },
+  "Alimentación":    { icon:"🛒", limite:820000 },
+  "Salud":           { icon:"🏥", limite:580000 },
+  "Servicios":       { icon:"💡", limite:610000 },
+  "Educación":       { icon:"📚", limite:290000 },
+  "Vehículo":        { icon:"🚗", limite:230000 },
+  "Comida Fuera":    { icon:"🍽️", limite:170000 },
+  "Entretenimiento": { icon:"🎭", limite:130000 },
+  "Indumentaria":    { icon:"👕", limite:120000 },
+  "Transporte":      { icon:"🚇", limite:60000  },
+  "Compras Online":  { icon:"🛍️", limite:60000  },
+  "Hogar":           { icon:"🏠", limite:60000  },
+  "Diezmo":          { icon:"🙏", limite:380000 },
+  "Banco":           { icon:"🏦", limite:0      },
+  "Pago Tarjeta":    { icon:"💳", limite:0      },
+  "Otros":           { icon:"📦", limite:0      },
+};
+
+const SUBCATEGORIAS_MAP = {
+  "Alimentación":    ["Supermercado","Panadería","Almacén/Kiosko","Carnicería","Verdulería"],
+  "Salud":           ["Farmacia","Medicina Prepaga","Médico/Hospital","Odontología","Óptica","Cuidado Personal"],
+  "Educación":       ["Colegio","Útiles/Material","Curso/Capacitación","Libros"],
+  "Transporte":      ["Transporte Público","Subte/SUBE","Taxi/Remis","Estacionamiento","Peaje"],
+  "Vehículo":        ["Combustible","Mantenimiento","Seguro Automotor","Repuestos"],
+  "Hogar":           ["Ferretería","Materiales/Construcción","Electrodomésticos","Decoración","Mantenimiento Hogar"],
+  "Servicios":       ["Electricidad","Gas","Agua","Internet/Cable","Teléfono Móvil","Municipalidad","ARBA","Seguro"],
+  "Entretenimiento": ["Streaming","Videojuegos","Cine/Teatro","Salidas/Eventos","Juguetes"],
+  "Indumentaria":    ["Ropa Adultos","Ropa Niños","Calzado","Accesorios"],
+  "Compras Online":  ["MercadoLibre","Tecnología","Shein/Temu","Otros Online"],
+  "Comida Fuera":    ["Restaurante","Fast Food","Cafetería","Delivery","Heladería"],
+  "Banco":           ["Cargo Bancario","Comisión","Bonificación","Descuento/Promoción","Contracargo","Ajuste","Devolución"],
+  "Pago Tarjeta":    ["Pago Tarjeta"],
+  "Otros":           ["Pendiente identificar"],
 };
 
 const PROHIBIDOS_DEF = [
@@ -865,11 +886,14 @@ async function fetchSheet() {
         const fecha=String(get('Fecha')||'');
         const fechaDate=parseFechaStr(fecha);
         const cat=String(get('Categoria')||'Otros');
+        const subcat=String(get('Subcategoria')||'');
+        const hormigaVal=get('Hormiga').toUpperCase();
+        const hormiga=hormigaVal==='S'||hormigaVal==='SI';
         const esProhibido=PROHIBIDOS_DEF.some(p=>p.keys.some(k=>comercio.toLowerCase().includes(k)));
         let quien='Eduardo';
         if(usuario.includes('ZIEGLER')||usuario.includes('ROMINA'))quien='Romina';
         else if(usuario.includes('SEGOVIA')||usuario.includes('ALFREDO'))quien='Padres';
-        return{fecha,fechaDate,comercio,monto,cat,signo,hormiga,quien,esProhibido,cuenta};
+        return{fecha,fechaDate,comercio,monto,cat,subcat,signo,hormiga,quien,esProhibido,cuenta};
       })
       .filter(g=>g.signo!=='E'&&g.quien!=='Padres');
     aplicarFiltroCiclo();
@@ -1015,9 +1039,9 @@ function renderCategorias(){
   gastosMes.forEach(g=>{totCat[g.cat]=(totCat[g.cat]||0)+g.monto});
   const cats=new Set([...Object.keys(presupuesto),...Object.keys(totCat)]);
   [...cats].forEach(cat=>{
-    const cfg=presupuesto[cat]||{icon:'📦',limite:50000};
+    const cfg=presupuesto[cat]||{icon:'📦',limite:0};
     const gastado=totCat[cat]||0;
-    const pct=Math.min((gastado/cfg.limite)*100,100);
+    const pct=cfg.limite>0?Math.min((gastado/cfg.limite)*100,100):0;
     let cl='ok';
     if(pct>=100)cl='danger';
     else if(pct>=80)cl='danger';
@@ -1026,21 +1050,47 @@ function renderCategorias(){
     const div=document.createElement('div');
     div.className='cat-card';
     div.id=idCat;
-    div.onclick=()=>{
-      const det=document.getElementById('det-'+idCat);
-      if(det)det.style.display=det.style.display==='none'?'block':'none';
-    };
-    const gastosCat = gastosMes.filter(g=>g.cat===cat).sort((a,b)=>b.monto-a.monto);
+
+    // Agrupar por subcategoría
+    const gastosCat=gastosMes.filter(g=>g.cat===cat);
+    const totSubcat={};
+    gastosCat.forEach(g=>{
+      const sc=g.subcat||'Sin subcategoría';
+      totSubcat[sc]=(totSubcat[sc]||0)+g.monto;
+    });
+
+    // Construir filas de subcategorías con sus movimientos
+    const detalleHtml=Object.entries(totSubcat).sort((a,b)=>b[1]-a[1]).map(([sc,tot])=>{
+      const movs=gastosCat.filter(g=>(g.subcat||'Sin subcategoría')===sc).sort((a,b)=>b.monto-a.monto);
+      const idSc=idCat+'-sc-'+sc.replace(/[^a-z0-9]/gi,'');
+      const movsHtml=movs.map(g=>`
+        <div class="cat-detalle-item" style="padding-left:16px;font-size:11px;border-left:2px solid var(--border);margin-left:8px">
+          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:65%">
+            ${g.esProhibido?'🚫 ':''}${g.comercio}
+            <span class="chip ${g.quien==='Romina'?'chip-romi':'chip-edu'}">${g.quien.substring(0,3).toUpperCase()}</span>
+            <span style="color:var(--muted);font-size:10px">${g.fecha}</span>
+          </span>
+          <span style="font-family:'Space Mono',monospace;white-space:nowrap">${fp(g.monto)}</span>
+        </div>`).join('');
+      return `
+        <div class="cat-detalle-item" style="cursor:pointer;font-weight:500;background:var(--bg);border-radius:6px;padding:6px 8px;margin-bottom:2px"
+          onclick="event.stopPropagation();const el=document.getElementById('${idSc}');if(el)el.style.display=el.style.display==='none'?'block':'none'">
+          <span>▸ ${sc}</span>
+          <span style="font-family:'Space Mono',monospace">${fp(tot)}</span>
+        </div>
+        <div id="${idSc}" style="display:none;margin-bottom:6px">${movsHtml}</div>`;
+    }).join('')||'<div style="color:var(--muted);font-size:11px;padding:4px 0">Sin movimientos</div>';
+
     div.innerHTML=`
-      <div class="cat-header">
+      <div class="cat-header" style="cursor:pointer" onclick="const det=document.getElementById('det-${idCat}');if(det)det.style.display=det.style.display==='none'?'block':'none'">
         <div class="cat-name">${cfg.icon} ${cat}</div>
         <div class="cat-amounts">
           <div class="cat-spent" style="color:${pct>=80?'var(--red)':pct>=60?'var(--yellow)':'var(--text)'}">${fp(gastado)}</div>
-          <div class="cat-limit">de ${fp(cfg.limite)}</div>
+          ${cfg.limite>0?`<div class="cat-limit">de ${fp(cfg.limite)}</div>`:''}
         </div>
       </div>
-      <div class="cat-bar-track"><div class="cat-bar-fill ${cl}" style="width:0%" data-pct="${pct}"></div></div>
-      <div class="cat-detalle" id="det-${idCat}">${gastosCat.map(g=>`<div class="cat-detalle-item"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:65%">${g.esProhibido?'🚫 ':''}${g.comercio} <span class="chip ${g.quien==='Romina'?'chip-romi':'chip-edu'}">${g.quien.substring(0,3).toUpperCase()}</span></span><span style="font-family:'Space Mono',monospace;white-space:nowrap">${fp(g.monto)}</span></div>`).join('')||'<div style="color:var(--muted);font-size:11px;padding:4px 0">Sin movimientos</div>'}</div>`;
+      ${cfg.limite>0?`<div class="cat-bar-track"><div class="cat-bar-fill ${cl}" style="width:0%" data-pct="${pct}"></div></div>`:''}
+      <div class="cat-detalle" id="det-${idCat}" style="display:none">${detalleHtml}</div>`;
     c.appendChild(div);
   });
   setTimeout(()=>{document.querySelectorAll('.cat-bar-fill[data-pct]').forEach(el=>{el.style.width=el.dataset.pct+'%'})},50);
