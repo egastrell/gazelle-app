@@ -881,7 +881,6 @@ async function fetchSheet() {
         const comercio=String(get('Comercio')||get('DescripcionRaw')||'');
         const signo=String(get('Signo')||'S');
         const cuenta=String(get('Cuenta')||'');
-        const hormiga=get('Hormiga').toUpperCase()==='SI';
         const usuario=String(get('USUARIO')||'');
         const fecha=String(get('Fecha')||'');
         const fechaDate=parseFechaStr(fecha);
