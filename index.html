@@ -870,7 +870,7 @@ function actualizarCicloUI() {
         else if(usuario.includes('SEGOVIA')||usuario.includes('ALFREDO'))quien='Padres';
         return{fecha,fechaDate,comercio,monto,cat,signo,hormiga,quien,esProhibido,cuenta};
       })
-      .filter(g=>g.signo!=='E'&&g.quien!=='Padres');
+      .filter(g=>g.quien!=='Padres'&&g.cat!=='Pago Tarjeta');
     aplicarFiltroCiclo();
     setSyncState('ok',`Ciclo: ${gastosMes.length} transacciones`);
     renderAll();
