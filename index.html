@@ -843,40 +843,58 @@ function fp(n){ return '$'+Math.round(n).toLocaleString('es-AR') }
 
 async function fetchSheet() {
   setSyncState('loading','Sincronizando...');
+
+  // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+  const urlConCacheBuster = API_URL + (API_URL.includes('?') ? '&' : '?') + `ts=${Date.now()}`;
+  // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+
   try {
-    const res = await fetch(API_URL);
-    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const res = await fetch(urlConCacheBuster, {
+      cache: 'no-store'        // fuerza que nunca use caché
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
     const json = await res.json();
     const allValues = json.values || [];
-    if(allValues.length < 2) throw new Error('Sin datos');
+
+    if (allValues.length < 2) throw new Error('Sin datos');
+
     const cols = allValues[0];
     const dataRows = allValues.slice(1);
+
     todosLosGastos = dataRows
-      .filter(r=>r&&r[0])
-      .map(r=>{
-        const get=l=>{const i=cols.indexOf(l);return i>=0&&r[i]!==undefined?String(r[i]):'';};
-        const montoStr=get('Monto').replace(/\$/g,'').replace(/\./g,'').replace(',','.').trim();
-        const monto=parseFloat(montoStr)||0;
-        const comercio=String(get('Comercio')||get('DescripcionRaw')||'');
-        const signo=String(get('Signo')||'S');
-        const cuenta=String(get('Cuenta')||'');
-        const hormiga=get('Hormiga').toUpperCase()==='SI';
-        const usuario=String(get('USUARIO')||'');
-        const fecha=String(get('Fecha')||'');
-        const fechaDate=parseFechaStr(fecha);
-        const cat=String(get('Categoria')||'Otros');
-        const esProhibido=PROHIBIDOS_DEF.some(p=>p.keys.some(k=>comercio.toLowerCase().includes(k)));
-        let quien='Eduardo';
-        if(usuario.includes('ZIEGLER')||usuario.includes('ROMINA'))quien='Romina';
-        else if(usuario.includes('SEGOVIA')||usuario.includes('ALFREDO'))quien='Padres';
-        return{fecha,fechaDate,comercio,monto,cat,signo,hormiga,quien,esProhibido,cuenta};
+      .filter(r => r && r[0])
+      .map(r => {
+        const get = l => {
+          const i = cols.indexOf(l);
+          return i >= 0 && r[i] !== undefined ? String(r[i]) : '';
+        };
+        const montoStr = get('Monto').replace(/\$/g, '').replace(/\./g, '').replace(',', '.').trim();
+        const monto = parseFloat(montoStr) || 0;
+        const comercio = String(get('Comercio') || get('DescripcionRaw') || '');
+        const signo = String(get('Signo') || 'S');
+        const cuenta = String(get('Cuenta') || '');
+        const hormiga = get('Hormiga').toUpperCase() === 'SI';
+        const usuario = String(get('USUARIO') || '');
+        const fecha = String(get('Fecha') || '');
+        const fechaDate = parseFechaStr(fecha);
+        const cat = String(get('Categoria') || 'Otros');
+        const esProhibido = PROHIBIDOS_DEF.some(p => p.keys.some(k => comercio.toLowerCase().includes(k)));
+        let quien = 'Eduardo';
+        if (usuario.includes('ZIEGLER') || usuario.includes('ROMINA')) quien = 'Romina';
+        else if (usuario.includes('SEGOVIA') || usuario.includes('ALFREDO')) quien = 'Padres';
+
+        return { fecha, fechaDate, comercio, monto, cat, signo, hormiga, quien, esProhibido, cuenta };
       })
-      .filter(g=>g.signo!=='E'&&g.quien!=='Padres');
+      .filter(g => g.signo !== 'E' && g.quien !== 'Padres');
+
     aplicarFiltroCiclo();
-    setSyncState('ok',`Ciclo: ${gastosMes.length} transacciones`);
+    setSyncState('ok', `Ciclo: ${gastosMes.length} transacciones • ${new Date().toLocaleTimeString('es-AR')}`);
     renderAll();
-  } catch(e) {
-    setSyncState('error','ERR:'+String(e.message||e).substring(0,40));
+
+  } catch (e) {
+    setSyncState('error', 'ERR:' + String(e.message || e).substring(0, 40));
     console.error(e);
   }
 }
