@@ -839,7 +839,8 @@ function actualizarCicloUI() {
 // ============================================================
 // FETCH
 // ============================================================
-async function fetchSheet() {
+  function fp(n){ return '$'+Math.round(n).toLocaleString('es-AR') }
+  async function fetchSheet() {
   setSyncState('loading','Sincronizando...');
   try {
     const res = await fetch(API_URL);
