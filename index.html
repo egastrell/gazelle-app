@@ -264,6 +264,7 @@ body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',
 .txn-list { display:grid; gap:8px; max-height:500px; overflow-y:auto; }
 .txn-item { background:var(--white); border-radius:var(--radius-sm); padding:12px 14px; display:flex; justify-content:space-between; align-items:center; box-shadow:var(--shadow-sm); }
 .txn-item.prohibido { border-left:3px solid var(--red); }
+.txn-item.ingreso { border-left:3px solid var(--green); }
 .txn-left { flex:1; min-width:0; }
 .txn-comercio { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .txn-meta { display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
@@ -274,6 +275,7 @@ body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',
 .chip-hormiga { background:var(--orange-light); color:var(--orange); }
 .chip-cat { background:var(--bg); color:var(--muted); }
 .txn-monto { font-size:14px; font-weight:700; font-family:'Space Mono',monospace; margin-left:8px; white-space:nowrap; }
+.txn-monto.negativo { color:var(--green); }
 
 /* A PAGAR */
 .pagar-seccion { margin-bottom:14px; }
@@ -496,12 +498,12 @@ body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',
       <div class="deuda-item">
         <div class="deuda-item-name">💳 Visa Galicia</div>
         <div class="deuda-item-amount" style="color:var(--red)">$681.704</div>
-        <div class="deuda-item-sub">Vence 01/Abr</div>
+        <div class="deuda-item-sub">🔥 Atacar primero</div>
       </div>
       <div class="deuda-item">
         <div class="deuda-item-name">💳 Mastercard BNA</div>
         <div class="deuda-item-amount" style="color:var(--red)">$2.911.169</div>
-        <div class="deuda-item-sub">Vence 01/Abr</div>
+        <div class="deuda-item-sub">⏳ Mínimo por ahora</div>
       </div>
     </div>
   </div>
@@ -542,14 +544,14 @@ body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',
       <div class="pagar-row">
         <div>
           <div class="pagar-nombre">Visa Galicia</div>
-          <div class="pagar-vence">Vence 01/Abr/2026</div>
+          <div class="pagar-vence" id="pagarVencVisa">—</div>
         </div>
         <div class="pagar-monto" id="pagarVisa">—</div>
       </div>
       <div class="pagar-row">
         <div>
           <div class="pagar-nombre">Mastercard BNA</div>
-          <div class="pagar-vence">Vence 01/Abr/2026</div>
+          <div class="pagar-vence" id="pagarVencMaster">—</div>
         </div>
         <div class="pagar-monto" id="pagarMaster">—</div>
       </div>
@@ -609,6 +611,7 @@ body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',
     <div class="filter-chip" onclick="filtrarTxn('Romina',this)">👩 Romina</div>
     <div class="filter-chip" onclick="filtrarTxn('prohibido',this)">🚫 Prohibidos</div>
     <div class="filter-chip" onclick="filtrarTxn('hormiga',this)">🐜 Hormigas</div>
+    <div class="filter-chip" onclick="filtrarTxn('devolucion',this)">✅ Devoluciones</div>
   </div>
   <div class="txn-list" id="txnList"></div>
 </div>
@@ -687,6 +690,8 @@ body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',
 <script>
 // ============================================================
 // CONFIG
+// FIX #3: API key restringida a dominio egastrell.github.io en Google Cloud Console.
+// Nunca exponer keys con permisos de escritura.
 // ============================================================
 const SHEET_ID='15TzS_-VQazdA427n8S7H_FnPD5Fj0eDrRMuETIdNLgQ';
 const SHEET_NAME='Tarjetas';
@@ -694,6 +699,27 @@ const SHEETS_API_KEY='AIzaSyD3QpBs7qRD3bpO00zjIPzXOXbU3Z7o7mA';
 const API_URL=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(SHEET_NAME)}?key=${SHEETS_API_KEY}`;
 const PARA_TARJETAS = 1544216;
 const DEUDA_INICIAL = 3592872;
+
+// FIX #4: Presupuesto sincronizado con taxonomía real del proyecto
+// ============================================================
+let presupuesto = JSON.parse(localStorage.getItem('gazelle_presupuesto')||'null') || {
+  "Alimentación":    { icon:"🛒", limite: 820000 },
+  "Salud":           { icon:"🏥", limite: 580000 },
+  "Servicios":       { icon:"💡", limite: 610000 },
+  "Educación":       { icon:"📚", limite: 290000 },
+  "Vehículo":        { icon:"🚗", limite: 230000 },
+  "Comida Fuera":    { icon:"🍽️", limite: 170000 },
+  "Entretenimiento": { icon:"🎭", limite: 130000 },
+  "Indumentaria":    { icon:"👕", limite: 120000 },
+  "Transporte":      { icon:"🚇", limite:  60000 },
+  "Compras Online":  { icon:"📦", limite:  60000 },
+  "Hogar":           { icon:"🏠", limite:  60000 },
+  "Diezmo":          { icon:"🙏", limite: 380000 },
+  "Otros":           { icon:"❓", limite:  50000 },
+};
+
+// FIX #2: Categorías excluidas de totales de gastos (no son gastos reales)
+const CATS_EXCLUIDAS = new Set(['Pago Tarjeta', 'Banco']);
 
 function anteultimoJueves(year, month) {
   const jueves = [];
@@ -736,26 +762,12 @@ let cicloActual = null;
 let cicloIndex = -1;
 let filtroActual = 'todos';
 
-let presupuesto = JSON.parse(localStorage.getItem('gazelle_presupuesto')||'null') || {
-  "Alimentación": { icon:"🛒", limite:450000 },
-  "Salud":        { icon:"🏥", limite:420000 },
-  "Servicios":    { icon:"💡", limite:280000 },
-  "Educación":    { icon:"📚", limite:200000 },
-  "Transporte":   { icon:"🚇", limite:160000 },
-  "Diezmo":       { icon:"🙏", limite:380000 },
-  "Hogar":        { icon:"🏠", limite:100000 },
-  "Indumentaria": { icon:"👕", limite:50000  },
-  "Entretenimiento":{ icon:"🎭", limite:30000 },
-  "Belleza":      { icon:"💅", limite:40000  },
-  "Otros":        { icon:"📦", limite:80000  },
-};
-
 const PROHIBIDOS_DEF = [
   { nombre:"Delivery (PedidosYa/Rappi)", keys:["pedidosya","rappi","dlo*pedidos"] },
   { nombre:"Fast Food (Mostaza/KFC)",    keys:["mostaza","kfc","burger","mcdonalds"] },
-  { nombre:"Restaurantes",               keys:["pizzeria","restaurant","buffet","dichabuffet"] },
+  { nombre:"Restaurantes",               keys:["pizzeria","restaurant","buffet","dichabuffet","ardente","cheka"] },
   { nombre:"Taxi / Cabify",              keys:["cabify","uber","taxi","remis"] },
-  { nombre:"Ropa no urgente",            keys:["shein","temu","mimo","tropea","ropelato"] },
+  { nombre:"Ropa no urgente",            keys:["shein","temu","mimo","tropea"] },
   { nombre:"Vivero / Plantas",           keys:["vivero"] },
   { nombre:"Juguetería",                 keys:["kinderland","elmundodeljug","juguet"] },
 ];
@@ -807,7 +819,7 @@ function parseFechaStr(f) {
   const p = String(f).split('/');
   if(p.length===3) {
     let y = parseInt(p[2].trim()); if(y < 100) y += 2000;
-  return new Date(y, parseInt(p[1].trim()) - 1, parseInt(p[0].trim()));
+    return new Date(y, parseInt(p[1].trim()) - 1, parseInt(p[0].trim()));
   }
   return null;
 }
@@ -834,13 +846,24 @@ function actualizarCicloUI() {
   document.getElementById('cicloDias').textContent = esPasado ? '—' : esFuturo ? '—' : Math.max(diasRestantes,0);
   document.getElementById('cicloLbl').textContent = esPasado ? 'CERRADO' : esFuturo ? 'PRÓXIMO' : 'DÍAS REST.';
   document.getElementById('cicloPct').style.width = pct+'%';
+
+  // FIX tab A Pagar: fechas dinámicas basadas en el ciclo actual
+  const vencimiento = new Date(fin);
+  vencimiento.setDate(vencimiento.getDate() + 8); // ~8 días después del cierre
+  const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const vencStr = `Vence ${vencimiento.getDate()}/${meses[vencimiento.getMonth()]}/${vencimiento.getFullYear()}`;
+  const elVV = document.getElementById('pagarVencVisa');
+  const elVM = document.getElementById('pagarVencMaster');
+  if(elVV) elVV.textContent = vencStr;
+  if(elVM) elVM.textContent = vencStr;
 }
 
 // ============================================================
 // FETCH
 // ============================================================
-  function fp(n){ return '$'+Math.round(n).toLocaleString('es-AR') }
-  async function fetchSheet() {
+function fp(n){ return '$'+Math.round(Math.abs(n)).toLocaleString('es-AR') }
+
+async function fetchSheet() {
   setSyncState('loading','Sincronizando...');
   try {
     const res = await fetch(API_URL);
@@ -854,25 +877,38 @@ function actualizarCicloUI() {
       .filter(r=>r&&r[0])
       .map(r=>{
         const get=l=>{const i=cols.indexOf(l);return i>=0&&r[i]!==undefined?String(r[i]):'';};
-        const montoStr=get('Monto').replace(/\$/g,'').replace(/\./g,'').replace(',','.').trim();
-        const monto=parseFloat(montoStr)||0;
         const comercio=String(get('Comercio')||get('DescripcionRaw')||'');
+        const cat=String(get('Categoria')||'Otros');
+
+        // FIX #1: Signo E → monto negativo (devoluciones, bonificaciones)
         const signo=String(get('Signo')||'S');
-        const cuenta=String(get('Cuenta')||'');
+        const montoStr=get('Monto').replace(/\$/g,'').replace(/\./g,'').replace(',','.').trim();
+        const montoRaw=parseFloat(montoStr)||0;
+        const monto=signo==='E'?-montoRaw:montoRaw;
+
         const hormiga=get('Hormiga').toUpperCase()==='S';
         const usuario=String(get('USUARIO')||'');
         const fecha=String(get('Fecha')||'');
         const fechaDate=parseFechaStr(fecha);
-        const cat=String(get('Categoria')||'Otros');
+        const cuenta=String(get('Cuenta')||'');
         const esProhibido=PROHIBIDOS_DEF.some(p=>p.keys.some(k=>comercio.toLowerCase().includes(k)));
+        const esDevolucion=monto<0;
+
         let quien='Eduardo';
         if(usuario.includes('ZIEGLER')||usuario.includes('ROMINA'))quien='Romina';
         else if(usuario.includes('SEGOVIA')||usuario.includes('ALFREDO'))quien='Padres';
-        return{fecha,fechaDate,comercio,monto,cat,signo,hormiga,quien,esProhibido,cuenta};
+
+        return{fecha,fechaDate,comercio,monto,cat,signo,hormiga,quien,esProhibido,esDevolucion,cuenta};
       })
-      .filter(g=>g.quien!=='Padres'&&g.cat!=='Pago Tarjeta');
+      .filter(g=>
+        g.quien!=='Padres' &&
+        g.cat!=='Pago Tarjeta'
+        // FIX #2: Banco excluido de gastos pero mantenido en array para visualización
+        // Se filtra en el render de categorías y totales, no acá, para poder mostrarlo en Movimientos
+      );
+
     aplicarFiltroCiclo();
-    setSyncState('ok',`Ciclo: ${gastosMes.length} transacciones`);
+    setSyncState('ok',`Ciclo: ${gastosMes.filter(g=>!CATS_EXCLUIDAS.has(g.cat)).length} transacciones`);
     renderAll();
   } catch(e) {
     setSyncState('error','ERR:'+String(e.message||e).substring(0,40));
@@ -899,8 +935,15 @@ function renderAll(){
   renderRamsey();
 }
 
+function gastosReales(lista){
+  // FIX #2: excluye Banco y Pago Tarjeta del cómputo de totales
+  return lista.filter(g=>!CATS_EXCLUIDAS.has(g.cat)&&g.monto>0);
+}
+
 function renderResumen(){
-  const total=gastosMes.reduce((s,g)=>s+g.monto,0);
+  // Solo gastos reales (positivos, excluye Banco)
+  const gastos = gastosReales(gastosMes);
+  const total=gastos.reduce((s,g)=>s+g.monto,0);
   const limite=Object.values(presupuesto).reduce((s,c)=>s+c.limite,0);
   const disponible=limite-total;
   const pct=(total/limite)*100;
@@ -908,13 +951,21 @@ function renderResumen(){
   const el=document.getElementById('disponibleAmt');
   const sub=document.getElementById('disponibleSub');
   const msg=document.getElementById('judgeMsg');
+
+  // FIX #1: devoluciones reducen el total real
+  const devoluciones=gastosMes.filter(g=>g.monto<0).reduce((s,g)=>s+g.monto,0);
+  const totalNeto=total+devoluciones; // devoluciones ya son negativas
+
   el.textContent=fp(Math.abs(disponible));
-  sub.textContent=`gastado ${fp(total)} de ${fp(limite)}`;
-  const hormigas=gastosMes.filter(g=>g.hormiga);
-  const prohibidos=gastosMes.filter(g=>g.esProhibido);
-  document.getElementById('statTxn').textContent=gastosMes.length;
+  sub.textContent=`gastado ${fp(totalNeto)} neto de ${fp(limite)}${devoluciones<0?' (incl. '+fp(Math.abs(devoluciones))+' devuelto)':''}`;
+
+  // FIX #1+2: hormigas y prohibidos solo de gastos positivos reales
+  const hormigas=gastos.filter(g=>g.hormiga);
+  const prohibidos=gastos.filter(g=>g.esProhibido);
+  document.getElementById('statTxn').textContent=gastos.length;
   document.getElementById('statHormigas').textContent=hormigas.length;
   document.getElementById('statProhibidos').textContent=prohibidos.length;
+
   if(disponible<0){
     card.className='disponible-card danger';
     el.textContent='-'+el.textContent;
@@ -929,6 +980,7 @@ function renderResumen(){
     card.className='disponible-card ok';
     msg.textContent=`✅ ¡Excelente! Solo usaron el ${Math.round(pct)}% del presupuesto. ¡Modo Gazelle funcionando!`;
   }
+
   const totalH=hormigas.reduce((s,g)=>s+g.monto,0);
   document.getElementById('hormigaTotal').textContent=fp(totalH);
   const tags=document.getElementById('hormigaItems');
@@ -939,14 +991,16 @@ function renderResumen(){
     t.textContent=h.comercio.substring(0,16)+' '+fp(h.monto);
     tags.appendChild(t);
   });
-  // Quote aleatoria en resumen
+
   const cita = RAMSEY_FRASES[Math.floor(Math.random()*RAMSEY_FRASES.length)];
   document.getElementById('ramseyCitaResumen').textContent = cita.texto;
 }
 
 function renderResumenPersonas(){
-  const edu = gastosMes.filter(g=>g.quien==='Eduardo').reduce((s,g)=>s+g.monto,0);
-  const romi = gastosMes.filter(g=>g.quien==='Romina').reduce((s,g)=>s+g.monto,0);
+  // FIX #1+2: solo gastos reales positivos por persona
+  const gastos = gastosReales(gastosMes);
+  const edu = gastos.filter(g=>g.quien==='Eduardo').reduce((s,g)=>s+g.monto,0);
+  const romi = gastos.filter(g=>g.quien==='Romina').reduce((s,g)=>s+g.monto,0);
   const INGRESO_BASE = 3800000;
   document.getElementById('totalEdu').textContent = fp(edu);
   document.getElementById('totalRomi').textContent = fp(romi);
@@ -958,8 +1012,8 @@ function renderResumenPersonas(){
   },50);
   const llenarDetalle = (elId, quien, color) => {
     const el = document.getElementById(elId);
-    const gastos = gastosMes.filter(g=>g.quien===quien).sort((a,b)=>b.monto-a.monto);
-    el.innerHTML = gastos.map(g=>`
+    const gs = gastosReales(gastosMes).filter(g=>g.quien===quien).sort((a,b)=>b.monto-a.monto);
+    el.innerHTML = gs.map(g=>`
       <div class="persona-detalle-item">
         <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%">${g.esProhibido?'🚫 ':''}${g.comercio}</span>
         <span style="font-family:'Space Mono',monospace;color:${color};white-space:nowrap">${fp(g.monto)}</span>
@@ -979,30 +1033,23 @@ function toggleDetalle(quien) {
 }
 
 function renderPagar(){
-  const estimadoMaster = gastosMes.filter(g=>g.cuenta&&g.cuenta.toLowerCase().includes('mastercard')).reduce((s,g)=>s+g.monto,0);
-  const estimadoVisa = gastosMes.filter(g=>g.cuenta&&g.cuenta.toLowerCase().includes('visa')).reduce((s,g)=>s+g.monto,0);
+  const estimadoMaster = gastosReales(gastosMes).filter(g=>g.cuenta&&g.cuenta.toLowerCase().includes('mastercard')).reduce((s,g)=>s+g.monto,0);
+  const estimadoVisa   = gastosReales(gastosMes).filter(g=>g.cuenta&&g.cuenta.toLowerCase().includes('visa')).reduce((s,g)=>s+g.monto,0);
   const total = estimadoMaster + estimadoVisa;
 
   const pagarVisa = document.getElementById('pagarVisa');
   const pagarMaster = document.getElementById('pagarMaster');
 
-  if(estimadoVisa > 0) {
-    pagarVisa.textContent = fp(estimadoVisa);
-    pagarVisa.className = estimadoVisa > PARA_TARJETAS ? 'pagar-monto danger' : 'pagar-monto ok';
-  } else {
-    pagarVisa.textContent = 'Sin movimientos';
-    pagarVisa.className = 'pagar-monto';
-  }
-
+  pagarVisa.textContent = estimadoVisa > 0 ? fp(estimadoVisa) : 'Sin movimientos';
+  pagarVisa.className = estimadoVisa > PARA_TARJETAS ? 'pagar-monto danger' : 'pagar-monto ok';
   pagarMaster.textContent = fp(estimadoMaster);
   pagarMaster.className = estimadoMaster > PARA_TARJETAS ? 'pagar-monto danger' : 'pagar-monto ok';
-
   document.getElementById('pagarTotal').textContent = fp(total);
 
   const diferencia = PARA_TARJETAS - total;
   const difEl = document.getElementById('diferenciaPago');
   const difBox = document.getElementById('diferenciaBox');
-  difEl.textContent = (diferencia >= 0 ? '+' : '') + fp(diferencia);
+  difEl.textContent = (diferencia >= 0 ? '+' : '-') + fp(diferencia);
   difEl.style.color = diferencia >= 0 ? 'var(--green)' : 'var(--red)';
   difBox.className = 'diferencia-box ' + (diferencia >= 0 ? 'ok' : 'danger');
 }
@@ -1011,15 +1058,16 @@ function renderCategorias(){
   const c=document.getElementById('barsContainer');
   c.innerHTML='';
   const totCat={};
-  gastosMes.forEach(g=>{totCat[g.cat]=(totCat[g.cat]||0)+g.monto});
+  // FIX #2: solo gastos reales en categorías
+  gastosReales(gastosMes).forEach(g=>{totCat[g.cat]=(totCat[g.cat]||0)+g.monto});
   const cats=new Set([...Object.keys(presupuesto),...Object.keys(totCat)]);
   [...cats].forEach(cat=>{
+    if(CATS_EXCLUIDAS.has(cat)) return; // no mostrar Banco ni Pago Tarjeta
     const cfg=presupuesto[cat]||{icon:'📦',limite:50000};
     const gastado=totCat[cat]||0;
     const pct=Math.min((gastado/cfg.limite)*100,100);
     let cl='ok';
-    if(pct>=100)cl='danger';
-    else if(pct>=80)cl='danger';
+    if(pct>=80)cl='danger';
     else if(pct>=60)cl='warning';
     const idCat='cat-'+cat.replace(/[^a-z0-9]/gi,'');
     const div=document.createElement('div');
@@ -1029,7 +1077,7 @@ function renderCategorias(){
       const det=document.getElementById('det-'+idCat);
       if(det)det.style.display=det.style.display==='none'?'block':'none';
     };
-    const gastosCat = gastosMes.filter(g=>g.cat===cat).sort((a,b)=>b.monto-a.monto);
+    const gastosCat = gastosReales(gastosMes).filter(g=>g.cat===cat).sort((a,b)=>b.monto-a.monto);
     div.innerHTML=`
       <div class="cat-header">
         <div class="cat-name">${cfg.icon} ${cat}</div>
@@ -1049,7 +1097,8 @@ function renderProhibidos(){
   const list=document.getElementById('prohibidoList');
   list.innerHTML='';
   PROHIBIDOS_DEF.forEach(p=>{
-    const enc=gastosMes.filter(g=>p.keys.some(k=>g.comercio.toLowerCase().includes(k)));
+    // FIX #1+2: solo gastos reales positivos
+    const enc=gastosReales(gastosMes).filter(g=>p.keys.some(k=>g.comercio.toLowerCase().includes(k)));
     const total=enc.reduce((s,g)=>s+g.monto,0);
     const found=enc.length>0;
     const div=document.createElement('div');
@@ -1060,25 +1109,26 @@ function renderProhibidos(){
   });
 }
 
-const FIJOS_KEYS = ['swiss medical','edenor','gas natural','claro deb','zurich','provincia segu','arba','municipali','colegio g belgrano','aysa'];
-function esFijo(comercio) { return FIJOS_KEYS.some(k=>comercio.toLowerCase().includes(k)); }
-
 function renderTxn(filtro){
   if(filtro)filtroActual=filtro;
   renderResumenPersonas();
   const list=document.getElementById('txnList');
   list.innerHTML='';
-  let datos=[...gastosMes].sort((a,b)=>b.monto-a.monto);
-  if(filtroActual==='Eduardo')datos=datos.filter(g=>g.quien==='Eduardo');
-  else if(filtroActual==='Romina')datos=datos.filter(g=>g.quien==='Romina');
-  else if(filtroActual==='prohibido')datos=datos.filter(g=>g.esProhibido);
-  else if(filtroActual==='hormiga')datos=datos.filter(g=>g.hormiga);
+  // Movimientos muestra TODO incluyendo Banco y devoluciones para transparencia
+  let datos=[...gastosMes].sort((a,b)=>Math.abs(b.monto)-Math.abs(a.monto));
+  if(filtroActual==='Eduardo') datos=datos.filter(g=>g.quien==='Eduardo'&&g.monto>0);
+  else if(filtroActual==='Romina') datos=datos.filter(g=>g.quien==='Romina'&&g.monto>0);
+  else if(filtroActual==='prohibido') datos=datos.filter(g=>g.esProhibido&&g.monto>0);
+  else if(filtroActual==='hormiga') datos=datos.filter(g=>g.hormiga&&g.monto>0);
+  else if(filtroActual==='devolucion') datos=datos.filter(g=>g.monto<0);
   if(!datos.length){list.innerHTML='<div class="empty-state">No hay transacciones</div>';return;}
   datos.slice(0,100).forEach(g=>{
     const div=document.createElement('div');
-    div.className='txn-item'+(g.esProhibido?' prohibido':'');
+    const esNeg=g.monto<0;
+    div.className='txn-item'+(g.esProhibido&&!esNeg?' prohibido':esNeg?' ingreso':'');
     const qc=g.quien==='Eduardo'?'chip-edu':g.quien==='Romina'?'chip-romi':'chip-otros';
-    div.innerHTML=`<div class="txn-left"><div class="txn-comercio">${g.esProhibido?'🚫 ':''}${g.comercio}</div><div class="txn-meta"><span class="chip ${qc}">${g.quien.substring(0,3).toUpperCase()}</span><span class="chip chip-cat">${g.cat}</span>${g.hormiga?'<span class="chip chip-hormiga">🐜</span>':''}<span style="font-size:10px;color:var(--muted)">${g.fecha}</span></div></div><div class="txn-monto">${fp(g.monto)}</div>`;
+    const montoStr=esNeg?'<span class="txn-monto negativo">+'+fp(g.monto)+'</span>':'<div class="txn-monto">'+fp(g.monto)+'</div>';
+    div.innerHTML=`<div class="txn-left"><div class="txn-comercio">${g.esProhibido&&!esNeg?'🚫 ':esNeg?'✅ ':''}${g.comercio}</div><div class="txn-meta"><span class="chip ${qc}">${g.quien.substring(0,3).toUpperCase()}</span><span class="chip chip-cat">${g.cat}</span>${g.hormiga&&!esNeg?'<span class="chip chip-hormiga">🐜</span>':''}<span style="font-size:10px;color:var(--muted)">${g.fecha}</span></div></div>${montoStr}`;
     list.appendChild(div);
   });
 }
@@ -1121,23 +1171,27 @@ function recalcularConfig() {
   const disponible = ingreso - diezmo - totalFijos - totalVar;
   document.getElementById('cfg_diezmo_calc').textContent = fp(diezmo);
   document.getElementById('cfg_bolanieve').textContent = disponible > 0 ? fp(disponible) : '⚠️ '+fp(Math.abs(disponible))+' déficit';
-  document.getElementById('cfg_bolanieve').style.color = disponible > 0 ? 'var(--red)' : 'var(--red)';
+  document.getElementById('cfg_bolanieve').style.color = disponible > 0 ? 'var(--red)' : 'var(--orange)';
+
   const rows = [
     ['Ingreso neto', ingreso, 'var(--text)', false],
     ['(-) Diezmo 10%', diezmo, 'var(--green)', true],
     ['(-) Gastos fijos', totalFijos, 'var(--muted)', true],
     ['(-) Variables (techo)', totalVar, 'var(--muted)', true],
-    ['(-) Ahorro Santa Anita', 0, 'var(--muted)', true],
+    ['(-) Santa Anita', 0, 'var(--muted)', true],
   ];
   document.getElementById('cfg_resumen_rows').innerHTML = rows.map(([lbl,val,color,minus])=>`
     <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border)">
       <span style="color:var(--muted)">${lbl}</span>
-      <span style="font-family:'Space Mono',monospace;color:${color}">${minus?'-':''} ${fp(val)}</span>
+      <span style="font-family:'Space Mono',monospace;color:${color}">${minus?'- ':''}${fp(val)}</span>
     </div>`).join('');
   document.getElementById('cfg_balance').textContent = fp(Math.abs(disponible)) + (disponible >= 0 ? ' ✅' : ' ⚠️');
   document.getElementById('cfg_balance').style.color = disponible >= 0 ? 'var(--green)' : 'var(--red)';
+
+  // FIX #4: actualizar presupuesto con taxonomía correcta
   presupuesto['Alimentación'].limite = superM;
-  presupuesto['Transporte'].limite = nafta + transp;
+  presupuesto['Vehículo'].limite = nafta;
+  presupuesto['Transporte'].limite = transp;
   presupuesto['Salud'].limite = swiss + farma;
   presupuesto['Servicios'].limite = edenor+gas+claro+zurich+provseg+arba+munici+aysa;
   presupuesto['Educación'].limite = colegio;
