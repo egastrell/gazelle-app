@@ -497,12 +497,12 @@ body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',
     <div class="deuda-items">
       <div class="deuda-item">
         <div class="deuda-item-name">💳 Visa Galicia</div>
-        <div class="deuda-item-amount" style="color:var(--red)">$681.704</div>
+        <div class="deuda-item-amount" style="color:var(--red)" id="deudaVisaAmt">—</div>
         <div class="deuda-item-sub">🔥 Atacar primero</div>
       </div>
       <div class="deuda-item">
         <div class="deuda-item-name">💳 Mastercard BNA</div>
-        <div class="deuda-item-amount" style="color:var(--red)">$2.911.169</div>
+        <div class="deuda-item-amount" style="color:var(--red)" id="deudaMasterAmt">—</div>
         <div class="deuda-item-sub">⏳ Mínimo por ahora</div>
       </div>
     </div>
@@ -513,12 +513,12 @@ body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',
     <div class="card-title">❄️ Bola de Nieve — Orden de ataque</div>
     <div style="background:var(--yellow-light);border-radius:12px;padding:14px;margin-bottom:10px;border-left:4px solid var(--yellow)">
       <div style="font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:4px">① PRIMERO — Visa Galicia</div>
-      <div style="font-size:13px;font-weight:600">$681.704</div>
+      <div style="font-size:13px;font-weight:600" id="bolaNieveVisaAmt">—</div>
       <div style="font-size:11px;color:var(--muted);margin-top:4px">Pagá mínimo en Mastercard + todo el excedente acá</div>
     </div>
     <div style="background:var(--bg);border-radius:12px;padding:14px;border-left:4px solid var(--border)">
       <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:4px">② DESPUÉS — Mastercard BNA</div>
-      <div style="font-size:13px;font-weight:600;color:var(--muted)">$2.911.169</div>
+      <div style="font-size:13px;font-weight:600;color:var(--muted)" id="bolaNieveMasterAmt">—</div>
       <div style="font-size:11px;color:var(--muted);margin-top:4px">Una vez eliminada Visa, toda la fuerza acá</div>
     </div>
     <div style="background:var(--green-light);border-radius:12px;padding:14px;margin-top:10px;border-left:4px solid var(--green)">
@@ -651,6 +651,11 @@ body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',
   <div class="cfg-row"><span>Transporte público</span><input type="number" id="cfg_transp" value="30000" onchange="recalcularConfig()"></div>
   <div class="cfg-row"><span>Farmacia / Salud extra</span><input type="number" id="cfg_farma" value="25000" onchange="recalcularConfig()"></div>
 
+  <div class="cfg-section-title">💳 Saldos de deuda actuales</div>
+  <div class="cfg-row" style="border-left:4px solid var(--red)"><span>Visa Galicia</span><input type="number" id="cfg_visa" value="681704" onchange="recalcularConfig()"></div>
+  <div class="cfg-row" style="border-left:4px solid var(--red)"><span>Mastercard BNA</span><input type="number" id="cfg_master" value="2911169" onchange="recalcularConfig()"></div>
+  <div class="cfg-row" style="border-left:4px solid var(--blue)"><span>Disponible para tarjetas</span><input type="number" id="cfg_para_tarjetas" value="1544216" onchange="recalcularConfig()"></div>
+
   <div class="cfg-section-title">❄️ Bola de nieve</div>
   <div class="cfg-row" style="border-left:4px solid var(--red)">
     <span style="color:var(--red);font-weight:600">Para pagar deudas</span>
@@ -697,7 +702,11 @@ const SHEET_ID='15TzS_-VQazdA427n8S7H_FnPD5Fj0eDrRMuETIdNLgQ';
 const SHEET_NAME='Tarjetas';
 const SHEETS_API_KEY='AIzaSyD3QpBs7qRD3bpO00zjIPzXOXbU3Z7o7mA';
 const API_URL=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(SHEET_NAME)}?key=${SHEETS_API_KEY}`;
-const PARA_TARJETAS = 1544216;
+// Estos valores se leen dinámicamente desde Config (localStorage)
+function getParaTarjetas(){ return parseInt(localStorage.getItem('gazelle_para_tarjetas')||'1544216'); }
+function getDeudaVisa(){    return parseInt(localStorage.getItem('gazelle_deuda_visa')||'681704'); }
+function getDeudaMaster(){  return parseInt(localStorage.getItem('gazelle_deuda_master')||'2911169'); }
+function getDeudaTotal(){   return getDeudaVisa() + getDeudaMaster(); }
 const DEUDA_INICIAL = 3592872;
 
 // FIX #4: Presupuesto sincronizado con taxonomía real del proyecto
@@ -927,6 +936,7 @@ function setSyncState(s,m){
 function renderAll(){
   renderResumen();
   renderResumenPersonas();
+  renderDeuda();
   renderPagar();
   renderCategorias();
   renderProhibidos();
@@ -1032,7 +1042,32 @@ function toggleDetalle(quien) {
   document.getElementById(arrow).textContent = isOpen ? '▼' : '▲';
 }
 
+function renderDeuda(){
+  const visa = getDeudaVisa();
+  const master = getDeudaMaster();
+  const total = visa + master;
+  const pagado = Math.max(DEUDA_INICIAL - total, 0);
+  const pct = Math.min((pagado / DEUDA_INICIAL) * 100, 100);
+  const elPct = document.getElementById('deudaPct');
+  const elActual = document.getElementById('deudaActual');
+  const elPagado = document.getElementById('deudaPagado');
+  const elBar = document.getElementById('deudaBar');
+  if(elPct) elPct.textContent = Math.round(pct) + '% pagado';
+  if(elActual) elActual.textContent = fp(total);
+  if(elPagado) elPagado.textContent = fp(pagado);
+  if(elBar) setTimeout(()=>{ elBar.style.width = pct+'%'; }, 50);
+  const elVisa = document.getElementById('deudaVisaAmt');
+  const elMaster = document.getElementById('deudaMasterAmt');
+  const elBNVisa = document.getElementById('bolaNieveVisaAmt');
+  const elBNMaster = document.getElementById('bolaNieveMasterAmt');
+  if(elVisa) elVisa.textContent = fp(visa);
+  if(elMaster) elMaster.textContent = fp(master);
+  if(elBNVisa) elBNVisa.textContent = fp(visa);
+  if(elBNMaster) elBNMaster.textContent = fp(master);
+}
+
 function renderPagar(){
+  const PARA_TARJETAS = getParaTarjetas();
   const estimadoMaster = gastosReales(gastosMes).filter(g=>g.cuenta&&g.cuenta.toLowerCase().includes('mastercard')).reduce((s,g)=>s+g.monto,0);
   const estimadoVisa   = gastosReales(gastosMes).filter(g=>g.cuenta&&g.cuenta.toLowerCase().includes('visa')).reduce((s,g)=>s+g.monto,0);
   const total = estimadoMaster + estimadoVisa;
@@ -1188,7 +1223,6 @@ function recalcularConfig() {
   document.getElementById('cfg_balance').textContent = fp(Math.abs(disponible)) + (disponible >= 0 ? ' ✅' : ' ⚠️');
   document.getElementById('cfg_balance').style.color = disponible >= 0 ? 'var(--green)' : 'var(--red)';
 
-  // FIX #4: actualizar presupuesto con taxonomía correcta
   presupuesto['Alimentación'].limite = superM;
   presupuesto['Vehículo'].limite = nafta;
   presupuesto['Transporte'].limite = transp;
@@ -1196,16 +1230,30 @@ function recalcularConfig() {
   presupuesto['Servicios'].limite = edenor+gas+claro+zurich+provseg+arba+munici+aysa;
   presupuesto['Educación'].limite = colegio;
   presupuesto['Diezmo'].limite = diezmo;
+
+  // Actualizar UI de deuda en tiempo real mientras se edita Config
+  renderDeuda();
 }
 
 function renderPresupuesto(){
   const cita = RAMSEY_FRASES[Math.floor(Math.random()*RAMSEY_FRASES.length)];
   document.getElementById('ramseyCita').textContent = cita.texto;
+  // Cargar valores de deuda en los inputs
+  const elVisa = document.getElementById('cfg_visa');
+  const elMaster = document.getElementById('cfg_master');
+  const elPT = document.getElementById('cfg_para_tarjetas');
+  if(elVisa) elVisa.value = getDeudaVisa();
+  if(elMaster) elMaster.value = getDeudaMaster();
+  if(elPT) elPT.value = getParaTarjetas();
   recalcularConfig();
 }
 
 function guardarConfig(){
   recalcularConfig();
+  // Guardar saldos de deuda
+  localStorage.setItem('gazelle_deuda_visa',    document.getElementById('cfg_visa').value||'681704');
+  localStorage.setItem('gazelle_deuda_master',  document.getElementById('cfg_master').value||'2911169');
+  localStorage.setItem('gazelle_para_tarjetas', document.getElementById('cfg_para_tarjetas').value||'1544216');
   localStorage.setItem('gazelle_presupuesto',JSON.stringify(presupuesto));
   const cfg = {
     ingreso: parseInt(document.getElementById('cfg_ingreso').value)||3800000,
@@ -1226,7 +1274,7 @@ function guardarConfig(){
   };
   localStorage.setItem('gazelle_config',JSON.stringify(cfg));
   renderAll();
-  mostrarAlert('💾','Presupuesto Guardado','Los valores se guardaron correctamente.');
+  mostrarAlert('💾','Presupuesto Guardado','Saldos de deuda y presupuesto actualizados.');
 }
 
 function cargarConfigGuardada(){
