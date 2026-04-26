@@ -839,6 +839,7 @@ function parseFechaISO(s) {
 }
 
 function actualizarCicloUI() {
+  try {
   const hoy = new Date(); hoy.setHours(0,0,0,0);
   const fin = parseFechaISO(cicloActual.fin);
   const ini = parseFechaISO(cicloActual.inicio);
@@ -865,6 +866,7 @@ function actualizarCicloUI() {
   const elVM = document.getElementById('pagarVencMaster');
   if(elVV) elVV.textContent = vencStr;
   if(elVM) elVM.textContent = vencStr;
+  } catch(e) { console.warn('actualizarCicloUI:', e); }
 }
 
 // ============================================================
