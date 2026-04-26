@@ -920,9 +920,9 @@ async function fetchSheet() {
 
     aplicarFiltroCiclo();
     setSyncState('ok',`Ciclo: ${gastosMes.filter(g=>!CATS_EXCLUIDAS.has(g.cat)).length} transacciones`);
-    renderAll();
+    try { renderAll(); } catch(e) { console.error('renderAll:', e); }
   } catch(e) {
-    setSyncState('error','ERR:'+String(e.message||e).substring(0,40));
+    setSyncState('error','Error al sincronizar. Tocá Actualizar.');
     console.error(e);
   }
 }
