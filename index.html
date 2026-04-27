@@ -165,6 +165,7 @@ body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',
 .chip-edu { background:var(--blue-light); color:var(--blue); }
 .chip-romi { background:var(--purple-light); color:var(--purple); }
 .chip-otros { background:var(--border); color:var(--muted); }
+.chip-mp { background:#E3F4FD; color:#009EE3; }
 .chip-hormiga { background:var(--orange-light); color:var(--orange); }
 .chip-cat { background:var(--bg); color:var(--muted); }
 .txn-monto { font-size:14px; font-weight:700; font-family:'Space Mono',monospace; margin-left:8px; white-space:nowrap; }
@@ -245,7 +246,7 @@ body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',
     <div class="tab" onclick="showTab('pagar',this)">💳 A Pagar</div>
     <div class="tab" onclick="showTab('categorias',this)">📂 Categorías</div>
     <div class="tab" onclick="showTab('prohibidos',this)">🚫 Prohibidos</div>
-    <div class="tab" onclick="showTab('transacciones',this)">📋 Movimientos</div>
+    <div class="tab" onclick="showTab('transacciones',this)">📋 Movimientos TC</div>
     <div class="tab" onclick="showTab('mercadopago',this)">📱 MP</div>
     <div class="tab" onclick="showTab('presupuesto',this)">⚙️ Config</div>
   </div>
@@ -254,7 +255,7 @@ body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',
 <!-- TAB RESUMEN -->
 <div id="tab-resumen" class="content">
   <div class="disponible-card ok" id="disponibleCard">
-    <div class="disp-label">Disponible este ciclo — Núcleo</div>
+    <div class="disp-label">Disponible este ciclo — TC + MP</div>
     <div class="disp-amount" id="disponibleAmt">—</div>
     <div class="disp-sub" id="disponibleSub">sincronizando...</div>
     <div class="disp-msg" id="judgeMsg">Conectando con Google Sheets...</div>
@@ -704,8 +705,36 @@ function renderAll(){ renderResumen(); renderResumenPersonas(); renderDeuda(); r
 
 function gastosReales(lista){ return lista.filter(g=>!CATS_EXCLUIDAS.has(g.cat)&&g.monto>0); }
 
+// Gastos MP reales del ciclo (egresos que NO son ingresos ni transferencias internas ni banco)
+const MP_CATS_GASTO = new Set(['Alimentación','Salud','Servicios','Educación','Vehículo','Comida Fuera','Entretenimiento','Indumentaria','Transporte','Compras Online','Hogar','Diezmo','Otros']);
+function gastosMPReales(lista){
+  return lista.filter(g => g.monto < 0 && MP_CATS_GASTO.has(g.cat));
+}
+
+// Convierte movimientos MP al formato de gastos TC para unificar renders
+function mpComoGastos(lista){
+  return gastosMPReales(lista).map(g => ({
+    fecha: g.fecha,
+    fechaDate: g.fechaDate,
+    comercio: g.tipo ? g.tipo.substring(0,40) : g.cat,
+    monto: Math.abs(g.monto),
+    cat: g.cat,
+    signo: 'S',
+    hormiga: ['Comida Fuera','Entretenimiento','Indumentaria','Compras Online'].includes(g.cat),
+    quien: 'Eduardo',
+    esProhibido: PROHIBIDOS_DEF.some(p => p.keys.some(k => (g.tipo||'').toLowerCase().includes(k))),
+    esDevolucion: false,
+    cuenta: 'MercadoPago',
+    fuenteMP: true
+  }));
+}
+
+function gastosUnificados(){
+  return [...gastosReales(gastosMes), ...mpComoGastos(gastosMPCiclo)];
+}
+
 function renderResumen(){
-  const gastos = gastosReales(gastosMes);
+  const gastos = gastosUnificados();
   const total=gastos.reduce((s,g)=>s+g.monto,0);
   const limite=Object.values(presupuesto).reduce((s,c)=>s+c.limite,0);
   const disponible=limite-total; const pct=(total/limite)*100;
@@ -731,7 +760,7 @@ function renderResumen(){
 }
 
 function renderResumenPersonas(){
-  const gastos = gastosReales(gastosMes);
+  const gastos = gastosUnificados();
   const edu = gastos.filter(g=>g.quien==='Eduardo').reduce((s,g)=>s+g.monto,0);
   const romi = gastos.filter(g=>g.quien==='Romina').reduce((s,g)=>s+g.monto,0);
   const INGRESO_BASE = 3800000;
@@ -742,7 +771,7 @@ function renderResumenPersonas(){
   setTimeout(()=>{ document.getElementById('barEdu').style.width = Math.min(edu/INGRESO_BASE*100,100)+'%'; document.getElementById('barRomi').style.width = Math.min(romi/INGRESO_BASE*100,100)+'%'; },50);
   const llenarDetalle = (elId, quien, color) => {
     const el = document.getElementById(elId);
-    const gs = gastosReales(gastosMes).filter(g=>g.quien===quien).sort((a,b)=>b.monto-a.monto);
+    const gs = gastosUnificados().filter(g=>g.quien===quien).sort((a,b)=>b.monto-a.monto);
     el.innerHTML = gs.map(g=>`<div class="persona-detalle-item"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%">${g.esProhibido?'🚫 ':''}${g.comercio}</span><span style="font-family:'Space Mono',monospace;color:${color};white-space:nowrap">${fp(g.monto)}</span></div>`).join('');
   };
   llenarDetalle('detalleEdu', 'Eduardo', 'var(--blue)'); llenarDetalle('detalleRomi', 'Romina', 'var(--purple)');
@@ -791,7 +820,7 @@ function renderPagar(){
 function renderCategorias(){
   const c=document.getElementById('barsContainer'); c.innerHTML='';
   const totCat={};
-  gastosReales(gastosMes).forEach(g=>{totCat[g.cat]=(totCat[g.cat]||0)+g.monto});
+  gastosUnificados().forEach(g=>{totCat[g.cat]=(totCat[g.cat]||0)+g.monto});
   const cats=new Set([...Object.keys(presupuesto),...Object.keys(totCat)]);
   [...cats].forEach(cat=>{
     if(CATS_EXCLUIDAS.has(cat)) return;
@@ -801,8 +830,8 @@ function renderCategorias(){
     const idCat='cat-'+cat.replace(/[^a-z0-9]/gi,'');
     const div=document.createElement('div'); div.className='cat-card'; div.id=idCat;
     div.onclick=()=>{ const det=document.getElementById('det-'+idCat); if(det)det.style.display=det.style.display==='none'?'block':'none'; };
-    const gastosCat = gastosReales(gastosMes).filter(g=>g.cat===cat).sort((a,b)=>b.monto-a.monto);
-    div.innerHTML=`<div class="cat-header"><div class="cat-name">${cfg.icon} ${cat}</div><div class="cat-amounts"><div class="cat-spent" style="color:${pct>=80?'var(--red)':pct>=60?'var(--yellow)':'var(--text)'}">${fp(gastado)}</div><div class="cat-limit">de ${fp(cfg.limite)}</div></div></div><div class="cat-bar-track"><div class="cat-bar-fill ${cl}" style="width:0%" data-pct="${pct}"></div></div><div class="cat-detalle" id="det-${idCat}">${gastosCat.map(g=>`<div class="cat-detalle-item"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:65%">${g.esProhibido?'🚫 ':''}${g.comercio} <span class="chip ${g.quien==='Romina'?'chip-romi':'chip-edu'}">${g.quien.substring(0,3).toUpperCase()}</span></span><span style="font-family:'Space Mono',monospace;white-space:nowrap">${fp(g.monto)}</span></div>`).join('')||'<div style="color:var(--muted);font-size:11px;padding:4px 0">Sin movimientos</div>'}</div>`;
+    const gastosCat = gastosUnificados().filter(g=>g.cat===cat).sort((a,b)=>b.monto-a.monto);
+    div.innerHTML=`<div class="cat-header"><div class="cat-name">${cfg.icon} ${cat}</div><div class="cat-amounts"><div class="cat-spent" style="color:${pct>=80?'var(--red)':pct>=60?'var(--yellow)':'var(--text)'}">${fp(gastado)}</div><div class="cat-limit">de ${fp(cfg.limite)}</div></div></div><div class="cat-bar-track"><div class="cat-bar-fill ${cl}" style="width:0%" data-pct="${pct}"></div></div><div class="cat-detalle" id="det-${idCat}">${gastosCat.map(g=>`<div class="cat-detalle-item"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:65%">${g.esProhibido?'🚫 ':''}${g.comercio} <span class="chip ${g.fuenteMP?'chip-mp':g.quien==='Romina'?'chip-romi':'chip-edu'}">${g.fuenteMP?'MP':g.quien.substring(0,3).toUpperCase()}</span></span><span style="font-family:'Space Mono',monospace;white-space:nowrap">${fp(g.monto)}</span></div>`).join('')||'<div style="color:var(--muted);font-size:11px;padding:4px 0">Sin movimientos</div>'}</div>`;
     c.appendChild(div);
   });
   setTimeout(()=>{document.querySelectorAll('.cat-bar-fill[data-pct]').forEach(el=>{el.style.width=el.dataset.pct+'%'})},50);
@@ -811,7 +840,7 @@ function renderCategorias(){
 function renderProhibidos(){
   const list=document.getElementById('prohibidoList'); list.innerHTML='';
   PROHIBIDOS_DEF.forEach(p=>{
-    const enc=gastosReales(gastosMes).filter(g=>p.keys.some(k=>g.comercio.toLowerCase().includes(k)));
+    const enc=gastosUnificados().filter(g=>p.keys.some(k=>g.comercio.toLowerCase().includes(k)));
     const total=enc.reduce((s,g)=>s+g.monto,0); const found=enc.length>0;
     const div=document.createElement('div'); div.className='prohibido-item'+(found?' found':'');
     const chips=found?[...new Set(enc.map(g=>g.quien))].map(q=>`<span class="chip ${q==='Eduardo'?'chip-edu':'chip-romi'}">${q.substring(0,3).toUpperCase()}</span>`).join(''):'';
