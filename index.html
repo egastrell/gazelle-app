@@ -686,7 +686,7 @@ async function fetchMP() {
       const fecha = get('Fecha');
       const fechaDate = parseFechaStr(fecha);
       const tipo = get('TipoMovimiento');
-      const monto = parseFloat(String(get('Monto')).replace(',','.')) || 0;
+      const monto = parseFloat(String(get('Monto')).replace(/\./g,'').replace(',','.')) || 0;
       const cat = get('Categoria') || 'Otros';
       const subcat = get('Subcategoria') || '';
       const nota = get('Nota') || '';
