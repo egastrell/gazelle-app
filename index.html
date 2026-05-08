@@ -670,7 +670,7 @@ async function fetchSheet() {
     todosLosGastos = dataRows.filter(r=>r&&r[0]).map(r=>{
       const get=l=>{const i=cols.indexOf(l);return i>=0&&r[i]!==undefined?String(r[i]):'';};
       const comercio=String(get('Comercio')||get('DescripcionRaw')||'');
-      const cat=String(get('Categoria')||'Otros');
+      const cat=String(get('Categoria')||'Otros').trim();
       const signo=String(get('Signo')||'S');
       const montoStr=get('Monto').replace(/\$/g,'').replace(/\./g,'').replace(',','.').trim();
       const montoRaw=parseFloat(montoStr)||0;
@@ -716,7 +716,7 @@ async function fetchMP() {
         const limpio = montoStr.replace(/[()$\-\s]/g,'').replace(/\./g,'').replace(',','.');
         monto = (parseFloat(limpio) || 0) * (esNegativo ? -1 : 1);
       }
-      const cat = get('Categoria') || 'Otros';
+      const cat = (get('Categoria') || 'Otros').trim();
       const subcat = get('Subcategoria') || '';
       const nota = get('Nota') || '';
       const esSangrado = subcat === 'Eduardo→Romina' || tipo.toLowerCase().includes('romina');
