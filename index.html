@@ -530,7 +530,7 @@ let presupuesto = JSON.parse(localStorage.getItem('gazelle_presupuesto')||'null'
   "Otros":           { icon:"❓", limite:  30000 },
 };
 
-const CATS_EXCLUIDAS = new Set(['Pago Tarjeta', 'Banco']);
+const CATS_EXCLUIDAS = new Set(['Pago Tarjeta', 'Banco', 'Transferencia Interna']);
 const MP_EXCLUIR = new Set(['Ingreso', 'Banco', 'Transferencia Interna']);
 
 function anteultimoJueves(year, month) {
@@ -735,7 +735,7 @@ function renderAll(){ renderResumen(); renderResumenPersonas(); renderDeuda(); r
 function gastosReales(lista){ return lista.filter(g=>!CATS_EXCLUIDAS.has(g.cat)&&g.monto>0); }
 
 // Gastos MP reales del ciclo (egresos que NO son ingresos ni transferencias internas ni banco)
-const MP_CATS_GASTO = new Set(['Alimentación','Salud','Servicios','Educación','Vehículo','Comida Fuera','Entretenimiento','Indumentaria','Transporte','Compras Online','Hogar','Diezmo','Otros','Transferencia Interna']);
+const MP_CATS_GASTO = new Set(['Alimentación','Salud','Servicios','Educación','Vehículo','Comida Fuera','Entretenimiento','Indumentaria','Transporte','Compras Online','Hogar','Diezmo','Otros']);
 function gastosMPReales(lista){
   return lista.filter(g => g.monto < 0 && MP_CATS_GASTO.has(g.cat));
 }
