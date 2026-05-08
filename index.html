@@ -217,7 +217,7 @@ body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',
 <div class="app-header">
   <div class="header-top">
     <div class="logo-group"><span class="logo-icon">🦌</span><span class="logo-text">Gazelle</span></div>
-    <div class="baby-step-badge">Baby Step 2 🔥</div>
+    <div class="baby-step-badge">Baby Step 3 💰</div>
   </div>
   <div class="ciclo-card">
     <button class="ciclo-nav" onclick="navegarCiclo(-1)">‹</button>
@@ -299,24 +299,24 @@ body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',
     <div class="bs-title">📍 Tu posición en el método</div>
     <div class="bs-steps">
       <div class="bs-step"><div class="bs-circle done">✓</div><div class="bs-label done">Fondo<br>emergencia<br>$1.000</div></div>
-      <div class="bs-step"><div class="bs-circle current">2</div><div class="bs-label current">Pagar<br>todas las<br>deudas ←</div></div>
-      <div class="bs-step"><div class="bs-circle future">3</div><div class="bs-label">Fondo<br>3-6<br>meses</div></div>
+      <div class="bs-step"><div class="bs-circle done">✓</div><div class="bs-label done">Pagaste<br>todas las<br>deudas ✓</div></div>
+      <div class="bs-step"><div class="bs-circle current">3</div><div class="bs-label current">Fondo<br>3-6<br>meses ←</div></div>
       <div class="bs-step"><div class="bs-circle future">4</div><div class="bs-label">Inversión<br>15%<br>retiro</div></div>
       <div class="bs-step"><div class="bs-circle future">5</div><div class="bs-label">Educación<br>hijos</div></div>
       <div class="bs-step"><div class="bs-circle future">6</div><div class="bs-label">Casa<br>propia</div></div>
       <div class="bs-step"><div class="bs-circle future">7</div><div class="bs-label">Dar &<br>invertir</div></div>
     </div>
     <div class="bs-current-info">
-      <div class="bs-current-name">🔥 Baby Step 2 — La Bola de Nieve</div>
-      <div class="bs-current-desc">Listá todas tus deudas del menor al mayor. Pagá mínimos en todas menos en la más chica — a esa tirále todo lo que puedas. Cuando la elimines, pasá a la siguiente. ¡Modo Gazelle activado!</div>
+      <div class="bs-current-name">💰 Baby Step 3 — Fondo de Emergencia</div>
+      <div class="bs-current-desc">¡Deudas eliminadas! Ahora construí un fondo de emergencia de 3 a 6 meses de gastos. Tu objetivo: ~$9.000.000–$18.000.000. Tus USD 3.643 (~$5.118.000) ya son el núcleo. ¡No los toques!</div>
     </div>
   </div>
   <div class="deuda-card">
-    <div class="deuda-header"><div class="deuda-label">📉 Progreso de deuda</div><div class="deuda-pct" id="deudaPct">0% pagado</div></div>
+    <div class="deuda-header"><div class="deuda-label">💰 Fondo de Emergencia BS3</div><div class="deuda-pct" style="background:var(--blue-light);color:var(--blue)" id="deudaPct">Construyendo</div></div>
     <div class="deuda-amounts">
-      <div class="deuda-amount-box"><div class="deuda-amount-num red" id="deudaActual">$3.592.873</div><div class="deuda-amount-lbl">Deuda actual</div></div>
-      <div class="deuda-amount-box" style="text-align:center"><div style="font-size:28px">🎯</div><div class="deuda-amount-lbl">Meta</div></div>
-      <div class="deuda-amount-box" style="text-align:right"><div class="deuda-amount-num green" id="deudaPagado">$0</div><div class="deuda-amount-lbl">Pagado</div></div>
+      <div class="deuda-amount-box"><div class="deuda-amount-num" style="color:var(--blue)" id="deudaActual">$5.118.000</div><div class="deuda-amount-lbl">Fondo actual (USD 3.643)</div></div>
+      <div class="deuda-amount-box" style="text-align:center"><div style="font-size:28px">🏦</div><div class="deuda-amount-lbl">Meta</div></div>
+      <div class="deuda-amount-box" style="text-align:right"><div class="deuda-amount-num green" id="deudaPagado">$9.000.000</div><div class="deuda-amount-lbl">Mínimo BS3</div></div>
     </div>
     <div class="deuda-bar-track"><div class="deuda-bar-fill" id="deudaBar" style="width:0%"></div></div>
     <div class="deuda-items">
@@ -325,19 +325,26 @@ body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',
     </div>
   </div>
   <div class="card">
-    <div class="card-title">❄️ Bola de Nieve — Orden de ataque</div>
-    <div style="background:var(--yellow-light);border-radius:12px;padding:14px;margin-bottom:10px;border-left:4px solid var(--yellow)">
-      <div style="font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:4px">① PRIMERO — Visa Galicia</div>
-      <div style="font-size:13px;font-weight:600" id="bolaNieveVisaAmt">—</div>
-      <div style="font-size:11px;color:var(--muted);margin-top:4px">Pagá mínimo en Mastercard + todo el excedente acá</div>
+    <div class="card-title">💰 Baby Step 3 — Plan de construcción</div>
+    <div style="background:var(--blue-light);border-radius:12px;padding:14px;margin-bottom:10px;border-left:4px solid var(--blue)">
+      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:4px">✅ Deuda eliminada — 5 mayo 2026</div>
+      <div style="font-size:13px;font-weight:600">Visa $0 + Mastercard $0</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">¡Libertad de deuda de tarjetas lograda!</div>
     </div>
-    <div style="background:var(--bg);border-radius:12px;padding:14px;border-left:4px solid var(--border)">
-      <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:4px">② DESPUÉS — Mastercard BNA</div>
-      <div style="font-size:13px;font-weight:600;color:var(--muted)" id="bolaNieveMasterAmt">—</div>
-      <div style="font-size:11px;color:var(--muted);margin-top:4px">Una vez eliminada Visa, toda la fuerza acá</div>
+    <div style="background:var(--green-light);border-radius:12px;padding:14px;margin-bottom:10px;border-left:4px solid var(--green)">
+      <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:4px">💵 Fondo actual — USD 3.643</div>
+      <div style="font-size:13px;font-weight:600">~$5.118.000 al blue</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">57% del mínimo BS3 (~$9.000.000). No tocar.</div>
     </div>
-    <div style="background:var(--green-light);border-radius:12px;padding:14px;margin-top:10px;border-left:4px solid var(--green)">
-      <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:4px">🏡 DESPUÉS — Santa Anita</div>
+    <div style="background:var(--yellow-light);border-radius:12px;padding:14px;border-left:4px solid var(--yellow)">
+      <div style="font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:4px">🎯 Meta BS3 mínima</div>
+      <div style="font-size:13px;font-weight:600">$9.000.000 — $18.000.000</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Agregar ~$1.629.000/mes del excedente</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">🏡 Santa Anita</div>
+    <div style="background:var(--green-light);border-radius:12px;padding:14px;border-left:4px solid var(--green)">
       <div style="font-size:13px;font-weight:600;color:var(--muted)">Bloqueado hasta Baby Step 6</div>
       <div style="font-size:11px;color:var(--muted);margin-top:4px">"El rico gobierna al pobre; el que pide prestado es esclavo del que presta." — Proverbios 22:7</div>
     </div>
@@ -450,25 +457,25 @@ body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',
   <div class="cfg-section-title">🙏 Diezmo (10% — inamovible)</div>
   <div class="cfg-row cfg-locked" style="border-left:4px solid var(--green)"><span style="color:var(--green);font-weight:600">Diezmo automático</span><div style="font-family:'Space Mono',monospace;font-size:14px;color:var(--green)" id="cfg_diezmo_calc">$380.000</div></div>
   <div class="cfg-section-title">🔒 Gastos fijos</div>
-  <div class="cfg-row"><span>Swiss Medical</span><input type="number" id="cfg_swiss" value="405000" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>EDENOR</span><input type="number" id="cfg_edenor" value="122000" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>Gas Natural FENO</span><input type="number" id="cfg_gas" value="45000" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>Claro</span><input type="number" id="cfg_claro" value="36000" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>Zurich</span><input type="number" id="cfg_zurich" value="146000" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>Provincia Seguros</span><input type="number" id="cfg_provseg" value="147000" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>ARBA</span><input type="number" id="cfg_arba" value="13000" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>Municipalidad Morón</span><input type="number" id="cfg_munici" value="7000" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>Colegio G. Belgrano</span><input type="number" id="cfg_colegio" value="200000" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>AySA</span><input type="number" id="cfg_aysa" value="20000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>Swiss Medical</span><input type="number" id="cfg_swiss" value="426682" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>EDENOR</span><input type="number" id="cfg_edenor" value="70000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>Gas Natural FENO</span><input type="number" id="cfg_gas" value="50000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>Claro / Tuenti</span><input type="number" id="cfg_claro" value="45000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>Zurich (seguro vida)</span><input type="number" id="cfg_zurich" value="146000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>Provincia Seguros (auto)</span><input type="number" id="cfg_provseg" value="145000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>ARBA</span><input type="number" id="cfg_arba" value="14000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>Municipalidad Morón</span><input type="number" id="cfg_munici" value="10000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>Colegio G. Belgrano</span><input type="number" id="cfg_colegio" value="187704" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>AySA</span><input type="number" id="cfg_aysa" value="52000" onchange="recalcularConfig()"></div>
   <div class="cfg-section-title">🛒 Variables (techos máximos)</div>
-  <div class="cfg-row"><span>Supermercado</span><input type="number" id="cfg_super" value="450000" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>Combustible</span><input type="number" id="cfg_nafta" value="130000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>Supermercado + Alimentación</span><input type="number" id="cfg_super" value="630000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>Combustible</span><input type="number" id="cfg_nafta" value="150000" onchange="recalcularConfig()"></div>
   <div class="cfg-row"><span>Transporte público</span><input type="number" id="cfg_transp" value="30000" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>Farmacia / Salud extra</span><input type="number" id="cfg_farma" value="25000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>Farmacia / Salud extra</span><input type="number" id="cfg_farma" value="30000" onchange="recalcularConfig()"></div>
   <div class="cfg-section-title">💳 Saldos de deuda actuales</div>
-  <div class="cfg-row" style="border-left:4px solid var(--red)"><span>Visa Galicia</span><input type="number" id="cfg_visa" value="681704" onchange="recalcularConfig()"></div>
-  <div class="cfg-row" style="border-left:4px solid var(--red)"><span>Mastercard BNA</span><input type="number" id="cfg_master" value="2911169" onchange="recalcularConfig()"></div>
-  <div class="cfg-row" style="border-left:4px solid var(--blue)"><span>Disponible para tarjetas</span><input type="number" id="cfg_para_tarjetas" value="1544216" onchange="recalcularConfig()"></div>
+  <div class="cfg-row" style="border-left:4px solid var(--red)"><span>Visa Galicia</span><input type="number" id="cfg_visa" value="0" onchange="recalcularConfig()"></div>
+  <div class="cfg-row" style="border-left:4px solid var(--red)"><span>Mastercard BNA</span><input type="number" id="cfg_master" value="0" onchange="recalcularConfig()"></div>
+  <div class="cfg-row" style="border-left:4px solid var(--blue)"><span>Disponible para tarjetas</span><input type="number" id="cfg_para_tarjetas" value="0" onchange="recalcularConfig()"></div>
   <div class="cfg-section-title">❄️ Bola de nieve</div>
   <div class="cfg-row" style="border-left:4px solid var(--red)"><span style="color:var(--red);font-weight:600">Para pagar deudas</span><div style="font-family:'Space Mono',monospace;font-size:14px;color:var(--red)" id="cfg_bolanieve">—</div></div>
   <div class="cfg-section-title">🏡 Santa Anita</div>
@@ -498,29 +505,29 @@ const SHEET_ID='15TzS_-VQazdA427n8S7H_FnPD5Fj0eDrRMuETIdNLgQ';
 const SHEET_NAME='Tarjetas';
 const MP_SHEET_NAME='MercadoPago';
 const SHEETS_API_KEY='AIzaSyD3QpBs7qRD3bpO00zjIPzXOXbU3Z7o7mA';
-const API_URL=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(SHEET_NAME)}?key=${SHEETS_API_KEY}`;
-const MP_API_URL=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(MP_SHEET_NAME)}?key=${SHEETS_API_KEY}`;
+const API_URL=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(SHEET_NAME+'!A1:Z50000')}?key=${SHEETS_API_KEY}`;
+const MP_API_URL=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(MP_SHEET_NAME+'!A1:Z50000')}?key=${SHEETS_API_KEY}`;
 
-function getParaTarjetas(){ return parseInt(localStorage.getItem('gazelle_para_tarjetas')||'1544216'); }
-function getDeudaVisa(){    return parseInt(localStorage.getItem('gazelle_deuda_visa')||'681704'); }
-function getDeudaMaster(){  return parseInt(localStorage.getItem('gazelle_deuda_master')||'2911169'); }
+function getParaTarjetas(){ return parseInt(localStorage.getItem('gazelle_para_tarjetas')||'0'); }
+function getDeudaVisa(){    return parseInt(localStorage.getItem('gazelle_deuda_visa')||'0'); }
+function getDeudaMaster(){  return parseInt(localStorage.getItem('gazelle_deuda_master')||'0'); }
 function getDeudaTotal(){   return getDeudaVisa() + getDeudaMaster(); }
 const DEUDA_INICIAL = 3592872;
 
 let presupuesto = JSON.parse(localStorage.getItem('gazelle_presupuesto')||'null') || {
-  "Alimentación":    { icon:"🛒", limite: 820000 },
-  "Salud":           { icon:"🏥", limite: 580000 },
+  "Alimentación":    { icon:"🛒", limite: 630000 },
+  "Salud":           { icon:"🏥", limite: 456682 },
   "Servicios":       { icon:"💡", limite: 610000 },
   "Educación":       { icon:"📚", limite: 290000 },
-  "Vehículo":        { icon:"🚗", limite: 230000 },
-  "Comida Fuera":    { icon:"🍽️", limite: 170000 },
-  "Entretenimiento": { icon:"🎭", limite: 130000 },
-  "Indumentaria":    { icon:"👕", limite: 120000 },
-  "Transporte":      { icon:"🚇", limite:  60000 },
-  "Compras Online":  { icon:"📦", limite:  60000 },
-  "Hogar":           { icon:"🏠", limite:  60000 },
+  "Vehículo":        { icon:"🚗", limite: 150000 },
+  "Comida Fuera":    { icon:"🍽️", limite: 80000 },
+  "Entretenimiento": { icon:"🎭", limite: 80000 },
+  "Indumentaria":    { icon:"👕", limite: 60000 },
+  "Transporte":      { icon:"🚇", limite:  50000 },
+  "Compras Online":  { icon:"📦", limite:  30000 },
+  "Hogar":           { icon:"🏠", limite:  30000 },
   "Diezmo":          { icon:"🙏", limite: 380000 },
-  "Otros":           { icon:"❓", limite:  50000 },
+  "Otros":           { icon:"❓", limite:  30000 },
 };
 
 const CATS_EXCLUIDAS = new Set(['Pago Tarjeta', 'Banco']);
@@ -605,8 +612,22 @@ function aplicarFiltroCicloMP() {
 
 function parseFechaStr(f) {
   if(!f) return null;
-  const p = String(f).split('/');
-  if(p.length===3) { let y = parseInt(p[2].trim()); if(y < 100) y += 2000; return new Date(y, parseInt(p[1].trim()) - 1, parseInt(p[0].trim())); }
+  const s = String(f).trim();
+  // Soporte DD/MM/YYYY y DD/MM/YY
+  const p = s.split('/');
+  if(p.length===3) {
+    let y = parseInt(p[2].trim());
+    if(y < 100) y += 2000;
+    const m = parseInt(p[1].trim()) - 1;
+    const d = parseInt(p[0].trim());
+    if(isNaN(y)||isNaN(m)||isNaN(d)) return null;
+    return new Date(y, m, d);
+  }
+  // Soporte YYYY-MM-DD
+  const iso = s.split('-');
+  if(iso.length===3 && iso[0].length===4) {
+    return new Date(parseInt(iso[0]), parseInt(iso[1])-1, parseInt(iso[2]));
+  }
   return null;
 }
 function parseFechaISO(s) { const p = s.split('-'); return new Date(parseInt(p[0]), parseInt(p[1])-1, parseInt(p[2])); }
@@ -685,15 +706,23 @@ async function fetchMP() {
       const get = l => { const i = cols.indexOf(l); return i >= 0 && r[i] !== undefined ? String(r[i]) : ''; };
       const fecha = get('Fecha');
       const fechaDate = parseFechaStr(fecha);
-      const tipo = get('TipoMovimiento');
-      const monto = parseFloat(String(get('Monto')).replace(/\./g,'').replace(',','.')) || 0;
+      // TipoMovimiento o Descripcion como fallback
+      const tipo = get('TipoMovimiento') || get('Descripcion') || '';
+      // Parser robusto para montos argentinos: (1.234,56) o -1.234,56 o 1.234,56
+      const montoStr = get('Monto').trim();
+      let monto = 0;
+      if(montoStr) {
+        const esNegativo = montoStr.startsWith('(') || montoStr.startsWith('-');
+        const limpio = montoStr.replace(/[()$\-\s]/g,'').replace(/\./g,'').replace(',','.');
+        monto = (parseFloat(limpio) || 0) * (esNegativo ? -1 : 1);
+      }
       const cat = get('Categoria') || 'Otros';
       const subcat = get('Subcategoria') || '';
       const nota = get('Nota') || '';
-      const esSangrado = cat === 'Transferencia Interna' && subcat === 'Eduardo→Romina';
-      const esDiezmo = cat === 'Diezmo';
+      const esSangrado = subcat === 'Eduardo→Romina' || tipo.toLowerCase().includes('romina');
+      const esDiezmo = cat === 'Diezmo' || tipo.toLowerCase().includes('cristo es vida');
       return { fecha, fechaDate, tipo, monto, cat, subcat, nota, esSangrado, esDiezmo };
-    });
+    }).filter(r => r.fechaDate !== null);
     aplicarFiltroCicloMP();
     renderMP();
   } catch(e) { console.warn('fetchMP error:', e); }
@@ -706,7 +735,7 @@ function renderAll(){ renderResumen(); renderResumenPersonas(); renderDeuda(); r
 function gastosReales(lista){ return lista.filter(g=>!CATS_EXCLUIDAS.has(g.cat)&&g.monto>0); }
 
 // Gastos MP reales del ciclo (egresos que NO son ingresos ni transferencias internas ni banco)
-const MP_CATS_GASTO = new Set(['Alimentación','Salud','Servicios','Educación','Vehículo','Comida Fuera','Entretenimiento','Indumentaria','Transporte','Compras Online','Hogar','Diezmo','Otros']);
+const MP_CATS_GASTO = new Set(['Alimentación','Salud','Servicios','Educación','Vehículo','Comida Fuera','Entretenimiento','Indumentaria','Transporte','Compras Online','Hogar','Diezmo','Otros','Transferencia Interna']);
 function gastosMPReales(lista){
   return lista.filter(g => g.monto < 0 && MP_CATS_GASTO.has(g.cat));
 }
@@ -988,9 +1017,9 @@ function renderPresupuesto(){
 
 function guardarConfig(){
   recalcularConfig();
-  localStorage.setItem('gazelle_deuda_visa', document.getElementById('cfg_visa').value||'681704');
-  localStorage.setItem('gazelle_deuda_master', document.getElementById('cfg_master').value||'2911169');
-  localStorage.setItem('gazelle_para_tarjetas', document.getElementById('cfg_para_tarjetas').value||'1544216');
+  localStorage.setItem('gazelle_deuda_visa', document.getElementById('cfg_visa').value||'0');
+  localStorage.setItem('gazelle_deuda_master', document.getElementById('cfg_master').value||'0');
+  localStorage.setItem('gazelle_para_tarjetas', document.getElementById('cfg_para_tarjetas').value||'0');
   localStorage.setItem('gazelle_presupuesto',JSON.stringify(presupuesto));
   const cfg = { ingreso: parseInt(document.getElementById('cfg_ingreso').value)||3800000, swiss: parseInt(document.getElementById('cfg_swiss').value)||0, edenor: parseInt(document.getElementById('cfg_edenor').value)||0, gas: parseInt(document.getElementById('cfg_gas').value)||0, claro: parseInt(document.getElementById('cfg_claro').value)||0, zurich: parseInt(document.getElementById('cfg_zurich').value)||0, provseg: parseInt(document.getElementById('cfg_provseg').value)||0, arba: parseInt(document.getElementById('cfg_arba').value)||0, munici: parseInt(document.getElementById('cfg_munici').value)||0, colegio: parseInt(document.getElementById('cfg_colegio').value)||0, aysa: parseInt(document.getElementById('cfg_aysa').value)||0, super: parseInt(document.getElementById('cfg_super').value)||0, nafta: parseInt(document.getElementById('cfg_nafta').value)||0, transp: parseInt(document.getElementById('cfg_transp').value)||0, farma: parseInt(document.getElementById('cfg_farma').value)||0 };
   localStorage.setItem('gazelle_config',JSON.stringify(cfg));
