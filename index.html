@@ -467,17 +467,24 @@ body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',
   <div class="cfg-row"><span>Municipalidad Morón</span><input type="number" id="cfg_munici" value="10000" onchange="recalcularConfig()"></div>
   <div class="cfg-row"><span>Colegio G. Belgrano</span><input type="number" id="cfg_colegio" value="187704" onchange="recalcularConfig()"></div>
   <div class="cfg-row"><span>AySA</span><input type="number" id="cfg_aysa" value="52000" onchange="recalcularConfig()"></div>
-  <div class="cfg-section-title">🛒 Variables (techos máximos)</div>
-  <div class="cfg-row"><span>Supermercado + Alimentación</span><input type="number" id="cfg_super" value="630000" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>Combustible</span><input type="number" id="cfg_nafta" value="150000" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>Transporte público</span><input type="number" id="cfg_transp" value="30000" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>Farmacia / Salud extra</span><input type="number" id="cfg_farma" value="30000" onchange="recalcularConfig()"></div>
+  <div class="cfg-section-title">🛒 Variables (techos máximos BS3)</div>
+  <div class="cfg-row"><span>Supermercado + Alimentación</span><input type="number" id="cfg_super" value="500000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>Combustible + Mantenimiento</span><input type="number" id="cfg_nafta" value="280000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>Transporte público</span><input type="number" id="cfg_transp" value="80000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>Farmacia / Salud extra</span><input type="number" id="cfg_farma" value="55000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>Sangrado Romina (acuerdo)</span><input type="number" id="cfg_romina" value="325000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>Comida Fuera</span><input type="number" id="cfg_comida" value="50000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>Entretenimiento</span><input type="number" id="cfg_entret" value="50000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>Indumentaria</span><input type="number" id="cfg_indum" value="40000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>Hogar</span><input type="number" id="cfg_hogar" value="80000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>Compras Online</span><input type="number" id="cfg_online" value="20000" onchange="recalcularConfig()"></div>
+  <div class="cfg-row"><span>Otros</span><input type="number" id="cfg_otros" value="40000" onchange="recalcularConfig()"></div>
   <div class="cfg-section-title">💳 Saldos de deuda actuales</div>
   <div class="cfg-row" style="border-left:4px solid var(--red)"><span>Visa Galicia</span><input type="number" id="cfg_visa" value="0" onchange="recalcularConfig()"></div>
   <div class="cfg-row" style="border-left:4px solid var(--red)"><span>Mastercard BNA</span><input type="number" id="cfg_master" value="0" onchange="recalcularConfig()"></div>
   <div class="cfg-row" style="border-left:4px solid var(--blue)"><span>Disponible para tarjetas</span><input type="number" id="cfg_para_tarjetas" value="0" onchange="recalcularConfig()"></div>
-  <div class="cfg-section-title">❄️ Bola de nieve</div>
-  <div class="cfg-row" style="border-left:4px solid var(--red)"><span style="color:var(--red);font-weight:600">Para pagar deudas</span><div style="font-family:'Space Mono',monospace;font-size:14px;color:var(--red)" id="cfg_bolanieve">—</div></div>
+  <div class="cfg-section-title">💰 Excedente para BS3</div>
+  <div class="cfg-row" style="border-left:4px solid var(--green)"><span style="color:var(--green);font-weight:600">Para fondo emergencia</span><div style="font-family:'Space Mono',monospace;font-size:14px;color:var(--green)" id="cfg_bolanieve">—</div></div>
   <div class="cfg-section-title">🏡 Santa Anita</div>
   <div class="cfg-row cfg-locked" style="border-left:4px solid var(--muted)"><span style="color:var(--muted)">Bloqueado hasta Baby Step 6</span><div style="font-family:'Space Mono',monospace;font-size:14px;color:var(--muted)">$0</div></div>
   <div class="card" style="margin-top:14px">
@@ -515,19 +522,19 @@ function getDeudaTotal(){   return getDeudaVisa() + getDeudaMaster(); }
 const DEUDA_INICIAL = 3592872;
 
 let presupuesto = JSON.parse(localStorage.getItem('gazelle_presupuesto')||'null') || {
-  "Alimentación":    { icon:"🛒", limite: 630000 },
-  "Salud":           { icon:"🏥", limite: 456682 },
-  "Servicios":       { icon:"💡", limite: 610000 },
+  "Alimentación":    { icon:"🛒", limite: 500000 },
+  "Salud":           { icon:"🏥", limite: 480000 },
+  "Servicios":       { icon:"💡", limite: 484000 },
   "Educación":       { icon:"📚", limite: 290000 },
-  "Vehículo":        { icon:"🚗", limite: 150000 },
-  "Comida Fuera":    { icon:"🍽️", limite: 80000 },
-  "Entretenimiento": { icon:"🎭", limite: 80000 },
-  "Indumentaria":    { icon:"👕", limite: 60000 },
-  "Transporte":      { icon:"🚇", limite:  50000 },
-  "Compras Online":  { icon:"📦", limite:  30000 },
-  "Hogar":           { icon:"🏠", limite:  30000 },
+  "Vehículo":        { icon:"🚗", limite: 280000 },
+  "Comida Fuera":    { icon:"🍽️", limite:  50000 },
+  "Entretenimiento": { icon:"🎭", limite:  50000 },
+  "Indumentaria":    { icon:"👕", limite:  40000 },
+  "Transporte":      { icon:"🚇", limite:  80000 },
+  "Compras Online":  { icon:"📦", limite:  20000 },
+  "Hogar":           { icon:"🏠", limite:  80000 },
   "Diezmo":          { icon:"🙏", limite: 380000 },
-  "Otros":           { icon:"❓", limite:  30000 },
+  "Otros":           { icon:"❓", limite:  40000 },
 };
 
 const CATS_EXCLUIDAS = new Set(['Pago Tarjeta', 'Banco', 'Transferencia Interna']);
@@ -991,19 +998,45 @@ function recalcularConfig() {
   const nafta=parseInt(document.getElementById('cfg_nafta').value)||0;
   const transp=parseInt(document.getElementById('cfg_transp').value)||0;
   const farma=parseInt(document.getElementById('cfg_farma').value)||0;
-  const totalVar = superM+nafta+transp+farma;
+  const romina=parseInt((document.getElementById('cfg_romina')||{value:0}).value)||0;
+  const comida=parseInt((document.getElementById('cfg_comida')||{value:0}).value)||0;
+  const entret=parseInt((document.getElementById('cfg_entret')||{value:0}).value)||0;
+  const indum=parseInt((document.getElementById('cfg_indum')||{value:0}).value)||0;
+  const hogar=parseInt((document.getElementById('cfg_hogar')||{value:0}).value)||0;
+  const online=parseInt((document.getElementById('cfg_online')||{value:0}).value)||0;
+  const otros=parseInt((document.getElementById('cfg_otros')||{value:0}).value)||0;
+  const totalVar = superM+nafta+transp+farma+romina+comida+entret+indum+hogar+online+otros;
   const disponible = ingreso - diezmo - totalFijos - totalVar;
   document.getElementById('cfg_diezmo_calc').textContent = fp(diezmo);
-  document.getElementById('cfg_bolanieve').textContent = disponible > 0 ? fp(disponible) : '⚠️ '+fp(Math.abs(disponible))+' déficit';
-  document.getElementById('cfg_bolanieve').style.color = disponible > 0 ? 'var(--red)' : 'var(--orange)';
-  const rows = [['Ingreso neto', ingreso, 'var(--text)', false],['(-) Diezmo 10%', diezmo, 'var(--green)', true],['(-) Gastos fijos', totalFijos, 'var(--muted)', true],['(-) Variables (techo)', totalVar, 'var(--muted)', true],['(-) Santa Anita', 0, 'var(--muted)', true]];
-  document.getElementById('cfg_resumen_rows').innerHTML = rows.map(([lbl,val,color,minus])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border)"><span style="color:var(--muted)">${lbl}</span><span style="font-family:'Space Mono',monospace;color:${color}">${minus?'- ':''}${fp(val)}</span></div>`).join('');
+  const elBolaNieve = document.getElementById('cfg_bolanieve');
+  if(elBolaNieve){
+    elBolaNieve.textContent = disponible > 0 ? fp(disponible)+' → BS3 🎯' : '⚠️ '+fp(Math.abs(disponible))+' déficit';
+    elBolaNieve.style.color = disponible > 0 ? 'var(--green)' : 'var(--red)';
+  }
+  const rows = [
+    ['Ingreso neto', ingreso, 'var(--text)', false],
+    ['(-) Diezmo 10%', diezmo, 'var(--green)', true],
+    ['(-) Gastos fijos', totalFijos, 'var(--muted)', true],
+    ['(-) Variables + Romina', totalVar, 'var(--muted)', true],
+    ['(=) Excedente BS3 mensual', disponible, disponible>=0?'var(--green)':'var(--red)', false]
+  ];
+  document.getElementById('cfg_resumen_rows').innerHTML = rows.map(([lbl,val,color,minus])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border)"><span style="color:var(--muted)">${lbl}</span><span style="font-family:'Space Mono',monospace;color:${color};font-weight:${lbl.includes('Excedente')?'700':'400'}">${minus?'- ':''}${fp(val)}</span></div>`).join('');
   document.getElementById('cfg_balance').textContent = fp(Math.abs(disponible)) + (disponible >= 0 ? ' ✅' : ' ⚠️');
   document.getElementById('cfg_balance').style.color = disponible >= 0 ? 'var(--green)' : 'var(--red)';
-  presupuesto['Alimentación'].limite = superM; presupuesto['Vehículo'].limite = nafta;
-  presupuesto['Transporte'].limite = transp; presupuesto['Salud'].limite = swiss + farma;
+  // Mapear a presupuesto de Categorías
+  presupuesto['Alimentación'].limite = superM;
+  presupuesto['Vehículo'].limite = nafta;
+  presupuesto['Transporte'].limite = transp;
+  presupuesto['Salud'].limite = swiss + farma;
   presupuesto['Servicios'].limite = edenor+gas+claro+zurich+provseg+arba+munici+aysa;
-  presupuesto['Educación'].limite = colegio; presupuesto['Diezmo'].limite = diezmo;
+  presupuesto['Educación'].limite = colegio;
+  presupuesto['Diezmo'].limite = diezmo;
+  presupuesto['Comida Fuera'].limite = comida;
+  presupuesto['Entretenimiento'].limite = entret;
+  presupuesto['Indumentaria'].limite = indum;
+  presupuesto['Hogar'].limite = hogar;
+  presupuesto['Compras Online'].limite = online;
+  presupuesto['Otros'].limite = otros;
   renderDeuda();
 }
 
@@ -1021,9 +1054,20 @@ function guardarConfig(){
   localStorage.setItem('gazelle_deuda_master', document.getElementById('cfg_master').value||'0');
   localStorage.setItem('gazelle_para_tarjetas', document.getElementById('cfg_para_tarjetas').value||'0');
   localStorage.setItem('gazelle_presupuesto',JSON.stringify(presupuesto));
-  const cfg = { ingreso: parseInt(document.getElementById('cfg_ingreso').value)||3800000, swiss: parseInt(document.getElementById('cfg_swiss').value)||0, edenor: parseInt(document.getElementById('cfg_edenor').value)||0, gas: parseInt(document.getElementById('cfg_gas').value)||0, claro: parseInt(document.getElementById('cfg_claro').value)||0, zurich: parseInt(document.getElementById('cfg_zurich').value)||0, provseg: parseInt(document.getElementById('cfg_provseg').value)||0, arba: parseInt(document.getElementById('cfg_arba').value)||0, munici: parseInt(document.getElementById('cfg_munici').value)||0, colegio: parseInt(document.getElementById('cfg_colegio').value)||0, aysa: parseInt(document.getElementById('cfg_aysa').value)||0, super: parseInt(document.getElementById('cfg_super').value)||0, nafta: parseInt(document.getElementById('cfg_nafta').value)||0, transp: parseInt(document.getElementById('cfg_transp').value)||0, farma: parseInt(document.getElementById('cfg_farma').value)||0 };
+  const getVal = id => parseInt((document.getElementById(id)||{value:0}).value)||0;
+  const cfg = {
+    ingreso: getVal('cfg_ingreso')||3800000,
+    swiss: getVal('cfg_swiss'), edenor: getVal('cfg_edenor'), gas: getVal('cfg_gas'),
+    claro: getVal('cfg_claro'), zurich: getVal('cfg_zurich'), provseg: getVal('cfg_provseg'),
+    arba: getVal('cfg_arba'), munici: getVal('cfg_munici'), colegio: getVal('cfg_colegio'),
+    aysa: getVal('cfg_aysa'),
+    super: getVal('cfg_super'), nafta: getVal('cfg_nafta'), transp: getVal('cfg_transp'),
+    farma: getVal('cfg_farma'), romina: getVal('cfg_romina'), comida: getVal('cfg_comida'),
+    entret: getVal('cfg_entret'), indum: getVal('cfg_indum'), hogar: getVal('cfg_hogar'),
+    online: getVal('cfg_online'), otros: getVal('cfg_otros')
+  };
   localStorage.setItem('gazelle_config',JSON.stringify(cfg));
-  renderAll(); mostrarAlert('💾','Presupuesto Guardado','Saldos de deuda y presupuesto actualizados.');
+  renderAll(); mostrarAlert('💾','Presupuesto BS3 Guardado','Techos actualizados según el plan de 5 meses para llegar al fondo de emergencia.');
 }
 
 function cargarConfigGuardada(){
