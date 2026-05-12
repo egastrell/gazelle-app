@@ -452,47 +452,56 @@ body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',
     <div class="quote-text" id="ramseyCita">Cargando...</div>
     <div class="quote-author">— Dave Ramsey</div>
   </div>
-  <div class="cfg-section-title">💰 Ingreso mensual</div>
-  <div class="cfg-row"><span>Ingreso neto promedio</span><input type="number" id="cfg_ingreso" value="3800000" onchange="recalcularConfig()"></div>
-  <div class="cfg-section-title">🙏 Diezmo (10% — inamovible)</div>
-  <div class="cfg-row cfg-locked" style="border-left:4px solid var(--green)"><span style="color:var(--green);font-weight:600">Diezmo automático</span><div style="font-family:'Space Mono',monospace;font-size:14px;color:var(--green)" id="cfg_diezmo_calc">$380.000</div></div>
-  <div class="cfg-section-title">🔒 Gastos fijos</div>
-  <div class="cfg-row"><span>Swiss Medical</span><input type="number" id="cfg_swiss" value="426682" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>EDENOR</span><input type="number" id="cfg_edenor" value="70000" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>Gas Natural FENO</span><input type="number" id="cfg_gas" value="50000" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>Claro / Tuenti</span><input type="number" id="cfg_claro" value="45000" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>Zurich (seguro vida)</span><input type="number" id="cfg_zurich" value="146000" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>Provincia Seguros (auto)</span><input type="number" id="cfg_provseg" value="145000" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>ARBA</span><input type="number" id="cfg_arba" value="14000" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>Municipalidad Morón</span><input type="number" id="cfg_munici" value="10000" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>Colegio G. Belgrano</span><input type="number" id="cfg_colegio" value="187704" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>AySA</span><input type="number" id="cfg_aysa" value="52000" onchange="recalcularConfig()"></div>
-  <div class="cfg-section-title">🛒 Variables (techos máximos BS3)</div>
-  <div class="cfg-row"><span>Supermercado + Alimentación</span><input type="number" id="cfg_super" value="500000" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>Combustible + Mantenimiento</span><input type="number" id="cfg_nafta" value="280000" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>Transporte público</span><input type="number" id="cfg_transp" value="80000" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>Farmacia / Salud extra</span><input type="number" id="cfg_farma" value="55000" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>Sangrado Romina (acuerdo)</span><input type="number" id="cfg_romina" value="325000" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>Comida Fuera</span><input type="number" id="cfg_comida" value="50000" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>Entretenimiento</span><input type="number" id="cfg_entret" value="50000" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>Indumentaria</span><input type="number" id="cfg_indum" value="40000" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>Hogar</span><input type="number" id="cfg_hogar" value="80000" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>Compras Online</span><input type="number" id="cfg_online" value="20000" onchange="recalcularConfig()"></div>
-  <div class="cfg-row"><span>Otros</span><input type="number" id="cfg_otros" value="40000" onchange="recalcularConfig()"></div>
-  <div class="cfg-section-title">💳 Saldos de deuda actuales</div>
-  <div class="cfg-row" style="border-left:4px solid var(--red)"><span>Visa Galicia</span><input type="number" id="cfg_visa" value="0" onchange="recalcularConfig()"></div>
-  <div class="cfg-row" style="border-left:4px solid var(--red)"><span>Mastercard BNA</span><input type="number" id="cfg_master" value="0" onchange="recalcularConfig()"></div>
-  <div class="cfg-row" style="border-left:4px solid var(--blue)"><span>Disponible para tarjetas</span><input type="number" id="cfg_para_tarjetas" value="0" onchange="recalcularConfig()"></div>
-  <div class="cfg-section-title">💰 Excedente para BS3</div>
-  <div class="cfg-row" style="border-left:4px solid var(--green)"><span style="color:var(--green);font-weight:600">Para fondo emergencia</span><div style="font-family:'Space Mono',monospace;font-size:14px;color:var(--green)" id="cfg_bolanieve">—</div></div>
-  <div class="cfg-section-title">🏡 Santa Anita</div>
-  <div class="cfg-row cfg-locked" style="border-left:4px solid var(--muted)"><span style="color:var(--muted)">Bloqueado hasta Baby Step 6</span><div style="font-family:'Space Mono',monospace;font-size:14px;color:var(--muted)">$0</div></div>
-  <div class="card" style="margin-top:14px">
-    <div class="card-title">📊 Resumen del ciclo</div>
-    <div id="cfg_resumen_rows"></div>
-    <div class="cfg-balance-row"><span style="font-weight:700;font-size:15px">BALANCE</span><span style="font-family:'Space Mono',monospace;font-size:20px;font-weight:800" id="cfg_balance">—</span></div>
+
+  <!-- INGRESO DEL MES -->
+  <div class="card" style="background:linear-gradient(135deg,#00C48C,#00A87A);color:#fff;border:none">
+    <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.7);text-transform:uppercase;margin-bottom:6px">💰 Ingreso este mes</div>
+    <div style="font-size:36px;font-weight:800;font-family:'Space Mono',monospace;line-height:1;margin-bottom:6px" id="cfg_ingreso_display">—</div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.7);margin-bottom:10px">Editable solo en hoja Config del Sheet</div>
+    <div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:10px 14px;font-size:12px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>Diezmo 10% auto</span><span style="font-family:'Space Mono',monospace" id="cfg_diezmo_auto">—</span></div>
+      <div style="display:flex;justify-content:space-between"><span>Excedente disponible BS3</span><span style="font-family:'Space Mono',monospace;font-weight:700" id="cfg_excedente_bs3">—</span></div>
+    </div>
   </div>
-  <button class="btn-guardar" onclick="guardarConfig()">💾 Guardar presupuesto</button>
+
+  <!-- FONDO BS3 -->
+  <div class="card" style="background:linear-gradient(135deg,#4A90D9,#3672B5);color:#fff;border:none">
+    <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.7);text-transform:uppercase;margin-bottom:6px">💵 Fondo BS3 actual</div>
+    <div style="font-size:28px;font-weight:800;font-family:'Space Mono',monospace;line-height:1;margin-bottom:4px" id="cfg_fondo_usd">—</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.85)" id="cfg_fondo_pesos">— al MEP</div>
+    <div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:10px 14px;font-size:12px;margin-top:10px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>Meta mínima BS3</span><span style="font-family:'Space Mono',monospace" id="cfg_meta_bs3">—</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>Falta para BS3</span><span style="font-family:'Space Mono',monospace" id="cfg_falta_bs3">—</span></div>
+      <div style="display:flex;justify-content:space-between"><span>Tiempo estimado</span><span style="font-family:'Space Mono',monospace;font-weight:700" id="cfg_meses_bs3">—</span></div>
+    </div>
+  </div>
+
+  <!-- COTIZACIÓN -->
+  <div class="card" id="cfg_cotizacion_box" style="margin-bottom:14px">
+    <div class="card-title">💲 Cotización del día</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">
+      <div style="background:var(--bg);border-radius:10px;padding:10px"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Oficial BNA</div><div style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;margin-top:4px" id="cfg_cot_oficial">—</div></div>
+      <div style="background:var(--bg);border-radius:10px;padding:10px"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Blue</div><div style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;margin-top:4px" id="cfg_cot_blue">—</div></div>
+      <div style="background:linear-gradient(135deg,var(--green),#00A87A);border-radius:10px;padding:10px"><div style="font-size:9px;color:rgba(255,255,255,0.85);text-transform:uppercase;letter-spacing:1px">MEP ✓</div><div style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;margin-top:4px;color:#fff" id="cfg_cot_mep">—</div></div>
+    </div>
+    <div style="font-size:10px;color:var(--muted);text-align:center;margin-top:8px" id="cfg_cot_fuente">Actualizado al cargar</div>
+  </div>
+
+  <!-- PRESUPUESTO POR CATEGORÍA -->
+  <div style="margin-top:18px;margin-bottom:10px">
+    <div style="font-size:13px;font-weight:700">📊 Presupuesto BS3 por categoría</div>
+    <div style="font-size:11px;color:var(--muted);margin-top:2px">Comparación: promedio real últimos 3 ciclos vs techo BS3 sugerido</div>
+  </div>
+  <div id="cfg_categorias_list" style="display:grid;gap:8px"></div>
+
+  <!-- RESUMEN FINAL -->
+  <div class="card" style="margin-top:14px">
+    <div class="card-title">📊 Resumen del mes</div>
+    <div id="cfg_resumen_rows"></div>
+    <div class="cfg-balance-row"><span style="font-weight:700;font-size:15px">EXCEDENTE BS3</span><span style="font-family:'Space Mono',monospace;font-size:20px;font-weight:800" id="cfg_balance">—</span></div>
+  </div>
+
+  <button class="btn-guardar" onclick="recargarConfig()">↺ Recargar valores del Sheet</button>
   <div class="bottom-pad"></div>
 </div>
 
@@ -511,9 +520,50 @@ body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',
 const SHEET_ID='15TzS_-VQazdA427n8S7H_FnPD5Fj0eDrRMuETIdNLgQ';
 const SHEET_NAME='Tarjetas';
 const MP_SHEET_NAME='MercadoPago';
+const CONFIG_SHEET_NAME='Config';
 const SHEETS_API_KEY='AIzaSyD3QpBs7qRD3bpO00zjIPzXOXbU3Z7o7mA';
 const API_URL=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(SHEET_NAME+'!A1:Z50000')}?key=${SHEETS_API_KEY}`;
 const MP_API_URL=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(MP_SHEET_NAME+'!A1:Z50000')}?key=${SHEETS_API_KEY}`;
+const CONFIG_API_URL=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(CONFIG_SHEET_NAME+'!A1:B100')}?key=${SHEETS_API_KEY}`;
+const DOLAR_API_BASE='https://dolarapi.com/v1/dolares';
+
+// Techos BS3 hardcodeados (recomendación del asesor)
+const TECHOS_BS3 = {
+  'Alimentación':    500000,
+  'Salud':           480000,
+  'Servicios':       484000,
+  'Educación':       290000,  // Colegio 187704 + Felipe 30000 + buffer 72k
+  'Vehículo':        280000,
+  'Comida Fuera':     50000,
+  'Entretenimiento':  50000,
+  'Indumentaria':     40000,
+  'Transporte':       80000,
+  'Compras Online':   20000,
+  'Hogar':           210000,  // 80000 + jardinero Santa Anita 130000
+  'Otros':            40000,
+};
+
+const ICONOS_CAT = {
+  'Alimentación':'🛒','Salud':'🏥','Servicios':'💡','Educación':'📚','Vehículo':'🚗',
+  'Comida Fuera':'🍽️','Entretenimiento':'🎭','Indumentaria':'👕','Transporte':'🚇',
+  'Compras Online':'📦','Hogar':'🏠','Otros':'❓','Diezmo':'🙏'
+};
+
+// Configuración global cargada del Sheet
+let configSheet = {
+  ingreso_mes_actual: 3800000,
+  fondo_bs3_usd: 3643,
+  cotizacion_dolar: 1430,
+  meta_bs3_minimo: 9000000,
+  sangrado_romina: 325000,
+};
+
+// Cotizaciones del día (se llenan al cargar)
+let cotizaciones = {
+  oficial: null,
+  blue: null,
+  mep: null,
+};
 
 function getParaTarjetas(){ return parseInt(localStorage.getItem('gazelle_para_tarjetas')||'0'); }
 function getDeudaVisa(){    return parseInt(localStorage.getItem('gazelle_deuda_visa')||'0'); }
@@ -521,20 +571,20 @@ function getDeudaMaster(){  return parseInt(localStorage.getItem('gazelle_deuda_
 function getDeudaTotal(){   return getDeudaVisa() + getDeudaMaster(); }
 const DEUDA_INICIAL = 3592872;
 
-let presupuesto = JSON.parse(localStorage.getItem('gazelle_presupuesto')||'null') || {
-  "Alimentación":    { icon:"🛒", limite: 500000 },
-  "Salud":           { icon:"🏥", limite: 480000 },
-  "Servicios":       { icon:"💡", limite: 484000 },
-  "Educación":       { icon:"📚", limite: 290000 },
-  "Vehículo":        { icon:"🚗", limite: 280000 },
-  "Comida Fuera":    { icon:"🍽️", limite:  50000 },
-  "Entretenimiento": { icon:"🎭", limite:  50000 },
-  "Indumentaria":    { icon:"👕", limite:  40000 },
-  "Transporte":      { icon:"🚇", limite:  80000 },
-  "Compras Online":  { icon:"📦", limite:  20000 },
-  "Hogar":           { icon:"🏠", limite:  80000 },
+let presupuesto = {
+  "Alimentación":    { icon:"🛒", limite: TECHOS_BS3['Alimentación'] },
+  "Salud":           { icon:"🏥", limite: TECHOS_BS3['Salud'] },
+  "Servicios":       { icon:"💡", limite: TECHOS_BS3['Servicios'] },
+  "Educación":       { icon:"📚", limite: TECHOS_BS3['Educación'] },
+  "Vehículo":        { icon:"🚗", limite: TECHOS_BS3['Vehículo'] },
+  "Comida Fuera":    { icon:"🍽️", limite: TECHOS_BS3['Comida Fuera'] },
+  "Entretenimiento": { icon:"🎭", limite: TECHOS_BS3['Entretenimiento'] },
+  "Indumentaria":    { icon:"👕", limite: TECHOS_BS3['Indumentaria'] },
+  "Transporte":      { icon:"🚇", limite: TECHOS_BS3['Transporte'] },
+  "Compras Online":  { icon:"📦", limite: TECHOS_BS3['Compras Online'] },
+  "Hogar":           { icon:"🏠", limite: TECHOS_BS3['Hogar'] },
   "Diezmo":          { icon:"🙏", limite: 380000 },
-  "Otros":           { icon:"❓", limite:  40000 },
+  "Otros":           { icon:"❓", limite: TECHOS_BS3['Otros'] },
 };
 
 const CATS_EXCLUIDAS = new Set(['Pago Tarjeta', 'Banco', 'Transferencia Interna']);
@@ -980,100 +1030,228 @@ function renderRamsey(){
   container.innerHTML = RAMSEY_FRASES.map(f=>`<div style="background:var(--bg);border-radius:12px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start"><span style="font-size:20px;flex-shrink:0">${f.icono}</span><span style="font-size:12px;color:var(--muted);line-height:1.6;font-style:italic">"${f.texto}"</span></div>`).join('');
 }
 
-function recalcularConfig() {
-  const ingreso = parseInt(document.getElementById('cfg_ingreso').value)||3800000;
-  const diezmo = Math.round(ingreso * 0.10);
-  const swiss=parseInt(document.getElementById('cfg_swiss').value)||0;
-  const edenor=parseInt(document.getElementById('cfg_edenor').value)||0;
-  const gas=parseInt(document.getElementById('cfg_gas').value)||0;
-  const claro=parseInt(document.getElementById('cfg_claro').value)||0;
-  const zurich=parseInt(document.getElementById('cfg_zurich').value)||0;
-  const provseg=parseInt(document.getElementById('cfg_provseg').value)||0;
-  const arba=parseInt(document.getElementById('cfg_arba').value)||0;
-  const munici=parseInt(document.getElementById('cfg_munici').value)||0;
-  const colegio=parseInt(document.getElementById('cfg_colegio').value)||0;
-  const aysa=parseInt(document.getElementById('cfg_aysa').value)||0;
-  const totalFijos = swiss+edenor+gas+claro+zurich+provseg+arba+munici+colegio+aysa;
-  const superM=parseInt(document.getElementById('cfg_super').value)||0;
-  const nafta=parseInt(document.getElementById('cfg_nafta').value)||0;
-  const transp=parseInt(document.getElementById('cfg_transp').value)||0;
-  const farma=parseInt(document.getElementById('cfg_farma').value)||0;
-  const romina=parseInt((document.getElementById('cfg_romina')||{value:0}).value)||0;
-  const comida=parseInt((document.getElementById('cfg_comida')||{value:0}).value)||0;
-  const entret=parseInt((document.getElementById('cfg_entret')||{value:0}).value)||0;
-  const indum=parseInt((document.getElementById('cfg_indum')||{value:0}).value)||0;
-  const hogar=parseInt((document.getElementById('cfg_hogar')||{value:0}).value)||0;
-  const online=parseInt((document.getElementById('cfg_online')||{value:0}).value)||0;
-  const otros=parseInt((document.getElementById('cfg_otros')||{value:0}).value)||0;
-  const totalVar = superM+nafta+transp+farma+romina+comida+entret+indum+hogar+online+otros;
-  const disponible = ingreso - diezmo - totalFijos - totalVar;
-  document.getElementById('cfg_diezmo_calc').textContent = fp(diezmo);
-  const elBolaNieve = document.getElementById('cfg_bolanieve');
-  if(elBolaNieve){
-    elBolaNieve.textContent = disponible > 0 ? fp(disponible)+' → BS3 🎯' : '⚠️ '+fp(Math.abs(disponible))+' déficit';
-    elBolaNieve.style.color = disponible > 0 ? 'var(--green)' : 'var(--red)';
+// === NUEVAS FUNCIONES CONFIG ===
+
+// Calcula promedios reales por categoría de los últimos 3 ciclos TC + MP
+function calcularPromediosReales(){
+  const ciclos = obtenerUltimos3Ciclos();
+  const totales = {};
+  // De TC
+  todosLosGastos.forEach(g => {
+    if(!g.fechaDate || CATS_EXCLUIDAS.has(g.cat) || g.quien==='Padres' || g.monto<=0) return;
+    for(const c of ciclos) {
+      if(g.fechaDate >= c.ini && g.fechaDate <= c.fin) {
+        totales[g.cat] = (totales[g.cat]||0) + g.monto;
+        break;
+      }
+    }
+  });
+  // De MP
+  todosLosMP.forEach(g => {
+    if(!g.fechaDate || g.monto >= 0 || !MP_CATS_GASTO.has(g.cat)) return;
+    for(const c of ciclos) {
+      if(g.fechaDate >= c.ini && g.fechaDate <= c.fin) {
+        totales[g.cat] = (totales[g.cat]||0) + Math.abs(g.monto);
+        break;
+      }
+    }
+  });
+  // Dividir por 3 para promedio
+  const prom = {};
+  Object.keys(totales).forEach(k => prom[k] = Math.round(totales[k]/3));
+  return prom;
+}
+
+function obtenerUltimos3Ciclos(){
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const ciclosPasados = CICLOS.map((c,i) => ({...c, idx:i, ini: parseFechaISO(c.inicio), fin: parseFechaISO(c.fin)}))
+    .filter(c => c.fin < hoy)
+    .sort((a,b) => b.fin - a.fin);
+  return ciclosPasados.slice(0,3);
+}
+
+// Lee Sheet Config y carga valores
+async function cargarConfigDesdeSheet(){
+  try {
+    const res = await fetch(CONFIG_API_URL);
+    if(!res.ok) throw new Error('No se pudo leer hoja Config');
+    const json = await res.json();
+    const rows = json.values || [];
+    rows.slice(1).forEach(r => {  // skip header
+      if(r.length>=2 && r[0]) {
+        const key = r[0].trim();
+        const val = parseFloat(String(r[1]).replace(/\./g,'').replace(',','.'));
+        if(!isNaN(val)) configSheet[key] = val;
+      }
+    });
+  } catch(e) {
+    console.warn('Config sheet load failed, usando defaults:', e);
   }
+}
+
+// Levanta cotizaciones del dólar
+async function cargarCotizaciones(){
+  const tipos = ['oficial','blue','bolsa'];
+  for(const tipo of tipos) {
+    try {
+      const res = await fetch(`${DOLAR_API_BASE}/${tipo}`);
+      if(!res.ok) continue;
+      const data = await res.json();
+      const key = tipo==='bolsa' ? 'mep' : tipo;
+      cotizaciones[key] = data.venta;
+    } catch(e) { console.warn('Cotización falló:', tipo, e); }
+  }
+}
+
+function renderCotizaciones(){
+  const elOf=document.getElementById('cfg_cot_oficial');
+  const elBl=document.getElementById('cfg_cot_blue');
+  const elMep=document.getElementById('cfg_cot_mep');
+  const elFte=document.getElementById('cfg_cot_fuente');
+  if(elOf) elOf.textContent = cotizaciones.oficial ? '$'+cotizaciones.oficial.toLocaleString('es-AR') : '—';
+  if(elBl) elBl.textContent = cotizaciones.blue ? '$'+cotizaciones.blue.toLocaleString('es-AR') : '—';
+  if(elMep) elMep.textContent = cotizaciones.mep ? '$'+cotizaciones.mep.toLocaleString('es-AR') : '—';
+  if(elFte) {
+    if(cotizaciones.mep) elFte.textContent = 'Fuente: dolarapi.com — al día';
+    else elFte.textContent = 'API no respondió — usando valor del Sheet ('+ configSheet.cotizacion_dolar +')';
+  }
+}
+
+function getCotizacionUsada(){
+  return cotizaciones.mep || configSheet.cotizacion_dolar || 1430;
+}
+
+function renderConfigBS3(){
+  const ingreso = configSheet.ingreso_mes_actual || 3800000;
+  const diezmo = Math.round(ingreso * 0.10);
+  
+  // Suma de techos BS3 (incluye sangrado Romina)
+  const sangrado = configSheet.sangrado_romina || 325000;
+  const sumaTechos = Object.values(TECHOS_BS3).reduce((s,v) => s+v, 0);
+  const excedente = ingreso - diezmo - sumaTechos - sangrado;
+  
+  // Mostrar ingreso y excedente
+  const elIng = document.getElementById('cfg_ingreso_display');
+  const elDz = document.getElementById('cfg_diezmo_auto');
+  const elEx = document.getElementById('cfg_excedente_bs3');
+  if(elIng) elIng.textContent = fp(ingreso);
+  if(elDz) elDz.textContent = fp(diezmo);
+  if(elEx) {
+    elEx.textContent = (excedente>=0?'+':'')+fp(excedente);
+    elEx.style.color = excedente>=0 ? '#fff' : '#FFD700';
+  }
+  
+  // Fondo BS3
+  const cot = getCotizacionUsada();
+  const fondoUsd = configSheet.fondo_bs3_usd || 3643;
+  const fondoPesos = Math.round(fondoUsd * cot);
+  const metaBS3 = configSheet.meta_bs3_minimo || 9000000;
+  const faltaBS3 = metaBS3 - fondoPesos;
+  const mesesBS3 = excedente > 0 ? Math.ceil(faltaBS3 / excedente) : 0;
+  
+  const elFondoUsd=document.getElementById('cfg_fondo_usd');
+  const elFondoPesos=document.getElementById('cfg_fondo_pesos');
+  const elMeta=document.getElementById('cfg_meta_bs3');
+  const elFalta=document.getElementById('cfg_falta_bs3');
+  const elMeses=document.getElementById('cfg_meses_bs3');
+  if(elFondoUsd) elFondoUsd.textContent = 'USD '+fondoUsd.toLocaleString('es-AR');
+  if(elFondoPesos) elFondoPesos.textContent = fp(fondoPesos)+' al MEP ($'+cot.toLocaleString('es-AR')+')';
+  if(elMeta) elMeta.textContent = fp(metaBS3);
+  if(elFalta) elFalta.textContent = faltaBS3>0 ? fp(faltaBS3) : '✅ Cumplido';
+  if(elMeses) {
+    if(faltaBS3<=0) elMeses.textContent = '🎉 ¡Logrado!';
+    else if(excedente<=0) elMeses.textContent = '⚠️ Sin excedente';
+    else elMeses.textContent = mesesBS3 + ' meses';
+  }
+  
+  // Categorías
+  const promedios = calcularPromediosReales();
+  const elList = document.getElementById('cfg_categorias_list');
+  if(elList) {
+    const orden = ['Alimentación','Salud','Servicios','Educación','Vehículo','Hogar','Comida Fuera','Entretenimiento','Transporte','Indumentaria','Otros','Compras Online'];
+    elList.innerHTML = orden.map(cat => {
+      const techo = TECHOS_BS3[cat] || 0;
+      const real = promedios[cat] || 0;
+      const icon = ICONOS_CAT[cat] || '📦';
+      const diff = real - techo;
+      const diffStr = diff>0 ? '+'+fp(diff)+' arriba' : fp(Math.abs(diff))+' margen';
+      const diffColor = diff>0 ? 'var(--red)' : 'var(--green)';
+      return `<div style="background:var(--white);border-radius:12px;padding:14px;box-shadow:var(--shadow-sm);cursor:pointer" onclick="toggleCfgCat('${cat}')">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-size:13px;font-weight:600">${icon} ${cat}</div>
+          <div style="font-size:11px;color:${diffColor};font-weight:600">${diffStr}</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px">
+          <span>Promedio real (3 ciclos)</span>
+          <span style="font-family:'Space Mono',monospace;color:var(--text)">${fp(real)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted)">
+          <span>Techo BS3 sugerido</span>
+          <span style="font-family:'Space Mono',monospace;color:var(--green);font-weight:700">${fp(techo)}</span>
+        </div>
+      </div>`;
+    }).join('') + 
+    `<div style="background:var(--purple-light);border:1px solid rgba(124,92,191,0.2);border-radius:12px;padding:14px;margin-top:6px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:13px;font-weight:600;color:var(--purple)">💜 Sangrado Romina</div>
+        <div style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--purple)">${fp(sangrado)}</div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Acuerdo: $75.000/semana</div>
+    </div>
+    <div style="background:var(--green-light);border:1px solid rgba(0,196,140,0.2);border-radius:12px;padding:14px;margin-top:6px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:13px;font-weight:600;color:var(--green)">🙏 Diezmo (10%)</div>
+        <div style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--green)">${fp(diezmo)}</div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Automático según ingreso</div>
+    </div>`;
+  }
+  
+  // Resumen final
   const rows = [
-    ['Ingreso neto', ingreso, 'var(--text)', false],
+    ['Ingreso del mes', ingreso, 'var(--text)', false],
     ['(-) Diezmo 10%', diezmo, 'var(--green)', true],
-    ['(-) Gastos fijos', totalFijos, 'var(--muted)', true],
-    ['(-) Variables + Romina', totalVar, 'var(--muted)', true],
-    ['(=) Excedente BS3 mensual', disponible, disponible>=0?'var(--green)':'var(--red)', false]
+    ['(-) Techos categorías', sumaTechos, 'var(--muted)', true],
+    ['(-) Sangrado Romina', sangrado, 'var(--purple)', true],
   ];
-  document.getElementById('cfg_resumen_rows').innerHTML = rows.map(([lbl,val,color,minus])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border)"><span style="color:var(--muted)">${lbl}</span><span style="font-family:'Space Mono',monospace;color:${color};font-weight:${lbl.includes('Excedente')?'700':'400'}">${minus?'- ':''}${fp(val)}</span></div>`).join('');
-  document.getElementById('cfg_balance').textContent = fp(Math.abs(disponible)) + (disponible >= 0 ? ' ✅' : ' ⚠️');
-  document.getElementById('cfg_balance').style.color = disponible >= 0 ? 'var(--green)' : 'var(--red)';
-  // Mapear a presupuesto de Categorías
-  presupuesto['Alimentación'].limite = superM;
-  presupuesto['Vehículo'].limite = nafta;
-  presupuesto['Transporte'].limite = transp;
-  presupuesto['Salud'].limite = swiss + farma;
-  presupuesto['Servicios'].limite = edenor+gas+claro+zurich+provseg+arba+munici+aysa;
-  presupuesto['Educación'].limite = colegio;
+  document.getElementById('cfg_resumen_rows').innerHTML = rows.map(([lbl,val,color,minus])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border)"><span style="color:var(--muted)">${lbl}</span><span style="font-family:'Space Mono',monospace;color:${color}">${minus?'- ':''}${fp(val)}</span></div>`).join('');
+  const elBal=document.getElementById('cfg_balance');
+  if(elBal) {
+    elBal.textContent = (excedente>=0?'':'-')+fp(excedente)+(excedente>=0?' ✅':' ⚠️');
+    elBal.style.color = excedente>=0 ? 'var(--green)' : 'var(--red)';
+  }
+  
+  // Actualizar también el presupuesto global con techos BS3 para Tab Categorías
+  Object.keys(TECHOS_BS3).forEach(cat => {
+    if(presupuesto[cat]) presupuesto[cat].limite = TECHOS_BS3[cat];
+  });
   presupuesto['Diezmo'].limite = diezmo;
-  presupuesto['Comida Fuera'].limite = comida;
-  presupuesto['Entretenimiento'].limite = entret;
-  presupuesto['Indumentaria'].limite = indum;
-  presupuesto['Hogar'].limite = hogar;
-  presupuesto['Compras Online'].limite = online;
-  presupuesto['Otros'].limite = otros;
-  renderDeuda();
+}
+
+function toggleCfgCat(cat) {
+  // placeholder para futuro despliegue de subcategorías
+}
+
+async function recargarConfig(){
+  await cargarConfigDesdeSheet();
+  await cargarCotizaciones();
+  renderCotizaciones();
+  renderConfigBS3();
+  renderAll();
+  mostrarAlert('✅','Config recargado','Valores actualizados desde el Sheet y cotizaciones del día.');
 }
 
 function renderPresupuesto(){
   const cita = RAMSEY_FRASES[Math.floor(Math.random()*RAMSEY_FRASES.length)];
-  document.getElementById('ramseyCita').textContent = cita.texto;
-  const elVisa = document.getElementById('cfg_visa'); const elMaster = document.getElementById('cfg_master'); const elPT = document.getElementById('cfg_para_tarjetas');
-  if(elVisa) elVisa.value = getDeudaVisa(); if(elMaster) elMaster.value = getDeudaMaster(); if(elPT) elPT.value = getParaTarjetas();
-  recalcularConfig();
+  const elCita = document.getElementById('ramseyCita');
+  if(elCita) elCita.textContent = cita.texto;
+  renderConfigBS3();
 }
 
-function guardarConfig(){
-  recalcularConfig();
-  localStorage.setItem('gazelle_deuda_visa', document.getElementById('cfg_visa').value||'0');
-  localStorage.setItem('gazelle_deuda_master', document.getElementById('cfg_master').value||'0');
-  localStorage.setItem('gazelle_para_tarjetas', document.getElementById('cfg_para_tarjetas').value||'0');
-  localStorage.setItem('gazelle_presupuesto',JSON.stringify(presupuesto));
-  const getVal = id => parseInt((document.getElementById(id)||{value:0}).value)||0;
-  const cfg = {
-    ingreso: getVal('cfg_ingreso')||3800000,
-    swiss: getVal('cfg_swiss'), edenor: getVal('cfg_edenor'), gas: getVal('cfg_gas'),
-    claro: getVal('cfg_claro'), zurich: getVal('cfg_zurich'), provseg: getVal('cfg_provseg'),
-    arba: getVal('cfg_arba'), munici: getVal('cfg_munici'), colegio: getVal('cfg_colegio'),
-    aysa: getVal('cfg_aysa'),
-    super: getVal('cfg_super'), nafta: getVal('cfg_nafta'), transp: getVal('cfg_transp'),
-    farma: getVal('cfg_farma'), romina: getVal('cfg_romina'), comida: getVal('cfg_comida'),
-    entret: getVal('cfg_entret'), indum: getVal('cfg_indum'), hogar: getVal('cfg_hogar'),
-    online: getVal('cfg_online'), otros: getVal('cfg_otros')
-  };
-  localStorage.setItem('gazelle_config',JSON.stringify(cfg));
-  renderAll(); mostrarAlert('💾','Presupuesto BS3 Guardado','Techos actualizados según el plan de 5 meses para llegar al fondo de emergencia.');
-}
-
-function cargarConfigGuardada(){
-  const cfg = JSON.parse(localStorage.getItem('gazelle_config')||'null'); if(!cfg) return;
-  Object.entries(cfg).forEach(([k,v])=>{ const el = document.getElementById('cfg_'+k); if(el) el.value = v; });
-}
+// Stubs vacíos para mantener compatibilidad con código viejo
+function recalcularConfig(){ renderConfigBS3(); }
+function guardarConfig(){ recargarConfig(); }
+function cargarConfigGuardada(){ /* ya no se usa - todo viene del Sheet */ }
 
 function mostrarAlert(emoji,titulo,msg){ document.getElementById('alertEmoji').textContent=emoji; document.getElementById('alertTitle').textContent=titulo; document.getElementById('alertMsg').textContent=msg; document.getElementById('alertOverlay').classList.add('show'); }
 function cerrarAlert(){ document.getElementById('alertOverlay').classList.remove('show'); }
@@ -1086,12 +1264,22 @@ function showTab(name,el){
 }
 
 // INIT
-cicloActual = detectarCicloActual();
-actualizarCicloUI();
-cargarConfigGuardada();
-fetchSheet();
-setInterval(fetchSheet, 5*60*1000);
-setInterval(fetchMP, 5*60*1000);
+async function init(){
+  cicloActual = detectarCicloActual();
+  actualizarCicloUI();
+  // Cargar Config del Sheet + cotizaciones en paralelo, antes de fetchSheet
+  await Promise.all([
+    cargarConfigDesdeSheet(),
+    cargarCotizaciones()
+  ]);
+  renderCotizaciones();
+  fetchSheet();
+  setInterval(fetchSheet, 5*60*1000);
+  setInterval(fetchMP, 5*60*1000);
+  // Recargar cotizaciones cada 30 min
+  setInterval(async()=>{ await cargarCotizaciones(); renderCotizaciones(); }, 30*60*1000);
+}
+init();
 </script>
 </body>
 </html>
