@@ -1232,14 +1232,67 @@ function toggleCfgCat(cat) {
   // placeholder para futuro despliegue de subcategorías
 }
 
-async function recargarConfig(){
-  await cargarConfigDesdeSheet();
-  await cargarCotizaciones();
-  renderCotizaciones();
-  renderConfigBS3();
-  renderAll();
-  mostrarAlert('✅','Config recargado','Valores actualizados desde el Sheet y cotizaciones del día.');
-}
+async function recargarConfig() {
+  try {
+    const res = await fetch(CONFIG_API_URL);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    const rows = json.values || [];
+    rows.forEach(r => {
+      if (!r[0] || !r[1]) return;
+      const clave = String(r[0]).trim();
+      const valorStr = String(r[1]).replace(/[$\s\.]/g,'').replace(',','.');
+      const valor = parseFloat(valorStr);
+      if (isNaN(valor)) return;
+      if (clave === 'ingreso_mes_actual') configSheet.ingreso_mes_actual = valor;
+      if (clave === 'fondo_bs3_usd') configSheet.fondo_bs3_usd = valor;
+      if (clave === 'cotizacion_dolar') configSheet.cotizacion_dolar = valor;
+      if (clave === 'meta_bs3_minimo') configSheet.meta_bs3_minimo = valor;
+    });
+    // Propagar ingreso a toda la app
+    const ingreso = configSheet.ingreso_mes_actual;
+    presupuesto['Diezmo'].limite = Math.round(ingreso * 0.1);
+    // Actualizar UI Config
+    const elIng = document.getElementById('cfg_ingreso_display');
+    if (elIng) elIng.textContent = fp(ingreso);
+    const elDiezmo = document.getElementById('cfg_diezmo_auto');
+    if (elDiezmo) elDiezmo.textContent = fp(ingreso * 0.1);
+    const totalTechos = Object.values(TECHOS_BS3).reduce((s,v)=>s+v,0);
+    const excedente = ingreso - ingreso*0.1 - totalTechos - (configSheet.sangrado_romina||325000);
+    const elExc = document.getElementById('cfg_excedente_bs3');
+    if (elExc) { elExc.textContent = (excedente>=0?'+':'')+fp(excedente); elExc.style.color = excedente>=0?'var(--green)':'var(--red)'; }
+    // Fondo BS3
+    const mep = configSheet.cotizacion_dolar;
+    const fondoUSD = configSheet.fondo_bs3_usd;
+    const fondoARS = fondoUSD * mep;
+    const meta = configSheet.meta_bs3_minimo;
+    const falta = Math.max(meta - fondoARS, 0);
+    const meses = excedente > 0 ? Math.ceil(falta / excedente) + ' meses' : '∞';
+    const elFUSD = document.getElementById('cfg_fondo_usd');
+    if (elFUSD) elFUSD.textContent = 'USD ' + fondoUSD.toLocaleString('es-AR');
+    const elFARS = document.getElementById('cfg_fondo_pesos');
+    if (elFARS) elFARS.textContent = fp(fondoARS) + ' al MEP';
+    const elMeta = document.getElementById('cfg_meta_bs3');
+    if (elMeta) elMeta.textContent = fp(meta);
+    const elFalta = document.getElementById('cfg_falta_bs3');
+    if (elFalta) elFalta.textContent = fp(falta);
+    const elMeses = document.getElementById('cfg_meses_bs3');
+    if (elMeses) elMeses.textContent = meses;
+    // Cotización
+    const elOficial = document.getElementById('cfg_cot_oficial');
+    if (elOficial) elOficial.textContent = '$' + (cotizaciones.oficial||'—');
+    const elBlue = document.getElementById('cfg_cot_blue');
+    if (elBlue) elBlue.textContent = '$' + (cotizaciones.blue||'—');
+    const elMep = document.getElementById('cfg_cot_mep');
+    if (elMep) elMep.textContent = '$' + mep.toLocaleString('es-AR');
+    // Resumen
+    renderPresupuesto();
+    mostrarAlert('✅','Config recargado','Valores actualizados desde el Sheet y cotizaciones del día.');
+  } catch(e) {
+    mostrarAlert('❌','Error al recargar','No se pudo conectar con el Sheet. Verificá tu conexión.');
+    console.error('recargarConfig:', e);
+  }
+  }
 
 function renderPresupuesto(){
   const cita = RAMSEY_FRASES[Math.floor(Math.random()*RAMSEY_FRASES.length)];
