@@ -1080,7 +1080,7 @@ async function cargarConfigDesdeSheet(){
     rows.slice(1).forEach(r => {  // skip header
       if(r.length>=2 && r[0]) {
         const key = r[0].trim();
-        const val = parseFloat(String(r[1]).replace(/\./g,'').replace(',','.'));
+        const val = parseFloat(String(r[1]).replace(/[$\s]/g,'').replace(/\./g,'').replace(',','.'));
         if(!isNaN(val)) configSheet[key] = val;
       }
     });
