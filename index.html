@@ -731,7 +731,9 @@ async function fetchSheet() {
       const signo=String(get('Signo')||'S');
       const montoStr=get('Monto').replace(/\$/g,'').replace(/\./g,'').replace(',','.').trim();
       const montoRaw=parseFloat(montoStr)||0;
-      const monto=signo==='E'?-montoRaw:montoRaw;
+      const cuotasRaw=get('Cuotas');
+      const numCuotas=cuotasRaw&&!isNaN(parseFloat(cuotasRaw))&&get('Fuente')!=='PDF'?Math.max(parseFloat(cuotasRaw),1):1;
+      const monto=signo==='E'?-montoRaw:montoRaw/numCuotas;
       const hormiga=get('Hormiga').toUpperCase()==='S';
       const usuario=String(get('USUARIO')||'');
       const fecha=String(get('Fecha')||'');
