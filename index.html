@@ -873,6 +873,61 @@ function toggleDetalle(quien) {
   document.getElementById(arrow).textContent = isOpen ? '▼' : '▲';
 }
 
+function renderMiPlan(){
+  const cot = getCotizacionUsada();
+  const fondoUsd = configSheet.fondo_bs3_usd || 3643;
+  const fondoPesos = Math.round(fondoUsd * cot);
+  const metaBS3 = configSheet.meta_bs3_minimo || 9000000;
+  const pct = Math.min((fondoPesos / metaBS3) * 100, 100);
+  const falta = Math.max(metaBS3 - fondoPesos, 0);
+  const ingreso = configSheet.ingreso_mes_actual || 3800000;
+  const diezmo = Math.round(ingreso * 0.10);
+  const sumaTechos = Object.values(TECHOS_BS3).reduce((s,v)=>s+v,0);
+  const sangrado = configSheet.sangrado_romina || 325000;
+  const excedente = ingreso - diezmo - sumaTechos - sangrado;
+  const meses = excedente > 0 ? Math.ceil(falta / excedente) : 0;
+
+  // Descripción dinámica
+  const elDesc = document.querySelector('.bs-current-desc');
+  if(elDesc) elDesc.textContent = `¡Deudas eliminadas! Ahora construí un fondo de emergencia de 3 a 6 meses de gastos. Tu objetivo: ~${fp(metaBS3)}–${fp(metaBS3*2)}. Tus USD ${fondoUsd} (~${fp(fondoPesos)}) ya son el núcleo. ¡No los toques!`;
+
+  // Barra y porcentaje
+  const elPct = document.getElementById('deudaPct');
+  if(elPct){ elPct.textContent = Math.round(pct)+'% del objetivo'; elPct.style.background='var(--blue-light)'; elPct.style.color='var(--blue)'; }
+  const elActual = document.getElementById('deudaActual');
+  if(elActual){ elActual.textContent = fp(fondoPesos); elActual.style.color='var(--blue)'; }
+  const elPagado = document.getElementById('deudaPagado');
+  if(elPagado) elPagado.textContent = fp(metaBS3);
+  const elBar = document.getElementById('deudaBar');
+  if(elBar) setTimeout(()=>{ elBar.style.width = pct+'%'; }, 50);
+
+  // Cards de construcción
+  const elFondoCard = document.querySelector('#tab-ramsey .card');
+  if(elFondoCard){
+    elFondoCard.querySelector && elFondoCard.querySelectorAll('[style*="green-light"]') && null;
+  }
+
+  // Reemplazar contenido de las 3 cards de plan
+  const planCards = document.querySelectorAll('#tab-ramsey .card');
+  if(planCards[0]){
+    planCards[0].innerHTML = `<div class="card-title">💰 Baby Step 3 — Plan de construcción</div>
+    <div style="background:var(--blue-light);border-radius:12px;padding:14px;margin-bottom:10px;border-left:4px solid var(--blue)">
+      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:4px">✅ Deuda eliminada — 5 mayo 2026</div>
+      <div style="font-size:13px;font-weight:600">Visa $0 + Mastercard $0</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">¡Libertad de deuda de tarjetas lograda!</div>
+    </div>
+    <div style="background:var(--green-light);border-radius:12px;padding:14px;margin-bottom:10px;border-left:4px solid var(--green)">
+      <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:4px">💵 Fondo actual — USD ${fondoUsd.toLocaleString('es-AR')}</div>
+      <div style="font-size:13px;font-weight:600">~${fp(fondoPesos)} al MEP</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">${Math.round(pct)}% del mínimo BS3 (~${fp(metaBS3)}). No tocar.</div>
+    </div>
+    <div style="background:var(--yellow-light);border-radius:12px;padding:14px;border-left:4px solid var(--yellow)">
+      <div style="font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:4px">🎯 Meta BS3 mínima</div>
+      <div style="font-size:13px;font-weight:600">${fp(metaBS3)} — ${fp(metaBS3*2)}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">${excedente>0?'Agregar ~'+fp(excedente)+'/mes del excedente':'⚠️ Sin excedente este mes'}${meses>0?' · '+meses+' meses para BS3':''}</div>
+    </div>`;
+  }
+}
 function renderDeuda(){
   const visa = getDeudaVisa(); const master = getDeudaMaster(); const total = visa + master;
   const pagado = Math.max(DEUDA_INICIAL - total, 0); const pct = Math.min((pagado / DEUDA_INICIAL) * 100, 100);
