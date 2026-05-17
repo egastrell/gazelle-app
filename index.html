@@ -927,6 +927,22 @@ function renderMiPlan(){
       <div style="font-size:11px;color:var(--muted);margin-top:4px">${excedente>0?'Agregar ~'+fp(excedente)+'/mes del excedente':'⚠️ Sin excedente este mes'}${meses>0?' · '+meses+' meses para BS3':''}</div>
     </div>`;
   }
+// Forzar actualización con delay para pisarle a renderDeuda
+  setTimeout(()=>{
+    const cot2 = getCotizacionUsada();
+    const fp2 = configSheet.fondo_bs3_usd || 3643;
+    const pp2 = Math.round(fp2 * cot2);
+    const meta2 = configSheet.meta_bs3_minimo || 9000000;
+    const pct2 = Math.min((pp2/meta2)*100,100);
+    const elA = document.getElementById('deudaActual');
+    const elP = document.getElementById('deudaPct');
+    const elB = document.getElementById('deudaBar');
+    const elPag = document.getElementById('deudaPagado');
+    if(elA){ elA.textContent = fp(pp2); elA.style.color='var(--blue)'; }
+    if(elP) elP.textContent = Math.round(pct2)+'% del objetivo';
+    if(elB) elB.style.width = pct2+'%';
+    if(elPag) elPag.textContent = fp(meta2);
+  }, 300);  
 }
 function renderDeuda(){
   const visa = getDeudaVisa(); const master = getDeudaMaster(); const total = visa + master;
