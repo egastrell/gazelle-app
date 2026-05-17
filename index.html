@@ -789,7 +789,7 @@ async function fetchMP() {
 
 function setSyncState(s,m){ document.getElementById('syncDot').className='sync-dot '+s; document.getElementById('syncTxt').textContent=m; }
 
-function renderAll(){ renderResumen(); renderResumenPersonas(); renderDeuda(); renderPagar(); renderCategorias(); renderProhibidos(); renderTxn(); renderPresupuesto(); renderRamsey(); }
+function renderAll(){ renderResumen(); renderMiPlan(); renderResumenPersonas(); renderDeuda(); renderPagar(); renderCategorias(); renderProhibidos(); renderTxn(); renderPresupuesto(); renderRamsey(); }
 
 function gastosReales(lista){ return lista.filter(g=>!CATS_EXCLUIDAS.has(g.cat)&&g.monto>0); }
 
