@@ -66,6 +66,72 @@ body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',
 .content { padding:20px 16px; }
 .card { background:var(--white); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow-sm); margin-bottom:14px; }
 .card-title { font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--muted); margin-bottom:14px; }
+
+/* ASESOR CARD */
+.asesor-card {
+  background: linear-gradient(135deg, #1A1D23, #2D3748);
+  border-radius: var(--radius);
+  padding: 0;
+  margin-bottom: 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  position: relative;
+}
+.asesor-card::before {
+  content:'';
+  position:absolute;
+  top:0; left:0; right:0;
+  height:3px;
+  background: linear-gradient(90deg, #D4A843, #FF8C42, #FF5B5B);
+}
+.asesor-header {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:14px 16px 10px;
+}
+.asesor-avatar {
+  width:36px; height:36px;
+  border-radius:50%;
+  background: linear-gradient(135deg, #8A6E2A, #D4A843);
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px;
+  flex-shrink:0;
+}
+.asesor-name { font-size:11px; font-weight:700; color:#D4A843; letter-spacing:1px; text-transform:uppercase; }
+.asesor-role { font-size:10px; color:rgba(255,255,255,0.4); margin-top:1px; }
+.asesor-body {
+  padding:0 16px 16px;
+  font-size:13px;
+  line-height:1.8;
+  color:rgba(255,255,255,0.85);
+  min-height:60px;
+}
+.asesor-loading {
+  display:flex;
+  gap:6px;
+  align-items:center;
+  padding:10px 0;
+}
+.asesor-loading span {
+  width:6px; height:6px;
+  border-radius:50%;
+  background:#D4A843;
+  animation:dotpulse 1.4s infinite;
+}
+.asesor-loading span:nth-child(2){animation-delay:.2s}
+.asesor-loading span:nth-child(3){animation-delay:.4s}
+@keyframes dotpulse{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+.asesor-action {
+  background:rgba(212,168,67,0.15);
+  border-top:1px solid rgba(212,168,67,0.2);
+  padding:10px 16px;
+  font-size:12px;
+  color:#D4A843;
+  font-weight:700;
+}
+.asesor-action::before { content:'→ '; }
+
 .baby-steps-card { background: linear-gradient(135deg, #1A1D23, #2D3748); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow-md); margin-bottom:14px; position:relative; overflow:hidden; }
 .baby-steps-card::after { content:''; position:absolute; bottom:-30px; right:-30px; width:120px; height:120px; background:radial-gradient(circle, rgba(0,196,140,0.15), transparent 70%); }
 .bs-title { font-size:11px; font-weight:700; letter-spacing:1px; color:rgba(255,255,255,0.4); text-transform:uppercase; margin-bottom:16px; }
@@ -254,6 +320,22 @@ body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',
 
 <!-- TAB RESUMEN -->
 <div id="tab-resumen" class="content">
+
+  <!-- ASESOR DAVE & DANIEL -->
+  <div class="asesor-card">
+    <div class="asesor-header">
+      <div class="asesor-avatar">🎯</div>
+      <div>
+        <div class="asesor-name">Dave & Daniel</div>
+        <div class="asesor-role">Tu asesor financiero personal</div>
+      </div>
+    </div>
+    <div class="asesor-body" id="asesorMsg">
+      <div class="asesor-loading"><span></span><span></span><span></span></div>
+    </div>
+    <div class="asesor-action" id="asesorAccion" style="display:none"></div>
+  </div>
+
   <div class="disponible-card ok" id="disponibleCard">
     <div class="disp-label">Disponible este ciclo — TC + MP</div>
     <div class="disp-amount" id="disponibleAmt">—</div>
@@ -289,7 +371,7 @@ body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',
   <div class="quote-card">
     <div class="quote-mark">"</div>
     <div class="quote-text" id="ramseyCitaResumen">Cargando frase motivacional...</div>
-    <div class="quote-author">— Dave Ramsey</div>
+    <div class="quote-author" id="ramseyCitaAutor">— Dave Ramsey</div>
   </div>
 </div>
 
@@ -308,7 +390,7 @@ body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',
     </div>
     <div class="bs-current-info">
       <div class="bs-current-name">💰 Baby Step 3 — Fondo de Emergencia</div>
-      <div class="bs-current-desc">¡Deudas eliminadas! Ahora construí un fondo de emergencia de 3 a 6 meses de gastos. Tu objetivo: ~$9.000.000–$18.000.000. Tus USD 3.643 (~$5.118.000) ya son el núcleo. ¡No los toques!</div>
+      <div class="bs-current-desc" id="bsDesc">¡Deudas eliminadas! Ahora construí un fondo de emergencia de 3 a 6 meses de gastos.</div>
     </div>
   </div>
   <div class="deuda-card">
@@ -326,20 +408,22 @@ body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',
   </div>
   <div class="card">
     <div class="card-title">💰 Baby Step 3 — Plan de construcción</div>
-    <div style="background:var(--blue-light);border-radius:12px;padding:14px;margin-bottom:10px;border-left:4px solid var(--blue)">
-      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:4px">✅ Deuda eliminada — 5 mayo 2026</div>
-      <div style="font-size:13px;font-weight:600">Visa $0 + Mastercard $0</div>
-      <div style="font-size:11px;color:var(--muted);margin-top:4px">¡Libertad de deuda de tarjetas lograda!</div>
-    </div>
-    <div style="background:var(--green-light);border-radius:12px;padding:14px;margin-bottom:10px;border-left:4px solid var(--green)">
-      <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:4px">💵 Fondo actual — USD 3.643</div>
-      <div style="font-size:13px;font-weight:600">~$5.118.000 al blue</div>
-      <div style="font-size:11px;color:var(--muted);margin-top:4px">57% del mínimo BS3 (~$9.000.000). No tocar.</div>
-    </div>
-    <div style="background:var(--yellow-light);border-radius:12px;padding:14px;border-left:4px solid var(--yellow)">
-      <div style="font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:4px">🎯 Meta BS3 mínima</div>
-      <div style="font-size:13px;font-weight:600">$9.000.000 — $18.000.000</div>
-      <div style="font-size:11px;color:var(--muted);margin-top:4px">Agregar ~$1.629.000/mes del excedente</div>
+    <div id="planBS3Content">
+      <div style="background:var(--blue-light);border-radius:12px;padding:14px;margin-bottom:10px;border-left:4px solid var(--blue)">
+        <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:4px">✅ Deuda eliminada — 5 mayo 2026</div>
+        <div style="font-size:13px;font-weight:600">Visa $0 + Mastercard $0</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">¡Libertad de deuda de tarjetas lograda!</div>
+      </div>
+      <div style="background:var(--green-light);border-radius:12px;padding:14px;margin-bottom:10px;border-left:4px solid var(--green)">
+        <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:4px">💵 Fondo actual — USD 3.643</div>
+        <div style="font-size:13px;font-weight:600">~$5.118.000 al MEP</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">57% del mínimo BS3 (~$9.000.000). No tocar.</div>
+      </div>
+      <div style="background:var(--yellow-light);border-radius:12px;padding:14px;border-left:4px solid var(--yellow)">
+        <div style="font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:4px">🎯 Meta BS3 mínima</div>
+        <div style="font-size:13px;font-weight:600">$9.000.000 — $18.000.000</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">Agregar ~$1.629.000/mes del excedente</div>
+      </div>
     </div>
   </div>
   <div class="card">
@@ -404,32 +488,27 @@ body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',
 
 <!-- TAB MERCADO PAGO -->
 <div id="tab-mercadopago" class="content" style="display:none">
-
   <div style="background:linear-gradient(135deg,#009EE3,#0072CE);border-radius:var(--radius);padding:20px;margin-bottom:14px;position:relative;overflow:hidden">
     <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:rgba(255,255,255,0.1);border-radius:50%"></div>
     <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.7);text-transform:uppercase;margin-bottom:6px">💙 MercadoPago — Ciclo actual</div>
     <div style="font-size:42px;font-weight:800;color:#fff;font-family:'Space Mono',monospace;line-height:1;margin-bottom:4px" id="mpTotalEgresos">—</div>
     <div style="font-size:12px;color:rgba(255,255,255,0.7)" id="mpTotalSub">Total de egresos del ciclo</div>
   </div>
-
   <div class="stats-row" style="margin-bottom:14px">
     <div class="stat-card"><div class="stat-val" id="mpStatSangrado" style="color:var(--purple)">—</div><div class="stat-lbl">→ Romina</div></div>
     <div class="stat-card"><div class="stat-val" id="mpStatDiezmo" style="color:var(--green)">—</div><div class="stat-lbl">Diezmo</div></div>
     <div class="stat-card"><div class="stat-val" id="mpStatTerceros" style="color:var(--orange)">—</div><div class="stat-lbl">Terceros</div></div>
   </div>
-
   <div style="background:var(--purple-light);border:1px solid rgba(124,92,191,0.2);border-radius:var(--radius);padding:18px;margin-bottom:14px">
     <div style="font-size:11px;font-weight:700;color:var(--purple);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">💸 Sangrado — Transferencias a Romina</div>
     <div style="font-size:32px;font-weight:800;color:var(--purple);font-family:'Space Mono',monospace" id="mpSangradoTotal">$0</div>
     <div style="font-size:11px;color:var(--muted);margin-top:4px;margin-bottom:12px">Fondos girados para gastos de Romina vía MP</div>
     <div id="mpSangradoItems" style="display:grid;gap:6px;max-height:200px;overflow-y:auto"></div>
   </div>
-
   <div class="card">
     <div class="card-title">📂 Gastos por categoría (MP)</div>
     <div id="mpCatList" style="display:grid;gap:8px"></div>
   </div>
-
   <div class="card" style="margin-top:14px">
     <div class="card-title">📋 Movimientos MercadoPago</div>
     <div style="display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;scrollbar-width:none">
@@ -441,7 +520,6 @@ body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',
     </div>
     <div id="mpTxnList" style="display:grid;gap:8px;max-height:500px;overflow-y:auto"></div>
   </div>
-
   <div class="bottom-pad"></div>
 </div>
 
@@ -452,8 +530,6 @@ body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',
     <div class="quote-text" id="ramseyCita">Cargando...</div>
     <div class="quote-author">— Dave Ramsey</div>
   </div>
-
-  <!-- INGRESO DEL MES -->
   <div class="card" style="background:linear-gradient(135deg,#00C48C,#00A87A);color:#fff;border:none">
     <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.7);text-transform:uppercase;margin-bottom:6px">💰 Ingreso este mes</div>
     <div style="font-size:36px;font-weight:800;font-family:'Space Mono',monospace;line-height:1;margin-bottom:6px" id="cfg_ingreso_display">—</div>
@@ -463,8 +539,6 @@ body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',
       <div style="display:flex;justify-content:space-between"><span>Excedente disponible BS3</span><span style="font-family:'Space Mono',monospace;font-weight:700" id="cfg_excedente_bs3">—</span></div>
     </div>
   </div>
-
-  <!-- FONDO BS3 -->
   <div class="card" style="background:linear-gradient(135deg,#4A90D9,#3672B5);color:#fff;border:none">
     <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.7);text-transform:uppercase;margin-bottom:6px">💵 Fondo BS3 actual</div>
     <div style="font-size:28px;font-weight:800;font-family:'Space Mono',monospace;line-height:1;margin-bottom:4px" id="cfg_fondo_usd">—</div>
@@ -475,8 +549,6 @@ body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',
       <div style="display:flex;justify-content:space-between"><span>Tiempo estimado</span><span style="font-family:'Space Mono',monospace;font-weight:700" id="cfg_meses_bs3">—</span></div>
     </div>
   </div>
-
-  <!-- COTIZACIÓN -->
   <div class="card" id="cfg_cotizacion_box" style="margin-bottom:14px">
     <div class="card-title">💲 Cotización del día</div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">
@@ -486,21 +558,16 @@ body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',
     </div>
     <div style="font-size:10px;color:var(--muted);text-align:center;margin-top:8px" id="cfg_cot_fuente">Actualizado al cargar</div>
   </div>
-
-  <!-- PRESUPUESTO POR CATEGORÍA -->
   <div style="margin-top:18px;margin-bottom:10px">
     <div style="font-size:13px;font-weight:700">📊 Presupuesto BS3 por categoría</div>
     <div style="font-size:11px;color:var(--muted);margin-top:2px">Comparación: promedio real últimos 3 ciclos vs techo BS3 sugerido</div>
   </div>
   <div id="cfg_categorias_list" style="display:grid;gap:8px"></div>
-
-  <!-- RESUMEN FINAL -->
   <div class="card" style="margin-top:14px">
     <div class="card-title">📊 Resumen del mes</div>
     <div id="cfg_resumen_rows"></div>
     <div class="cfg-balance-row"><span style="font-weight:700;font-size:15px">EXCEDENTE BS3</span><span style="font-family:'Space Mono',monospace;font-size:20px;font-weight:800" id="cfg_balance">—</span></div>
   </div>
-
   <button class="btn-guardar" onclick="recargarConfig()">↺ Recargar valores del Sheet</button>
   <div class="bottom-pad"></div>
 </div>
@@ -527,205 +594,120 @@ const MP_API_URL=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/valu
 const CONFIG_API_URL=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(CONFIG_SHEET_NAME+'!A1:B100')}?key=${SHEETS_API_KEY}`;
 const DOLAR_API_BASE='https://dolarapi.com/v1/dolares';
 
-// Techos BS3 hardcodeados (recomendación del asesor)
 const TECHOS_BS3 = {
-  'Alimentación':    500000,
-  'Salud':           480000,
-  'Servicios':       484000,
-  'Educación':       290000,  // Colegio 187704 + Felipe 30000 + buffer 72k
-  'Vehículo':        280000,
-  'Comida Fuera':     50000,
-  'Entretenimiento':  50000,
-  'Indumentaria':     40000,
-  'Transporte':       80000,
-  'Compras Online':   20000,
-  'Hogar':           210000,  // 80000 + jardinero Santa Anita 130000
-  'Otros':            40000,
+  'Alimentación':500000,'Salud':480000,'Servicios':484000,'Educación':290000,
+  'Vehículo':280000,'Comida Fuera':50000,'Entretenimiento':50000,'Indumentaria':40000,
+  'Transporte':80000,'Compras Online':20000,'Hogar':210000,'Otros':40000,
 };
-
 const ICONOS_CAT = {
   'Alimentación':'🛒','Salud':'🏥','Servicios':'💡','Educación':'📚','Vehículo':'🚗',
   'Comida Fuera':'🍽️','Entretenimiento':'🎭','Indumentaria':'👕','Transporte':'🚇',
   'Compras Online':'📦','Hogar':'🏠','Otros':'❓','Diezmo':'🙏'
 };
 
-// Configuración global cargada del Sheet
 let configSheet = {
-  ingreso_mes_actual: 3800000,
-  fondo_bs3_usd: 3643,
-  cotizacion_dolar: 1430,
-  meta_bs3_minimo: 9000000,
-  sangrado_romina: 325000,
+  ingreso_mes_actual:3800000,fondo_bs3_usd:3643,cotizacion_dolar:1430,
+  meta_bs3_minimo:9000000,sangrado_romina:325000,
 };
-
-// Cotizaciones del día (se llenan al cargar)
-let cotizaciones = {
-  oficial: null,
-  blue: null,
-  mep: null,
-};
+let cotizaciones = {oficial:null,blue:null,mep:null};
 
 function getParaTarjetas(){ return parseInt(localStorage.getItem('gazelle_para_tarjetas')||'0'); }
 function getDeudaVisa(){    return parseInt(localStorage.getItem('gazelle_deuda_visa')||'0'); }
 function getDeudaMaster(){  return parseInt(localStorage.getItem('gazelle_deuda_master')||'0'); }
-function getDeudaTotal(){   return getDeudaVisa() + getDeudaMaster(); }
-const DEUDA_INICIAL = 3592872;
+const DEUDA_INICIAL=3592872;
 
 let presupuesto = {
-  "Alimentación":    { icon:"🛒", limite: TECHOS_BS3['Alimentación'] },
-  "Salud":           { icon:"🏥", limite: TECHOS_BS3['Salud'] },
-  "Servicios":       { icon:"💡", limite: TECHOS_BS3['Servicios'] },
-  "Educación":       { icon:"📚", limite: TECHOS_BS3['Educación'] },
-  "Vehículo":        { icon:"🚗", limite: TECHOS_BS3['Vehículo'] },
-  "Comida Fuera":    { icon:"🍽️", limite: TECHOS_BS3['Comida Fuera'] },
-  "Entretenimiento": { icon:"🎭", limite: TECHOS_BS3['Entretenimiento'] },
-  "Indumentaria":    { icon:"👕", limite: TECHOS_BS3['Indumentaria'] },
-  "Transporte":      { icon:"🚇", limite: TECHOS_BS3['Transporte'] },
-  "Compras Online":  { icon:"📦", limite: TECHOS_BS3['Compras Online'] },
-  "Hogar":           { icon:"🏠", limite: TECHOS_BS3['Hogar'] },
-  "Diezmo":          { icon:"🙏", limite: 380000 },
-  "Otros":           { icon:"❓", limite: TECHOS_BS3['Otros'] },
+  "Alimentación":{icon:"🛒",limite:TECHOS_BS3['Alimentación']},
+  "Salud":{icon:"🏥",limite:TECHOS_BS3['Salud']},
+  "Servicios":{icon:"💡",limite:TECHOS_BS3['Servicios']},
+  "Educación":{icon:"📚",limite:TECHOS_BS3['Educación']},
+  "Vehículo":{icon:"🚗",limite:TECHOS_BS3['Vehículo']},
+  "Comida Fuera":{icon:"🍽️",limite:TECHOS_BS3['Comida Fuera']},
+  "Entretenimiento":{icon:"🎭",limite:TECHOS_BS3['Entretenimiento']},
+  "Indumentaria":{icon:"👕",limite:TECHOS_BS3['Indumentaria']},
+  "Transporte":{icon:"🚇",limite:TECHOS_BS3['Transporte']},
+  "Compras Online":{icon:"📦",limite:TECHOS_BS3['Compras Online']},
+  "Hogar":{icon:"🏠",limite:TECHOS_BS3['Hogar']},
+  "Diezmo":{icon:"🙏",limite:380000},
+  "Otros":{icon:"❓",limite:TECHOS_BS3['Otros']},
 };
 
-const CATS_EXCLUIDAS = new Set(['Pago Tarjeta', 'Banco', 'Transferencia Interna']);
-const MP_EXCLUIR = new Set(['Ingreso', 'Banco', 'Transferencia Interna']);
+const CATS_EXCLUIDAS=new Set(['Pago Tarjeta','Banco','Transferencia Interna']);
+const MP_EXCLUIR=new Set(['Ingreso','Banco','Transferencia Interna']);
+const MP_CATS_GASTO=new Set(['Alimentación','Salud','Servicios','Educación','Vehículo','Comida Fuera','Entretenimiento','Indumentaria','Transporte','Compras Online','Hogar','Diezmo','Otros']);
 
-function anteultimoJueves(year, month) {
-  const jueves = [];
-  const d = new Date(year, month - 1, 1);
-  while (d.getMonth() === month - 1) { if (d.getDay() === 4) jueves.push(new Date(d)); d.setDate(d.getDate() + 1); }
-  return jueves[jueves.length - 2];
-}
-
-function generarCiclos(desde, hasta) {
-  const ciclos = [];
-  const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  let prev = anteultimoJueves(desde.getFullYear(), desde.getMonth() + 1);
-  let y = desde.getFullYear(); let m = desde.getMonth() + 2;
-  while (true) {
-    if (m > 12) { m = 1; y++; }
-    const fin = anteultimoJueves(y, m);
-    const ini = new Date(prev); ini.setDate(ini.getDate() + 1);
-    ciclos.push({ nombre: meses[m-1] + ' ' + y, inicio: ini.toISOString().split('T')[0], fin: fin.toISOString().split('T')[0] });
-    prev = fin;
-    if (fin > hasta) break;
-    m++;
-  }
-  return ciclos;
-}
-
-const CICLOS = generarCiclos(new Date(2024, 8, 1), new Date(2027, 11, 31));
-let gastosMes = [], todosLosGastos = [], cicloActual = null, cicloIndex = -1, filtroActual = 'todos';
-let todosLosMP = [], gastosMPCiclo = [], filtroMP = 'todos';
-
-const PROHIBIDOS_DEF = [
-  { nombre:"Delivery (PedidosYa/Rappi)", keys:["pedidosya","rappi","dlo*pedidos"] },
-  { nombre:"Fast Food (Mostaza/KFC)",    keys:["mostaza","kfc","burger","mcdonalds"] },
-  { nombre:"Restaurantes",               keys:["pizzeria","restaurant","buffet","dichabuffet","ardente","cheka"] },
-  { nombre:"Taxi / Cabify",              keys:["cabify","uber","taxi","remis"] },
-  { nombre:"Ropa no urgente",            keys:["shein","temu","mimo","tropea"] },
-  { nombre:"Vivero / Plantas",           keys:["vivero"] },
-  { nombre:"Juguetería",                 keys:["kinderland","elmundodeljug","juguet"] },
+const PROHIBIDOS_DEF=[
+  {nombre:"Delivery (PedidosYa/Rappi)",keys:["pedidosya","rappi","dlo*pedidos"]},
+  {nombre:"Fast Food (Mostaza/KFC)",keys:["mostaza","kfc","burger","mcdonalds"]},
+  {nombre:"Restaurantes",keys:["pizzeria","restaurant","buffet","dichabuffet","ardente","cheka"]},
+  {nombre:"Taxi / Cabify",keys:["cabify","uber","taxi","remis"]},
+  {nombre:"Ropa no urgente",keys:["shein","temu","mimo","tropea"]},
+  {nombre:"Vivero / Plantas",keys:["vivero"]},
+  {nombre:"Juguetería",keys:["kinderland","elmundodeljug","juguet"]},
 ];
 
-const RAMSEY_FRASES = [
-  { texto: "Vivir como nadie hoy para poder vivir como nadie mañana.", icono:"🔥" },
-  { texto: "La deuda no es una herramienta, es un producto que te venden los ricos.", icono:"⚠️" },
-  { texto: "Si sacrificás hoy, podés ganar mañana. La intensidad gana.", icono:"💪" },
-  { texto: "El plan de cuotas es la manera más cara de comprar algo.", icono:"💳" },
-  { texto: "Tus ingresos son tu herramienta más poderosa para construir riqueza.", icono:"🛠️" },
-  { texto: "Actúa tu edad financiera, no tu edad emocional.", icono:"🧠" },
-  { texto: "El Modo Gazelle no es una dieta, es un estilo de vida.", icono:"🦌" },
-  { texto: "La disciplina financiera hoy = libertad mañana.", icono:"🏆" },
+const RAMSEY_FRASES=[
+  {texto:"Vivir como nadie hoy para poder vivir como nadie mañana.",icono:"🔥",autor:"Dave Ramsey"},
+  {texto:"La deuda no es una herramienta, es un producto que te venden los ricos.",icono:"⚠️",autor:"Dave Ramsey"},
+  {texto:"No hay dos billeteras en un matrimonio. El dinero de la familia es uno solo.",icono:"🙏",autor:"Daniel González"},
+  {texto:"El que es fiel en lo poco, también lo será en lo mucho. El dinero es una prueba de mayordomía.",icono:"📖",autor:"Daniel González"},
+  {texto:"Dios no te dio el dinero para que lo gastes todo. Te lo confió para que lo administres con sabiduría.",icono:"✝️",autor:"Daniel González"},
+  {texto:"El presupuesto no es una restricción. Es una declaración de intenciones: le decís a tu dinero a dónde ir.",icono:"💪",autor:"Daniel González"},
+  {texto:"El Modo Gazelle no es una dieta, es un estilo de vida.",icono:"🦌",autor:"Dave Ramsey"},
+  {texto:"La disciplina financiera hoy = libertad mañana.",icono:"🏆",autor:"Dave Ramsey"},
 ];
 
-function detectarCicloActual() {
-  const hoy = new Date(); hoy.setHours(0,0,0,0);
-  for(let i = 0; i < CICLOS.length; i++) {
-    const ini = parseFechaISO(CICLOS[i].inicio); const fin = parseFechaISO(CICLOS[i].fin);
-    if(hoy >= ini && hoy <= fin) { cicloIndex = i; return CICLOS[i]; }
-  }
-  cicloIndex = CICLOS.length - 1; return CICLOS[CICLOS.length-1];
+function anteultimoJueves(year,month){const j=[];const d=new Date(year,month-1,1);while(d.getMonth()===month-1){if(d.getDay()===4)j.push(new Date(d));d.setDate(d.getDate()+1)}return j[j.length-2]}
+function generarCiclos(desde,hasta){const ciclos=[];const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];let prev=anteultimoJueves(desde.getFullYear(),desde.getMonth()+1);let y=desde.getFullYear();let m=desde.getMonth()+2;while(true){if(m>12){m=1;y++}const fin=anteultimoJueves(y,m);const ini=new Date(prev);ini.setDate(ini.getDate()+1);ciclos.push({nombre:meses[m-1]+' '+y,inicio:ini.toISOString().split('T')[0],fin:fin.toISOString().split('T')[0]});prev=fin;if(fin>hasta)break;m++}return ciclos}
+const CICLOS=generarCiclos(new Date(2024,8,1),new Date(2027,11,31));
+let gastosMes=[],todosLosGastos=[],cicloActual=null,cicloIndex=-1,filtroActual='todos';
+let todosLosMP=[],gastosMPCiclo=[],filtroMP='todos';
+
+function detectarCicloActual(){const hoy=new Date();hoy.setHours(0,0,0,0);for(let i=0;i<CICLOS.length;i++){const ini=parseFechaISO(CICLOS[i].inicio);const fin=parseFechaISO(CICLOS[i].fin);if(hoy>=ini&&hoy<=fin){cicloIndex=i;return CICLOS[i]}}cicloIndex=CICLOS.length-1;return CICLOS[CICLOS.length-1]}
+function navegarCiclo(dir){const nuevoIdx=cicloIndex+dir;if(nuevoIdx<0||nuevoIdx>=CICLOS.length)return;cicloIndex=nuevoIdx;cicloActual=CICLOS[cicloIndex];actualizarCicloUI();aplicarFiltroCiclo();aplicarFiltroCicloMP();renderAll();renderMP()}
+function aplicarFiltroCiclo(){if(!cicloActual)return;const ini=parseFechaISO(cicloActual.inicio);const fin=parseFechaISO(cicloActual.fin);gastosMes=todosLosGastos.filter(g=>g.fechaDate&&g.fechaDate>=ini&&g.fechaDate<=fin)}
+function aplicarFiltroCicloMP(){if(!cicloActual)return;const ini=parseFechaISO(cicloActual.inicio);const fin=parseFechaISO(cicloActual.fin);gastosMPCiclo=todosLosMP.filter(g=>g.fechaDate&&g.fechaDate>=ini&&g.fechaDate<=fin)}
+
+function parseFechaStr(f){if(!f)return null;const s=String(f).trim();const p=s.split('/');if(p.length===3){let y=parseInt(p[2].trim());if(y<100)y+=2000;const m=parseInt(p[1].trim())-1;const d=parseInt(p[0].trim());if(isNaN(y)||isNaN(m)||isNaN(d))return null;return new Date(y,m,d)}const iso=s.split('-');if(iso.length===3&&iso[0].length===4){return new Date(parseInt(iso[0]),parseInt(iso[1])-1,parseInt(iso[2]))}return null}
+function parseFechaISO(s){const p=s.split('-');return new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]))}
+
+function actualizarCicloUI(){
+  try{
+    const hoy=new Date();hoy.setHours(0,0,0,0);
+    const fin=parseFechaISO(cicloActual.fin);const ini=parseFechaISO(cicloActual.inicio);
+    const diasRestantes=Math.ceil((fin-hoy)/(1000*60*60*24))+1;
+    const totalDias=Math.ceil((fin-ini)/(1000*60*60*24))+1;
+    const diasPasados=totalDias-diasRestantes;
+    const pct=Math.min((diasPasados/totalDias)*100,100);
+    const esPasado=fin<hoy;const esFuturo=ini>hoy;
+    document.getElementById('cicloTitulo').textContent='Ciclo '+cicloActual.nombre+(esPasado?' 📁':esFuturo?' 🔮':' ✦');
+    const fmtIni=cicloActual.inicio.split('-').reverse().join('/').substring(0,5);
+    const fmtFin=cicloActual.fin.split('-').reverse().join('/');
+    document.getElementById('cicloFechas').textContent=fmtIni+' → '+fmtFin;
+    document.getElementById('cicloDias').textContent=esPasado?'—':esFuturo?'—':Math.max(diasRestantes,0);
+    document.getElementById('cicloLbl').textContent=esPasado?'CERRADO':esFuturo?'PRÓXIMO':'DÍAS REST.';
+    document.getElementById('cicloPct').style.width=pct+'%';
+    const vencimiento=new Date(fin);vencimiento.setDate(vencimiento.getDate()+8);
+    const meses=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    const vencStr=`Vence ${vencimiento.getDate()}/${meses[vencimiento.getMonth()]}/${vencimiento.getFullYear()}`;
+    const elVV=document.getElementById('pagarVencVisa');const elVM=document.getElementById('pagarVencMaster');
+    if(elVV)elVV.textContent=vencStr;if(elVM)elVM.textContent=vencStr;
+  }catch(e){console.warn('actualizarCicloUI:',e)}
 }
 
-function navegarCiclo(dir) {
-  const nuevoIdx = cicloIndex + dir;
-  if(nuevoIdx < 0 || nuevoIdx >= CICLOS.length) return;
-  cicloIndex = nuevoIdx; cicloActual = CICLOS[cicloIndex];
-  actualizarCicloUI(); aplicarFiltroCiclo(); aplicarFiltroCicloMP(); renderAll(); renderMP();
-}
+const fp=n=>'$'+Math.round(Math.abs(n)).toLocaleString('es-AR');
 
-function aplicarFiltroCiclo() {
-  if(!cicloActual) return;
-  const ini = parseFechaISO(cicloActual.inicio); const fin = parseFechaISO(cicloActual.fin);
-  gastosMes = todosLosGastos.filter(g=>g.fechaDate&&g.fechaDate>=ini&&g.fechaDate<=fin);
-}
-
-function aplicarFiltroCicloMP() {
-  if(!cicloActual) return;
-  const ini = parseFechaISO(cicloActual.inicio); const fin = parseFechaISO(cicloActual.fin);
-  gastosMPCiclo = todosLosMP.filter(g => g.fechaDate && g.fechaDate >= ini && g.fechaDate <= fin);
-}
-
-function parseFechaStr(f) {
-  if(!f) return null;
-  const s = String(f).trim();
-  // Soporte DD/MM/YYYY y DD/MM/YY
-  const p = s.split('/');
-  if(p.length===3) {
-    let y = parseInt(p[2].trim());
-    if(y < 100) y += 2000;
-    const m = parseInt(p[1].trim()) - 1;
-    const d = parseInt(p[0].trim());
-    if(isNaN(y)||isNaN(m)||isNaN(d)) return null;
-    return new Date(y, m, d);
-  }
-  // Soporte YYYY-MM-DD
-  const iso = s.split('-');
-  if(iso.length===3 && iso[0].length===4) {
-    return new Date(parseInt(iso[0]), parseInt(iso[1])-1, parseInt(iso[2]));
-  }
-  return null;
-}
-function parseFechaISO(s) { const p = s.split('-'); return new Date(parseInt(p[0]), parseInt(p[1])-1, parseInt(p[2])); }
-
-function actualizarCicloUI() {
-  try {
-    const hoy = new Date(); hoy.setHours(0,0,0,0);
-    const fin = parseFechaISO(cicloActual.fin); const ini = parseFechaISO(cicloActual.inicio);
-    const diasRestantes = Math.ceil((fin - hoy) / (1000*60*60*24)) + 1;
-    const totalDias = Math.ceil((fin - ini) / (1000*60*60*24)) + 1;
-    const diasPasados = totalDias - diasRestantes;
-    const pct = Math.min((diasPasados/totalDias)*100, 100);
-    const esPasado = fin < hoy; const esFuturo = ini > hoy;
-    document.getElementById('cicloTitulo').textContent = 'Ciclo ' + cicloActual.nombre + (esPasado ? ' 📁' : esFuturo ? ' 🔮' : ' ✦');
-    const fmtIni = cicloActual.inicio.split('-').reverse().join('/').substring(0,5);
-    const fmtFin = cicloActual.fin.split('-').reverse().join('/');
-    document.getElementById('cicloFechas').textContent = fmtIni + ' → ' + fmtFin;
-    document.getElementById('cicloDias').textContent = esPasado ? '—' : esFuturo ? '—' : Math.max(diasRestantes,0);
-    document.getElementById('cicloLbl').textContent = esPasado ? 'CERRADO' : esFuturo ? 'PRÓXIMO' : 'DÍAS REST.';
-    document.getElementById('cicloPct').style.width = pct+'%';
-    const vencimiento = new Date(fin); vencimiento.setDate(vencimiento.getDate() + 8);
-    const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-    const vencStr = `Vence ${vencimiento.getDate()}/${meses[vencimiento.getMonth()]}/${vencimiento.getFullYear()}`;
-    const elVV = document.getElementById('pagarVencVisa'); const elVM = document.getElementById('pagarVencMaster');
-    if(elVV) elVV.textContent = vencStr; if(elVM) elVM.textContent = vencStr;
-  } catch(e) { console.warn('actualizarCicloUI:', e); }
-}
-
-function fp(n){ return '$'+Math.round(Math.abs(n)).toLocaleString('es-AR') }
-
-async function fetchSheet() {
+async function fetchSheet(){
   setSyncState('loading','Sincronizando...');
-  try {
-    const res = await fetch(API_URL);
-    if(!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json();
-    const allValues = json.values || [];
-    if(allValues.length < 2) throw new Error('Sin datos');
-    const cols = allValues[0]; const dataRows = allValues.slice(1);
-    todosLosGastos = dataRows.filter(r=>r&&r[0]).map(r=>{
-      const get=l=>{const i=cols.indexOf(l);return i>=0&&r[i]!==undefined?String(r[i]):'';};
+  try{
+    const res=await fetch(API_URL);
+    if(!res.ok)throw new Error(`HTTP ${res.status}`);
+    const json=await res.json();
+    const allValues=json.values||[];
+    if(allValues.length<2)throw new Error('Sin datos');
+    const cols=allValues[0];const dataRows=allValues.slice(1);
+    todosLosGastos=dataRows.filter(r=>r&&r[0]).map(r=>{
+      const get=l=>{const i=cols.indexOf(l);return i>=0&&r[i]!==undefined?String(r[i]):''};
       const comercio=String(get('Comercio')||get('DescripcionRaw')||'');
       const cat=String(get('Categoria')||'Otros').trim();
       const signo=String(get('Signo')||'S');
@@ -748,169 +730,217 @@ async function fetchSheet() {
     }).filter(g=>g.quien!=='Padres'&&g.cat!=='Pago Tarjeta');
     aplicarFiltroCiclo();
     setSyncState('ok',`Ciclo: ${gastosMes.filter(g=>!CATS_EXCLUIDAS.has(g.cat)).length} transacciones`);
-    try { renderAll(); } catch(e) { console.error('renderAll:', e); }
+    try{renderAll()}catch(e){console.error('renderAll:',e)}
     fetchMP();
-  } catch(e) { setSyncState('error','Error al sincronizar. Tocá Actualizar.'); console.error(e); }
+    llamarAsesor();
+  }catch(e){setSyncState('error','Error al sincronizar. Tocá Actualizar.');console.error(e)}
 }
 
-async function fetchMP() {
-  try {
-    const res = await fetch(MP_API_URL);
-    if(!res.ok) return;
-    const json = await res.json();
-    const allValues = json.values || [];
-    if(allValues.length < 2) return;
-    const cols = allValues[0]; const dataRows = allValues.slice(1);
-    todosLosMP = dataRows.filter(r => r && r[0]).map(r => {
-      const get = l => { const i = cols.indexOf(l); return i >= 0 && r[i] !== undefined ? String(r[i]) : ''; };
-      const fecha = get('Fecha');
-      const fechaDate = parseFechaStr(fecha);
-      // TipoMovimiento o Descripcion como fallback
-      const tipo = get('TipoMovimiento') || get('Descripcion') || '';
-      // Parser robusto para montos argentinos: (1.234,56) o -1.234,56 o 1.234,56
-      const montoStr = get('Monto').trim();
-      let monto = 0;
-      if(montoStr) {
-        const esNegativo = montoStr.startsWith('(') || montoStr.startsWith('-');
-        const limpio = montoStr.replace(/[()$\-\s]/g,'').replace(/\./g,'').replace(',','.');
-        monto = (parseFloat(limpio) || 0) * (esNegativo ? -1 : 1);
-      }
-      const cat = (get('Categoria') || 'Otros').trim();
-      const subcat = get('Subcategoria') || '';
-      const nota = get('Nota') || '';
-      const esSangrado = subcat === 'Eduardo→Romina' || tipo.toLowerCase().includes('romina');
-      const esDiezmo = cat === 'Diezmo' || tipo.toLowerCase().includes('cristo es vida');
-      return { fecha, fechaDate, tipo, monto, cat, subcat, nota, esSangrado, esDiezmo };
-    }).filter(r => r.fechaDate !== null);
-    aplicarFiltroCicloMP();
-    renderMP();
-  } catch(e) { console.warn('fetchMP error:', e); }
+async function fetchMP(){
+  try{
+    const res=await fetch(MP_API_URL);if(!res.ok)return;
+    const json=await res.json();const allValues=json.values||[];
+    if(allValues.length<2)return;
+    const cols=allValues[0];const dataRows=allValues.slice(1);
+    todosLosMP=dataRows.filter(r=>r&&r[0]).map(r=>{
+      const get=l=>{const i=cols.indexOf(l);return i>=0&&r[i]!==undefined?String(r[i]):''};
+      const fecha=get('Fecha');const fechaDate=parseFechaStr(fecha);
+      const tipo=get('TipoMovimiento')||get('Descripcion')||'';
+      const montoStr=get('Monto').trim();
+      let monto=0;
+      if(montoStr){const esNeg=montoStr.startsWith('(')||montoStr.startsWith('-');const limpio=montoStr.replace(/[()$\-\s]/g,'').replace(/\./g,'').replace(',','.');monto=(parseFloat(limpio)||0)*(esNeg?-1:1)}
+      const cat=(get('Categoria')||'Otros').trim();
+      const subcat=get('Subcategoria')||'';const nota=get('Nota')||'';
+      const esSangrado=subcat==='Eduardo→Romina'||tipo.toLowerCase().includes('romina');
+      const esDiezmo=cat==='Diezmo'||tipo.toLowerCase().includes('cristo es vida');
+      return{fecha,fechaDate,tipo,monto,cat,subcat,nota,esSangrado,esDiezmo};
+    }).filter(r=>r.fechaDate!==null);
+    aplicarFiltroCicloMP();renderMP();
+  }catch(e){console.warn('fetchMP error:',e)}
 }
 
-function setSyncState(s,m){ document.getElementById('syncDot').className='sync-dot '+s; document.getElementById('syncTxt').textContent=m; }
+function setSyncState(s,m){document.getElementById('syncDot').className='sync-dot '+s;document.getElementById('syncTxt').textContent=m}
 
-function renderAll(){ renderResumen(); renderMiPlan(); renderResumenPersonas(); renderDeuda(); renderPagar(); renderCategorias(); renderProhibidos(); renderTxn(); renderPresupuesto(); renderRamsey(); }
+// ============================================================
+// ASESOR DAVE & DANIEL — nueva función
+// ============================================================
+const FRASES_ASESOR=[
+  {texto:"Vivir como nadie hoy para poder vivir como nadie mañana.",autor:"Dave Ramsey"},
+  {texto:"No hay dos billeteras en un matrimonio. El dinero de la familia es uno solo, y uno solo debe ser el plan.",autor:"Daniel González"},
+  {texto:"El que es fiel en lo poco, también lo será en lo mucho. El dinero es una prueba de mayordomía.",autor:"Daniel González"},
+  {texto:"Dios no te dio el dinero para que lo gastes todo. Te lo confió para que lo administres con sabiduría.",autor:"Daniel González"},
+  {texto:"El presupuesto no es una restricción. Es una declaración de intenciones: le decís a tu dinero a dónde ir antes de que se vaya solo.",autor:"Daniel González"},
+  {texto:"El rico gobierna al pobre; el que pide prestado es esclavo del que presta.",autor:"Proverbios 22:7"},
+  {texto:"Modo Gazelle: velocidad, intensidad, enfoque. No hay deuda que resista a alguien que corre.",autor:"Dave Ramsey"},
+];
 
-function gastosReales(lista){ return lista.filter(g=>!CATS_EXCLUIDAS.has(g.cat)&&g.monto>0); }
+async function llamarAsesor(){
+  const g=gastosReales(gastosMes);
+  const total=g.reduce((s,x)=>s+x.monto,0);
+  const edu=g.filter(x=>x.quien==='Eduardo').reduce((s,x)=>s+x.monto,0);
+  const romi=g.filter(x=>x.quien==='Romina').reduce((s,x)=>s+x.monto,0);
+  const hormigas=g.filter(x=>x.hormiga).reduce((s,x)=>s+x.monto,0);
+  const prohibidos=g.filter(x=>x.esProhibido);
+  const limite=Object.values(presupuesto).reduce((s,c)=>s+c.limite,0);
+  const pct=Math.round(total/limite*100);
+  const cot=getCotizacionUsada();
+  const fondoUsd=configSheet.fondo_bs3_usd||3643;
+  const fondoPesos=Math.round(fondoUsd*cot);
+  const metaBS3=configSheet.meta_bs3_minimo||9000000;
+  const pctBS3=Math.round(fondoPesos/metaBS3*100);
+  const ingreso=configSheet.ingreso_mes_actual||3800000;
+  const porCat={};g.forEach(x=>{porCat[x.cat]=(porCat[x.cat]||0)+x.monto});
+  const dr=Math.max(Math.ceil((parseFechaISO(cicloActual.fin)-new Date())/864e5)+1,0);
 
-// Gastos MP reales del ciclo (egresos que NO son ingresos ni transferencias internas ni banco)
-const MP_CATS_GASTO = new Set(['Alimentación','Salud','Servicios','Educación','Vehículo','Comida Fuera','Entretenimiento','Indumentaria','Transporte','Compras Online','Hogar','Diezmo','Otros']);
-function gastosMPReales(lista){
-  return lista.filter(g => g.monto < 0 && MP_CATS_GASTO.has(g.cat));
+  // Sangrado MP del ciclo
+  const sangradoCiclo=gastosMPCiclo.filter(x=>x.esSangrado).reduce((s,x)=>s+Math.abs(x.monto),0);
+
+  const prompt=`Sos un asesor financiero personal que combina dos voces complementarias:
+
+DAVE RAMSEY: Directo, intenso, sin anestesia. Usa los números reales. Habla de Modo Gazelle, bola de nieve, la deuda como esclavitud. No acepta excusas. Los números son los números.
+
+DANIEL GONZÁLEZ (pastor y conferencista cristiano latinoamericano de finanzas personales): Habla de mayordomía — el dinero no nos pertenece, lo administramos para Dios. Unidad matrimonial en las finanzas (una sola billetera, un solo plan). Propósito antes que presupuesto. La generosidad como principio (el diezmo es el primer fruto). Santa Anita como el sueño que Dios puso en el corazón de esta familia. Cita Proverbios cuando corresponda.
+
+FAMILIA: Eduardo Franco Gastrell y Romina Ziegler. Dos hijos: Felipe y Federico. Sueño: casa propia en Santa Anita, Entre Ríos (bloqueado hasta BS6).
+
+CONTEXTO: Ya completaron Baby Step 2 el 5 de mayo de 2026. ¡Eliminaron todas las deudas! Ahora están en Baby Step 3: construir fondo de emergencia de 3-6 meses.
+
+DATOS REALES — Ciclo ${cicloActual.nombre}:
+- Días restantes: ${dr}
+- Gasto total TC: ${fp(total)} de ${fp(limite)} presupuestado (${pct}%)
+- Eduardo gastó (TC): ${fp(edu)}
+- Romina gastó (TC): ${fp(romi)}
+- Sangrado a Romina vía MP: ${fp(sangradoCiclo)}
+- Gastos hormiga: ${fp(hormigas)}
+- Gastos prohibidos: ${prohibidos.length}${prohibidos.length>0?' — '+prohibidos.slice(0,3).map(x=>x.comercio+': '+fp(x.monto)).join(', '):''}
+- Por categoría: ${Object.entries(porCat).map(([c,v])=>c+': '+fp(v)).join(', ')}
+- Fondo BS3: USD ${fondoUsd} (~${fp(fondoPesos)} al MEP) — ${pctBS3}% de la meta mínima (${fp(metaBS3)})
+- Ingreso mensual: ${fp(ingreso)}
+- Santa Anita: sueño bloqueado hasta BS6
+
+INSTRUCCIONES:
+- Analizá la situación real del ciclo sin suavizar
+- Nombrá a Eduardo y Romina individualmente cuando corresponda a sus gastos
+- Si hay gastos prohibidos o categorías fuera de control, señalalo con consecuencias concretas
+- Si van bien, celebralo genuinamente con los números que lo demuestran
+- Combiná la voz de Dave (intensidad, números, consecuencias) con la de Daniel (propósito divino, mayordomía, unidad familiar, fe)
+- Recordá que ya eliminaron la deuda — eso merece reconocimiento si corresponde
+- Hablá del fondo BS3 y el progreso hacia Santa Anita
+- Máximo 4 párrafos concisos
+- Terminá siempre con UNA acción concreta precedida exactamente por: → ACCIÓN DE HOY:
+- Sin markdown con asteriscos ni hashtags. Texto limpio.`;
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,messages:[{role:'user',content:prompt}]})
+    });
+    const data=await res.json();
+    const texto=data.content?.[0]?.text||'';
+    const partes=texto.split('→ ACCIÓN DE HOY:');
+    const msg=partes[0].trim();
+    const accion=partes[1]?.trim()||'';
+    const elMsg=document.getElementById('asesorMsg');
+    const elAcc=document.getElementById('asesorAccion');
+    if(elMsg)elMsg.innerHTML=msg.replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');
+    if(elAcc){elAcc.textContent=accion;elAcc.style.display=accion?'':'none'}
+    // Frase aleatoria en Resumen
+    const frase=FRASES_ASESOR[Math.floor(Math.random()*FRASES_ASESOR.length)];
+    const elCita=document.getElementById('ramseyCitaResumen');
+    const elAutor=document.getElementById('ramseyCitaAutor');
+    if(elCita)elCita.textContent=frase.texto;
+    if(elAutor)elAutor.textContent='— '+frase.autor;
+  }catch(e){
+    const el=document.getElementById('asesorMsg');
+    if(el)el.textContent='Error al conectar con el asesor. Tocá Actualizar.';
+    console.error(e);
+  }
 }
 
-// Convierte movimientos MP al formato de gastos TC para unificar renders
-function mpComoGastos(lista){
-  return gastosMPReales(lista).map(g => ({
-    fecha: g.fecha,
-    fechaDate: g.fechaDate,
-    comercio: g.tipo ? g.tipo.substring(0,40) : g.cat,
-    monto: Math.abs(g.monto),
-    cat: g.cat,
-    signo: 'S',
-    hormiga: ['Comida Fuera','Entretenimiento','Indumentaria','Compras Online'].includes(g.cat),
-    quien: 'Eduardo',
-    esProhibido: PROHIBIDOS_DEF.some(p => p.keys.some(k => (g.tipo||'').toLowerCase().includes(k))),
-    esDevolucion: false,
-    cuenta: 'MercadoPago',
-    fuenteMP: true
-  }));
-}
+function renderAll(){renderResumen();renderMiPlan();renderResumenPersonas();renderDeuda();renderPagar();renderCategorias();renderProhibidos();renderTxn();renderPresupuesto();renderRamsey()}
 
-function gastosUnificados(){
-  return [...gastosReales(gastosMes), ...mpComoGastos(gastosMPCiclo)];
-}
+function gastosReales(lista){return lista.filter(g=>!CATS_EXCLUIDAS.has(g.cat)&&g.monto>0)}
+function gastosMPReales(lista){return lista.filter(g=>g.monto<0&&MP_CATS_GASTO.has(g.cat))}
+function mpComoGastos(lista){return gastosMPReales(lista).map(g=>({fecha:g.fecha,fechaDate:g.fechaDate,comercio:g.tipo?g.tipo.substring(0,40):g.cat,monto:Math.abs(g.monto),cat:g.cat,signo:'S',hormiga:['Comida Fuera','Entretenimiento','Indumentaria','Compras Online'].includes(g.cat),quien:'Eduardo',esProhibido:PROHIBIDOS_DEF.some(p=>p.keys.some(k=>(g.tipo||'').toLowerCase().includes(k))),esDevolucion:false,cuenta:'MercadoPago',fuenteMP:true}))}
+function gastosUnificados(){return[...gastosReales(gastosMes),...mpComoGastos(gastosMPCiclo)]}
 
 function renderResumen(){
-  const gastos = gastosUnificados();
+  const gastos=gastosUnificados();
   const total=gastos.reduce((s,g)=>s+g.monto,0);
   const limite=Object.values(presupuesto).reduce((s,c)=>s+c.limite,0);
-  const disponible=limite-total; const pct=(total/limite)*100;
-  const card=document.getElementById('disponibleCard'); const el=document.getElementById('disponibleAmt');
-  const sub=document.getElementById('disponibleSub'); const msg=document.getElementById('judgeMsg');
+  const disponible=limite-total;const pct=(total/limite)*100;
+  const card=document.getElementById('disponibleCard');const el=document.getElementById('disponibleAmt');
   const devoluciones=gastosMes.filter(g=>g.monto<0).reduce((s,g)=>s+g.monto,0);
   const totalNeto=total+devoluciones;
   el.textContent=fp(Math.abs(disponible));
-  sub.textContent=`gastado ${fp(totalNeto)} neto de ${fp(limite)}${devoluciones<0?' (incl. '+fp(Math.abs(devoluciones))+' devuelto)':''}`;
-  const hormigas=gastos.filter(g=>g.hormiga); const prohibidos=gastos.filter(g=>g.esProhibido);
+  document.getElementById('disponibleSub').textContent=`gastado ${fp(totalNeto)} neto de ${fp(limite)}${devoluciones<0?' (incl. '+fp(Math.abs(devoluciones))+' devuelto)':''}`;
+  const hormigas=gastos.filter(g=>g.hormiga);const prohibidos=gastos.filter(g=>g.esProhibido);
   document.getElementById('statTxn').textContent=gastos.length;
   document.getElementById('statHormigas').textContent=hormigas.length;
   document.getElementById('statProhibidos').textContent=prohibidos.length;
-  if(disponible<0){ card.className='disponible-card danger'; el.textContent='-'+el.textContent; msg.textContent=`😤 ¡Alerta! Se pasaron ${fp(Math.abs(disponible))} del presupuesto.`; }
-  else if(pct>80){ card.className='disponible-card warning'; msg.textContent=`⚠️ Van en el ${Math.round(pct)}% del presupuesto.`; }
-  else { card.className='disponible-card ok'; msg.textContent=`✅ Solo usaron el ${Math.round(pct)}% del presupuesto. ¡Modo Gazelle funcionando!`; }
+  if(disponible<0){card.className='disponible-card danger';el.textContent='-'+el.textContent;document.getElementById('judgeMsg').textContent=`😤 ¡Alerta! Se pasaron ${fp(Math.abs(disponible))} del presupuesto.`}
+  else if(pct>80){card.className='disponible-card warning';document.getElementById('judgeMsg').textContent=`⚠️ Van en el ${Math.round(pct)}% del presupuesto.`}
+  else{card.className='disponible-card ok';document.getElementById('judgeMsg').textContent=`✅ Solo usaron el ${Math.round(pct)}% del presupuesto. ¡Modo Gazelle funcionando!`}
   const totalH=hormigas.reduce((s,g)=>s+g.monto,0);
   document.getElementById('hormigaTotal').textContent=fp(totalH);
-  const tags=document.getElementById('hormigaItems'); tags.innerHTML='';
-  hormigas.slice(0,10).forEach(h=>{ const t=document.createElement('span'); t.className='hormiga-tag'; t.textContent=h.comercio.substring(0,16)+' '+fp(h.monto); tags.appendChild(t); });
-  const cita = RAMSEY_FRASES[Math.floor(Math.random()*RAMSEY_FRASES.length)];
-  document.getElementById('ramseyCitaResumen').textContent = cita.texto;
+  const tags=document.getElementById('hormigaItems');tags.innerHTML='';
+  hormigas.slice(0,10).forEach(h=>{const t=document.createElement('span');t.className='hormiga-tag';t.textContent=h.comercio.substring(0,16)+' '+fp(h.monto);tags.appendChild(t)});
 }
 
 function renderResumenPersonas(){
-  const gastos = gastosUnificados();
-  const edu = gastos.filter(g=>g.quien==='Eduardo').reduce((s,g)=>s+g.monto,0);
-  const romi = gastos.filter(g=>g.quien==='Romina').reduce((s,g)=>s+g.monto,0);
-  const INGRESO_BASE = 3800000;
-  document.getElementById('totalEdu').textContent = fp(edu);
-  document.getElementById('totalRomi').textContent = fp(romi);
-  document.getElementById('pctEdu').textContent = Math.round(edu/INGRESO_BASE*100)+'% del ingreso';
-  document.getElementById('pctRomi').textContent = Math.round(romi/INGRESO_BASE*100)+'% del ingreso';
-  setTimeout(()=>{ document.getElementById('barEdu').style.width = Math.min(edu/INGRESO_BASE*100,100)+'%'; document.getElementById('barRomi').style.width = Math.min(romi/INGRESO_BASE*100,100)+'%'; },50);
-  const llenarDetalle = (elId, quien, color) => {
-    const el = document.getElementById(elId);
-    const gs = gastosUnificados().filter(g=>g.quien===quien).sort((a,b)=>b.monto-a.monto);
-    el.innerHTML = gs.map(g=>`<div class="persona-detalle-item"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%">${g.esProhibido?'🚫 ':''}${g.comercio}</span><span style="font-family:'Space Mono',monospace;color:${color};white-space:nowrap">${fp(g.monto)}</span></div>`).join('');
+  const gastos=gastosUnificados();
+  const edu=gastos.filter(g=>g.quien==='Eduardo').reduce((s,g)=>s+g.monto,0);
+  const romi=gastos.filter(g=>g.quien==='Romina').reduce((s,g)=>s+g.monto,0);
+  const INGRESO_BASE=3800000;
+  document.getElementById('totalEdu').textContent=fp(edu);
+  document.getElementById('totalRomi').textContent=fp(romi);
+  document.getElementById('pctEdu').textContent=Math.round(edu/INGRESO_BASE*100)+'% del ingreso';
+  document.getElementById('pctRomi').textContent=Math.round(romi/INGRESO_BASE*100)+'% del ingreso';
+  setTimeout(()=>{document.getElementById('barEdu').style.width=Math.min(edu/INGRESO_BASE*100,100)+'%';document.getElementById('barRomi').style.width=Math.min(romi/INGRESO_BASE*100,100)+'%'},50);
+  const llenarDetalle=(elId,quien,color)=>{
+    const el=document.getElementById(elId);
+    const gs=gastosUnificados().filter(g=>g.quien===quien).sort((a,b)=>b.monto-a.monto);
+    el.innerHTML=gs.map(g=>`<div class="persona-detalle-item"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%">${g.esProhibido?'🚫 ':''}${g.comercio}</span><span style="font-family:'Space Mono',monospace;color:${color};white-space:nowrap">${fp(g.monto)}</span></div>`).join('');
   };
-  llenarDetalle('detalleEdu', 'Eduardo', 'var(--blue)'); llenarDetalle('detalleRomi', 'Romina', 'var(--purple)');
+  llenarDetalle('detalleEdu','Eduardo','var(--blue)');
+  llenarDetalle('detalleRomi','Romina','var(--purple)');
 }
 
-function toggleDetalle(quien) {
-  const id = quien === 'edu' ? 'detalleEdu' : 'detalleRomi';
-  const arrow = quien === 'edu' ? 'arrowEdu' : 'arrowRomi';
-  const el = document.getElementById(id); const isOpen = el.style.display !== 'none';
-  el.style.display = isOpen ? 'none' : 'block';
-  document.getElementById(arrow).textContent = isOpen ? '▼' : '▲';
+function toggleDetalle(quien){
+  const id=quien==='edu'?'detalleEdu':'detalleRomi';
+  const arrow=quien==='edu'?'arrowEdu':'arrowRomi';
+  const el=document.getElementById(id);const isOpen=el.style.display!=='none';
+  el.style.display=isOpen?'none':'block';
+  document.getElementById(arrow).textContent=isOpen?'▼':'▲';
 }
 
 function renderMiPlan(){
-  const cot = getCotizacionUsada();
-  const fondoUsd = configSheet.fondo_bs3_usd || 3643;
-  const fondoPesos = Math.round(fondoUsd * cot);
-  const metaBS3 = configSheet.meta_bs3_minimo || 9000000;
-  const pct = Math.min((fondoPesos / metaBS3) * 100, 100);
-  const falta = Math.max(metaBS3 - fondoPesos, 0);
-  const ingreso = configSheet.ingreso_mes_actual || 3800000;
-  const diezmo = Math.round(ingreso * 0.10);
-  const sumaTechos = Object.values(TECHOS_BS3).reduce((s,v)=>s+v,0);
-  const sangrado = configSheet.sangrado_romina || 325000;
-  const excedente = ingreso - diezmo - sumaTechos - sangrado;
-  const meses = excedente > 0 ? Math.ceil(falta / excedente) : 0;
-
-  // Descripción dinámica
-  const elDesc = document.querySelector('.bs-current-desc');
-  if(elDesc) elDesc.textContent = `¡Deudas eliminadas! Ahora construí un fondo de emergencia de 3 a 6 meses de gastos. Tu objetivo: ~${fp(metaBS3)}–${fp(metaBS3*2)}. Tus USD ${fondoUsd} (~${fp(fondoPesos)}) ya son el núcleo. ¡No los toques!`;
-
-  // Barra y porcentaje
-  const elPct = document.getElementById('deudaPct');
-  if(elPct){ elPct.textContent = Math.round(pct)+'% del objetivo'; elPct.style.background='var(--blue-light)'; elPct.style.color='var(--blue)'; }
-  const elActual = document.getElementById('deudaActual');
-  if(elActual){ elActual.textContent = fp(fondoPesos); elActual.style.color='var(--blue)'; }
-  const elPagado = document.getElementById('deudaPagado');
-  if(elPagado) elPagado.textContent = fp(metaBS3);
-  const elBar = document.getElementById('deudaBar');
-  if(elBar) setTimeout(()=>{ elBar.style.width = pct+'%'; }, 50);
-
-  // Cards de construcción
-  const elFondoCard = document.querySelector('#tab-ramsey .card');
-  if(elFondoCard){
-    elFondoCard.querySelector && elFondoCard.querySelectorAll('[style*="green-light"]') && null;
-  }
-
-  // Reemplazar contenido de las 3 cards de plan
-  const planCards = document.querySelectorAll('#tab-ramsey .card');
-  if(planCards[0]){
-    planCards[0].innerHTML = `<div class="card-title">💰 Baby Step 3 — Plan de construcción</div>
+  const cot=getCotizacionUsada();
+  const fondoUsd=configSheet.fondo_bs3_usd||3643;
+  const fondoPesos=Math.round(fondoUsd*cot);
+  const metaBS3=configSheet.meta_bs3_minimo||9000000;
+  const pct=Math.min((fondoPesos/metaBS3)*100,100);
+  const falta=Math.max(metaBS3-fondoPesos,0);
+  const ingreso=configSheet.ingreso_mes_actual||3800000;
+  const diezmo=Math.round(ingreso*0.10);
+  const sumaTechos=Object.values(TECHOS_BS3).reduce((s,v)=>s+v,0);
+  const sangrado=configSheet.sangrado_romina||325000;
+  const excedente=ingreso-diezmo-sumaTechos-sangrado;
+  const meses=excedente>0?Math.ceil(falta/excedente):0;
+  const elDesc=document.getElementById('bsDesc');
+  if(elDesc)elDesc.textContent=`¡Deudas eliminadas! Ahora construí un fondo de 3 a 6 meses de gastos. USD ${fondoUsd} (~${fp(fondoPesos)}) = ${Math.round(pct)}% de la meta. ¡No los toques!`;
+  const elPct=document.getElementById('deudaPct');
+  if(elPct){elPct.textContent=Math.round(pct)+'% del objetivo';elPct.style.background='var(--blue-light)';elPct.style.color='var(--blue)'}
+  const elActual=document.getElementById('deudaActual');
+  if(elActual){elActual.textContent=fp(fondoPesos);elActual.style.color='var(--blue)'}
+  const elPagado=document.getElementById('deudaPagado');
+  if(elPagado)elPagado.textContent=fp(metaBS3);
+  const elBar=document.getElementById('deudaBar');
+  if(elBar)setTimeout(()=>{elBar.style.width=pct+'%'},50);
+  const planContent=document.getElementById('planBS3Content');
+  if(planContent){
+    planContent.innerHTML=`
     <div style="background:var(--blue-light);border-radius:12px;padding:14px;margin-bottom:10px;border-left:4px solid var(--blue)">
       <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:4px">✅ Deuda eliminada — 5 mayo 2026</div>
       <div style="font-size:13px;font-weight:600">Visa $0 + Mastercard $0</div>
@@ -927,92 +957,70 @@ function renderMiPlan(){
       <div style="font-size:11px;color:var(--muted);margin-top:4px">${excedente>0?'Agregar ~'+fp(excedente)+'/mes del excedente':'⚠️ Sin excedente este mes'}${meses>0?' · '+meses+' meses para BS3':''}</div>
     </div>`;
   }
-// Forzar actualización con delay para pisarle a renderDeuda
-  setTimeout(()=>{
-    const cot2 = getCotizacionUsada();
-    const fp2 = configSheet.fondo_bs3_usd || 3643;
-    const pp2 = Math.round(fp2 * cot2);
-    const meta2 = configSheet.meta_bs3_minimo || 9000000;
-    const pct2 = Math.min((pp2/meta2)*100,100);
-    const elA = document.getElementById('deudaActual');
-    const elP = document.getElementById('deudaPct');
-    const elB = document.getElementById('deudaBar');
-    const elPag = document.getElementById('deudaPagado');
-    if(elA){ elA.textContent = fp(pp2); elA.style.color='var(--blue)'; }
-    if(elP) elP.textContent = Math.round(pct2)+'% del objetivo';
-    if(elB) elB.style.width = pct2+'%';
-    if(elPag) elPag.textContent = fp(meta2);
-  }, 300);  
 }
-function renderDeuda(){
-  const visa = getDeudaVisa(); const master = getDeudaMaster(); const total = visa + master;
-  const pagado = Math.max(DEUDA_INICIAL - total, 0); const pct = Math.min((pagado / DEUDA_INICIAL) * 100, 100);
 
-  // En BS3 los elementos de deuda muestran el fondo, no la deuda
-  const enBS3 = (visa === 0 && master === 0);
+function renderDeuda(){
+  const visa=getDeudaVisa();const master=getDeudaMaster();
+  const enBS3=(visa===0&&master===0);
   if(enBS3){
-    const cot = getCotizacionUsada();
-    const fondoUsd = configSheet.fondo_bs3_usd || 3643;
-    const fondoPesos = Math.round(fondoUsd * cot);
-    const metaBS3 = configSheet.meta_bs3_minimo || 9000000;
-    const pctBS3 = Math.min((fondoPesos / metaBS3) * 100, 100);
-    const elPct = document.getElementById('deudaPct');
-    if(elPct){ elPct.textContent = Math.round(pctBS3)+'% del objetivo'; }
-    const elActual = document.getElementById('deudaActual');
-    if(elActual){ elActual.textContent = fp(fondoPesos); elActual.style.color='var(--blue)'; }
-    const elPagado = document.getElementById('deudaPagado');
-    if(elPagado) elPagado.textContent = fp(metaBS3);
-    const elBar = document.getElementById('deudaBar');
-    if(elBar) setTimeout(()=>{ elBar.style.width = pctBS3+'%'; }, 50);
-    const elVisa = document.getElementById('deudaVisaAmt');
-    const elMaster = document.getElementById('deudaMasterAmt');
-    if(elVisa) elVisa.textContent = '$0';
-    if(elMaster) elMaster.textContent = '$0';
+    const cot=getCotizacionUsada();
+    const fondoUsd=configSheet.fondo_bs3_usd||3643;
+    const fondoPesos=Math.round(fondoUsd*cot);
+    const metaBS3=configSheet.meta_bs3_minimo||9000000;
+    const pctBS3=Math.min((fondoPesos/metaBS3)*100,100);
+    const elPct=document.getElementById('deudaPct');
+    if(elPct){elPct.textContent=Math.round(pctBS3)+'% del objetivo'}
+    const elActual=document.getElementById('deudaActual');
+    if(elActual){elActual.textContent=fp(fondoPesos);elActual.style.color='var(--blue)'}
+    const elPagado=document.getElementById('deudaPagado');
+    if(elPagado)elPagado.textContent=fp(metaBS3);
+    const elBar=document.getElementById('deudaBar');
+    if(elBar)setTimeout(()=>{elBar.style.width=pctBS3+'%'},50);
+    const elVisa=document.getElementById('deudaVisaAmt');const elMaster=document.getElementById('deudaMasterAmt');
+    if(elVisa)elVisa.textContent='$0';if(elMaster)elMaster.textContent='$0';
     return;
   }
-
-  const elPct = document.getElementById('deudaPct'); const elActual = document.getElementById('deudaActual');
-  const elPagado = document.getElementById('deudaPagado'); const elBar = document.getElementById('deudaBar');
-  if(elPct) elPct.textContent = Math.round(pct) + '% pagado';
-  if(elActual) elActual.textContent = fp(total); if(elPagado) elPagado.textContent = fp(pagado);
-  if(elBar) setTimeout(()=>{ elBar.style.width = pct+'%'; }, 50);
-  const elVisa = document.getElementById('deudaVisaAmt'); const elMaster = document.getElementById('deudaMasterAmt');
-  const elBNVisa = document.getElementById('bolaNieveVisaAmt'); const elBNMaster = document.getElementById('bolaNieveMasterAmt');
-  if(elVisa) elVisa.textContent = fp(visa); if(elMaster) elMaster.textContent = fp(master);
-  if(elBNVisa) elBNVisa.textContent = fp(visa); if(elBNMaster) elBNMaster.textContent = fp(master);
+  const total=visa+master;const pagado=Math.max(DEUDA_INICIAL-total,0);const pct=Math.min((pagado/DEUDA_INICIAL)*100,100);
+  const elPct=document.getElementById('deudaPct');if(elPct)elPct.textContent=Math.round(pct)+'% pagado';
+  const elActual=document.getElementById('deudaActual');if(elActual)elActual.textContent=fp(total);
+  const elPagado=document.getElementById('deudaPagado');if(elPagado)elPagado.textContent=fp(pagado);
+  const elBar=document.getElementById('deudaBar');if(elBar)setTimeout(()=>{elBar.style.width=pct+'%'},50);
+  const elVisa=document.getElementById('deudaVisaAmt');const elMaster=document.getElementById('deudaMasterAmt');
+  if(elVisa)elVisa.textContent=fp(visa);if(elMaster)elMaster.textContent=fp(master);
 }
+
 function renderPagar(){
-  const PARA_TARJETAS = getParaTarjetas();
-  const estimadoMaster = gastosReales(gastosMes).filter(g=>g.cuenta&&g.cuenta.toLowerCase().includes('mastercard')).reduce((s,g)=>s+g.monto,0);
-  const estimadoVisa   = gastosReales(gastosMes).filter(g=>g.cuenta&&g.cuenta.toLowerCase().includes('visa')).reduce((s,g)=>s+g.monto,0);
-  const total = estimadoMaster + estimadoVisa;
-  const pagarVisa = document.getElementById('pagarVisa'); const pagarMaster = document.getElementById('pagarMaster');
-  pagarVisa.textContent = estimadoVisa > 0 ? fp(estimadoVisa) : 'Sin movimientos';
-  pagarVisa.className = estimadoVisa > PARA_TARJETAS ? 'pagar-monto danger' : 'pagar-monto ok';
-  pagarMaster.textContent = fp(estimadoMaster);
-  pagarMaster.className = estimadoMaster > PARA_TARJETAS ? 'pagar-monto danger' : 'pagar-monto ok';
-  document.getElementById('pagarTotal').textContent = fp(total);
-  const diferencia = PARA_TARJETAS - total;
-  const difEl = document.getElementById('diferenciaPago'); const difBox = document.getElementById('diferenciaBox');
-  difEl.textContent = (diferencia >= 0 ? '+' : '-') + fp(diferencia);
-  difEl.style.color = diferencia >= 0 ? 'var(--green)' : 'var(--red)';
-  difBox.className = 'diferencia-box ' + (diferencia >= 0 ? 'ok' : 'danger');
+  const PARA_TARJETAS=getParaTarjetas();
+  const estimadoMaster=gastosReales(gastosMes).filter(g=>g.cuenta&&g.cuenta.toLowerCase().includes('mastercard')).reduce((s,g)=>s+g.monto,0);
+  const estimadoVisa=gastosReales(gastosMes).filter(g=>g.cuenta&&g.cuenta.toLowerCase().includes('visa')).reduce((s,g)=>s+g.monto,0);
+  const total=estimadoMaster+estimadoVisa;
+  const pagarVisa=document.getElementById('pagarVisa');const pagarMaster=document.getElementById('pagarMaster');
+  pagarVisa.textContent=estimadoVisa>0?fp(estimadoVisa):'Sin movimientos';
+  pagarVisa.className=estimadoVisa>PARA_TARJETAS?'pagar-monto danger':'pagar-monto ok';
+  pagarMaster.textContent=fp(estimadoMaster);
+  pagarMaster.className=estimadoMaster>PARA_TARJETAS?'pagar-monto danger':'pagar-monto ok';
+  document.getElementById('pagarTotal').textContent=fp(total);
+  const diferencia=PARA_TARJETAS-total;
+  const difEl=document.getElementById('diferenciaPago');const difBox=document.getElementById('diferenciaBox');
+  difEl.textContent=(diferencia>=0?'+':'-')+fp(diferencia);
+  difEl.style.color=diferencia>=0?'var(--green)':'var(--red)';
+  difBox.className='diferencia-box '+(diferencia>=0?'ok':'danger');
 }
 
 function renderCategorias(){
-  const c=document.getElementById('barsContainer'); c.innerHTML='';
+  const c=document.getElementById('barsContainer');c.innerHTML='';
   const totCat={};
   gastosUnificados().forEach(g=>{totCat[g.cat]=(totCat[g.cat]||0)+g.monto});
   const cats=new Set([...Object.keys(presupuesto),...Object.keys(totCat)]);
   [...cats].forEach(cat=>{
-    if(CATS_EXCLUIDAS.has(cat)) return;
+    if(CATS_EXCLUIDAS.has(cat))return;
     const cfg=presupuesto[cat]||{icon:'📦',limite:50000};
-    const gastado=totCat[cat]||0; const pct=Math.min((gastado/cfg.limite)*100,100);
-    let cl='ok'; if(pct>=80)cl='danger'; else if(pct>=60)cl='warning';
+    const gastado=totCat[cat]||0;const pct=Math.min((gastado/cfg.limite)*100,100);
+    let cl='ok';if(pct>=80)cl='danger';else if(pct>=60)cl='warning';
     const idCat='cat-'+cat.replace(/[^a-z0-9]/gi,'');
-    const div=document.createElement('div'); div.className='cat-card'; div.id=idCat;
-    div.onclick=()=>{ const det=document.getElementById('det-'+idCat); if(det)det.style.display=det.style.display==='none'?'block':'none'; };
-    const gastosCat = gastosUnificados().filter(g=>g.cat===cat).sort((a,b)=>b.monto-a.monto);
+    const div=document.createElement('div');div.className='cat-card';div.id=idCat;
+    div.onclick=()=>{const det=document.getElementById('det-'+idCat);if(det)det.style.display=det.style.display==='none'?'block':'none'};
+    const gastosCat=gastosUnificados().filter(g=>g.cat===cat).sort((a,b)=>b.monto-a.monto);
     div.innerHTML=`<div class="cat-header"><div class="cat-name">${cfg.icon} ${cat}</div><div class="cat-amounts"><div class="cat-spent" style="color:${pct>=80?'var(--red)':pct>=60?'var(--yellow)':'var(--text)'}">${fp(gastado)}</div><div class="cat-limit">de ${fp(cfg.limite)}</div></div></div><div class="cat-bar-track"><div class="cat-bar-fill ${cl}" style="width:0%" data-pct="${pct}"></div></div><div class="cat-detalle" id="det-${idCat}">${gastosCat.map(g=>`<div class="cat-detalle-item"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:65%">${g.esProhibido?'🚫 ':''}${g.comercio} <span class="chip ${g.fuenteMP?'chip-mp':g.quien==='Romina'?'chip-romi':'chip-edu'}">${g.fuenteMP?'MP':g.quien.substring(0,3).toUpperCase()}</span></span><span style="font-family:'Space Mono',monospace;white-space:nowrap">${fp(g.monto)}</span></div>`).join('')||'<div style="color:var(--muted);font-size:11px;padding:4px 0">Sin movimientos</div>'}</div>`;
     c.appendChild(div);
   });
@@ -1020,11 +1028,11 @@ function renderCategorias(){
 }
 
 function renderProhibidos(){
-  const list=document.getElementById('prohibidoList'); list.innerHTML='';
+  const list=document.getElementById('prohibidoList');list.innerHTML='';
   PROHIBIDOS_DEF.forEach(p=>{
     const enc=gastosUnificados().filter(g=>p.keys.some(k=>g.comercio.toLowerCase().includes(k)));
-    const total=enc.reduce((s,g)=>s+g.monto,0); const found=enc.length>0;
-    const div=document.createElement('div'); div.className='prohibido-item'+(found?' found':'');
+    const total=enc.reduce((s,g)=>s+g.monto,0);const found=enc.length>0;
+    const div=document.createElement('div');div.className='prohibido-item'+(found?' found':'');
     const chips=found?[...new Set(enc.map(g=>g.quien))].map(q=>`<span class="chip ${q==='Eduardo'?'chip-edu':'chip-romi'}">${q.substring(0,3).toUpperCase()}</span>`).join(''):'';
     div.innerHTML=`<div class="prohibido-name">${found?'🚨':'✅'} ${p.nombre} ${chips}</div>${found?`<div class="prohibido-amount">${fp(total)}</div>`:'<div class="prohibido-ok">Libre ✓</div>'}`;
     list.appendChild(div);
@@ -1034,16 +1042,16 @@ function renderProhibidos(){
 function renderTxn(filtro){
   if(filtro)filtroActual=filtro;
   renderResumenPersonas();
-  const list=document.getElementById('txnList'); list.innerHTML='';
+  const list=document.getElementById('txnList');list.innerHTML='';
   let datos=[...gastosMes].sort((a,b)=>Math.abs(b.monto)-Math.abs(a.monto));
-  if(filtroActual==='Eduardo') datos=datos.filter(g=>g.quien==='Eduardo'&&g.monto>0);
-  else if(filtroActual==='Romina') datos=datos.filter(g=>g.quien==='Romina'&&g.monto>0);
-  else if(filtroActual==='prohibido') datos=datos.filter(g=>g.esProhibido&&g.monto>0);
-  else if(filtroActual==='hormiga') datos=datos.filter(g=>g.hormiga&&g.monto>0);
-  else if(filtroActual==='devolucion') datos=datos.filter(g=>g.monto<0);
-  if(!datos.length){list.innerHTML='<div class="empty-state">No hay transacciones</div>';return;}
+  if(filtroActual==='Eduardo')datos=datos.filter(g=>g.quien==='Eduardo'&&g.monto>0);
+  else if(filtroActual==='Romina')datos=datos.filter(g=>g.quien==='Romina'&&g.monto>0);
+  else if(filtroActual==='prohibido')datos=datos.filter(g=>g.esProhibido&&g.monto>0);
+  else if(filtroActual==='hormiga')datos=datos.filter(g=>g.hormiga&&g.monto>0);
+  else if(filtroActual==='devolucion')datos=datos.filter(g=>g.monto<0);
+  if(!datos.length){list.innerHTML='<div class="empty-state">No hay transacciones</div>';return}
   datos.slice(0,100).forEach(g=>{
-    const div=document.createElement('div'); const esNeg=g.monto<0;
+    const div=document.createElement('div');const esNeg=g.monto<0;
     div.className='txn-item'+(g.esProhibido&&!esNeg?' prohibido':esNeg?' ingreso':'');
     const qc=g.quien==='Eduardo'?'chip-edu':g.quien==='Romina'?'chip-romi':'chip-otros';
     const montoStr=esNeg?'<span class="txn-monto negativo">+'+fp(g.monto)+'</span>':'<div class="txn-monto">'+fp(g.monto)+'</div>';
@@ -1052,358 +1060,197 @@ function renderTxn(filtro){
   });
 }
 
-function filtrarTxn(f,el){ document.querySelectorAll('.txn-filters .filter-chip').forEach(c=>c.classList.remove('active')); el.classList.add('active'); renderTxn(f); }
+function filtrarTxn(f,el){document.querySelectorAll('.txn-filters .filter-chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderTxn(f)}
 
-function renderMP() {
-  const egresos = gastosMPCiclo.filter(g => g.monto < 0);
-  const sangrado = egresos.filter(g => g.esSangrado);
-  const diezmo = egresos.filter(g => g.esDiezmo);
-  const terceros = egresos.filter(g => !g.esSangrado && !g.esDiezmo && !MP_EXCLUIR.has(g.cat));
-  const totalEgresos = egresos.reduce((s,g) => s + Math.abs(g.monto), 0);
-  const totalSangrado = sangrado.reduce((s,g) => s + Math.abs(g.monto), 0);
-  const totalDiezmo = diezmo.reduce((s,g) => s + Math.abs(g.monto), 0);
-  const totalTerceros = terceros.reduce((s,g) => s + Math.abs(g.monto), 0);
-  const elTotal = document.getElementById('mpTotalEgresos');
-  const elSub = document.getElementById('mpTotalSub');
-  const elSangStat = document.getElementById('mpStatSangrado');
-  const elDiezStat = document.getElementById('mpStatDiezmo');
-  const elTercStat = document.getElementById('mpStatTerceros');
-  const elSangTotal = document.getElementById('mpSangradoTotal');
-  const elSangItems = document.getElementById('mpSangradoItems');
-  const elCatList = document.getElementById('mpCatList');
-  if(elTotal) elTotal.textContent = fp(totalEgresos);
-  if(elSub) elSub.textContent = `${egresos.length} movimientos de egreso en el ciclo`;
-  if(elSangStat) elSangStat.textContent = fp(totalSangrado);
-  if(elDiezStat) elDiezStat.textContent = fp(totalDiezmo);
-  if(elTercStat) elTercStat.textContent = fp(totalTerceros);
-  if(elSangTotal) elSangTotal.textContent = fp(totalSangrado);
-  if(elSangItems) {
-    if(sangrado.length === 0) { elSangItems.innerHTML = '<div style="color:var(--muted);font-size:12px">Sin transferencias a Romina en este ciclo</div>'; }
-    else { elSangItems.innerHTML = sangrado.map(g => `<div style="display:flex;justify-content:space-between;align-items:center;background:rgba(124,92,191,0.08);border-radius:8px;padding:8px 10px"><div><div style="font-size:12px;font-weight:600;color:var(--purple)">${g.tipo.substring(0,40)}</div><div style="font-size:10px;color:var(--muted)">${g.fecha}</div></div><div style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--purple)">${fp(Math.abs(g.monto))}</div></div>`).join(''); }
+function renderMP(){
+  const egresos=gastosMPCiclo.filter(g=>g.monto<0);
+  const sangrado=egresos.filter(g=>g.esSangrado);
+  const diezmo=egresos.filter(g=>g.esDiezmo);
+  const terceros=egresos.filter(g=>!g.esSangrado&&!g.esDiezmo&&!MP_EXCLUIR.has(g.cat));
+  const totalEgresos=egresos.reduce((s,g)=>s+Math.abs(g.monto),0);
+  const totalSangrado=sangrado.reduce((s,g)=>s+Math.abs(g.monto),0);
+  const totalDiezmo=diezmo.reduce((s,g)=>s+Math.abs(g.monto),0);
+  const totalTerceros=terceros.reduce((s,g)=>s+Math.abs(g.monto),0);
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};
+  set('mpTotalEgresos',fp(totalEgresos));
+  set('mpTotalSub',`${egresos.length} movimientos de egreso en el ciclo`);
+  set('mpStatSangrado',fp(totalSangrado));set('mpStatDiezmo',fp(totalDiezmo));set('mpStatTerceros',fp(totalTerceros));
+  set('mpSangradoTotal',fp(totalSangrado));
+  const elSangItems=document.getElementById('mpSangradoItems');
+  if(elSangItems){
+    if(sangrado.length===0)elSangItems.innerHTML='<div style="color:var(--muted);font-size:12px">Sin transferencias a Romina en este ciclo</div>';
+    else elSangItems.innerHTML=sangrado.map(g=>`<div style="display:flex;justify-content:space-between;align-items:center;background:rgba(124,92,191,0.08);border-radius:8px;padding:8px 10px"><div><div style="font-size:12px;font-weight:600;color:var(--purple)">${g.tipo.substring(0,40)}</div><div style="font-size:10px;color:var(--muted)">${g.fecha}</div></div><div style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--purple)">${fp(Math.abs(g.monto))}</div></div>`).join('');
   }
-  if(elCatList) {
-    const totCat = {};
-    egresos.filter(g => !g.esSangrado && !MP_EXCLUIR.has(g.cat)).forEach(g => { totCat[g.cat] = (totCat[g.cat] || 0) + Math.abs(g.monto); });
-    if(Object.keys(totCat).length === 0) { elCatList.innerHTML = '<div style="color:var(--muted);font-size:12px;text-align:center;padding:16px">Sin gastos directos MP en este ciclo</div>'; }
-    else {
-      const maxVal = Math.max(...Object.values(totCat));
-      elCatList.innerHTML = Object.entries(totCat).sort((a,b) => b[1]-a[1]).map(([cat, monto]) => {
-        const cfg = presupuesto[cat] || { icon:'📦' };
-        const pct = Math.min((monto / maxVal) * 100, 100);
-        return `<div style="background:var(--bg);border-radius:10px;padding:10px 12px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span style="font-size:12px;font-weight:600">${cfg.icon || '📦'} ${cat}</span><span style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700">${fp(monto)}</span></div><div style="height:4px;background:var(--border);border-radius:10px;overflow:hidden"><div style="height:100%;width:${pct}%;background:#009EE3;border-radius:10px;transition:width .8s"></div></div></div>`;
+  const elCatList=document.getElementById('mpCatList');
+  if(elCatList){
+    const totCat={};
+    egresos.filter(g=>!g.esSangrado&&!MP_EXCLUIR.has(g.cat)).forEach(g=>{totCat[g.cat]=(totCat[g.cat]||0)+Math.abs(g.monto)});
+    if(Object.keys(totCat).length===0)elCatList.innerHTML='<div style="color:var(--muted);font-size:12px;text-align:center;padding:16px">Sin gastos directos MP en este ciclo</div>';
+    else{
+      const maxVal=Math.max(...Object.values(totCat));
+      elCatList.innerHTML=Object.entries(totCat).sort((a,b)=>b[1]-a[1]).map(([cat,monto])=>{
+        const cfg=presupuesto[cat]||{icon:'📦'};const pct=Math.min((monto/maxVal)*100,100);
+        return`<div style="background:var(--bg);border-radius:10px;padding:10px 12px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span style="font-size:12px;font-weight:600">${cfg.icon||'📦'} ${cat}</span><span style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700">${fp(monto)}</span></div><div style="height:4px;background:var(--border);border-radius:10px;overflow:hidden"><div style="height:100%;width:${pct}%;background:#009EE3;border-radius:10px;transition:width .8s"></div></div></div>`;
       }).join('');
     }
   }
   renderMPTxn();
 }
 
-function renderMPTxn() {
-  const list = document.getElementById('mpTxnList');
-  if(!list) return;
-  let datos = [...gastosMPCiclo].sort((a,b) => (b.fechaDate||0) - (a.fechaDate||0));
-  if(filtroMP === 'egreso') datos = datos.filter(g => g.monto < 0 && !g.esSangrado && !g.esDiezmo);
-  else if(filtroMP === 'sangrado') datos = datos.filter(g => g.esSangrado);
-  else if(filtroMP === 'diezmo') datos = datos.filter(g => g.esDiezmo);
-  else if(filtroMP === 'ingreso') datos = datos.filter(g => g.monto > 0);
-  if(!datos.length) { list.innerHTML = '<div class="empty-state">Sin movimientos</div>'; return; }
-  list.innerHTML = datos.slice(0, 80).map(g => {
-    const esPos = g.monto > 0;
-    const color = g.esDiezmo ? 'var(--green)' : g.esSangrado ? 'var(--purple)' : esPos ? 'var(--blue)' : 'var(--text)';
-    const prefix = g.esDiezmo ? '🙏 ' : g.esSangrado ? '💸 ' : esPos ? '⬇️ ' : '';
-    return `<div style="background:var(--white);border-radius:var(--radius-sm);padding:12px 14px;display:flex;justify-content:space-between;align-items:center;box-shadow:var(--shadow-sm);${g.esSangrado?'border-left:3px solid var(--purple);':''}${g.esDiezmo?'border-left:3px solid var(--green);':''}"><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${prefix}${g.tipo.substring(0,45)}</div><div style="display:flex;gap:6px;margin-top:3px;flex-wrap:wrap"><span style="font-size:9px;background:var(--bg);color:var(--muted);padding:2px 6px;border-radius:6px;font-weight:700">${g.cat}</span>${g.nota?`<span style="font-size:9px;color:var(--muted)">${g.nota.substring(0,30)}</span>`:''}<span style="font-size:9px;color:var(--muted)">${g.fecha}</span></div></div><div style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:${color};white-space:nowrap;margin-left:8px">${esPos?'+':''}${fp(g.monto)}</div></div>`;
+function renderMPTxn(){
+  const list=document.getElementById('mpTxnList');if(!list)return;
+  let datos=[...gastosMPCiclo].sort((a,b)=>(b.fechaDate||0)-(a.fechaDate||0));
+  if(filtroMP==='egreso')datos=datos.filter(g=>g.monto<0&&!g.esSangrado&&!g.esDiezmo);
+  else if(filtroMP==='sangrado')datos=datos.filter(g=>g.esSangrado);
+  else if(filtroMP==='diezmo')datos=datos.filter(g=>g.esDiezmo);
+  else if(filtroMP==='ingreso')datos=datos.filter(g=>g.monto>0);
+  if(!datos.length){list.innerHTML='<div class="empty-state">Sin movimientos</div>';return}
+  list.innerHTML=datos.slice(0,80).map(g=>{
+    const esPos=g.monto>0;
+    const color=g.esDiezmo?'var(--green)':g.esSangrado?'var(--purple)':esPos?'var(--blue)':'var(--text)';
+    const prefix=g.esDiezmo?'🙏 ':g.esSangrado?'💸 ':esPos?'⬇️ ':'';
+    return`<div style="background:var(--white);border-radius:var(--radius-sm);padding:12px 14px;display:flex;justify-content:space-between;align-items:center;box-shadow:var(--shadow-sm);${g.esSangrado?'border-left:3px solid var(--purple);':''}${g.esDiezmo?'border-left:3px solid var(--green);':''}"><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${prefix}${g.tipo.substring(0,45)}</div><div style="display:flex;gap:6px;margin-top:3px;flex-wrap:wrap"><span style="font-size:9px;background:var(--bg);color:var(--muted);padding:2px 6px;border-radius:6px;font-weight:700">${g.cat}</span>${g.nota?`<span style="font-size:9px;color:var(--muted)">${g.nota.substring(0,30)}</span>`:''}<span style="font-size:9px;color:var(--muted)">${g.fecha}</span></div></div><div style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:${color};white-space:nowrap;margin-left:8px">${esPos?'+':''}${fp(g.monto)}</div></div>`;
   }).join('');
 }
 
-function filtrarMP(f, el) {
-  document.querySelectorAll('#tab-mercadopago .filter-chip').forEach(c => c.classList.remove('active'));
-  if(el) el.classList.add('active');
-  filtroMP = f;
-  renderMPTxn();
-}
+function filtrarMP(f,el){document.querySelectorAll('#tab-mercadopago .filter-chip').forEach(c=>c.classList.remove('active'));if(el)el.classList.add('active');filtroMP=f;renderMPTxn()}
 
 function renderRamsey(){
-  const container = document.getElementById('ramseyFrases'); if(!container) return;
-  container.innerHTML = RAMSEY_FRASES.map(f=>`<div style="background:var(--bg);border-radius:12px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start"><span style="font-size:20px;flex-shrink:0">${f.icono}</span><span style="font-size:12px;color:var(--muted);line-height:1.6;font-style:italic">"${f.texto}"</span></div>`).join('');
+  const container=document.getElementById('ramseyFrases');if(!container)return;
+  container.innerHTML=RAMSEY_FRASES.map(f=>`<div style="background:var(--bg);border-radius:12px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start"><span style="font-size:20px;flex-shrink:0">${f.icono}</span><span style="font-size:12px;color:var(--muted);line-height:1.6;font-style:italic">"${f.texto}"</span></div>`).join('');
 }
 
-// === NUEVAS FUNCIONES CONFIG ===
-
-// Calcula promedios reales por categoría de los últimos 3 ciclos TC + MP
 function calcularPromediosReales(){
-  const ciclos = obtenerUltimos3Ciclos();
-  const totales = {};
-  // De TC
-  todosLosGastos.forEach(g => {
-    if(!g.fechaDate || CATS_EXCLUIDAS.has(g.cat) || g.quien==='Padres' || g.monto<=0) return;
-    for(const c of ciclos) {
-      if(g.fechaDate >= c.ini && g.fechaDate <= c.fin) {
-        totales[g.cat] = (totales[g.cat]||0) + g.monto;
-        break;
-      }
-    }
+  const ciclos=obtenerUltimos3Ciclos();const totales={};
+  todosLosGastos.forEach(g=>{
+    if(!g.fechaDate||CATS_EXCLUIDAS.has(g.cat)||g.quien==='Padres'||g.monto<=0)return;
+    for(const c of ciclos){if(g.fechaDate>=c.ini&&g.fechaDate<=c.fin){totales[g.cat]=(totales[g.cat]||0)+g.monto;break}}
   });
-  // De MP
-  todosLosMP.forEach(g => {
-    if(!g.fechaDate || g.monto >= 0 || !MP_CATS_GASTO.has(g.cat)) return;
-    for(const c of ciclos) {
-      if(g.fechaDate >= c.ini && g.fechaDate <= c.fin) {
-        totales[g.cat] = (totales[g.cat]||0) + Math.abs(g.monto);
-        break;
-      }
-    }
+  todosLosMP.forEach(g=>{
+    if(!g.fechaDate||g.monto>=0||!MP_CATS_GASTO.has(g.cat))return;
+    for(const c of ciclos){if(g.fechaDate>=c.ini&&g.fechaDate<=c.fin){totales[g.cat]=(totales[g.cat]||0)+Math.abs(g.monto);break}}
   });
-  // Dividir por 3 para promedio
-  const prom = {};
-  Object.keys(totales).forEach(k => prom[k] = Math.round(totales[k]/3));
-  return prom;
+  const prom={};Object.keys(totales).forEach(k=>prom[k]=Math.round(totales[k]/3));return prom;
 }
 
 function obtenerUltimos3Ciclos(){
-  const hoy = new Date(); hoy.setHours(0,0,0,0);
-  const ciclosPasados = CICLOS.map((c,i) => ({...c, idx:i, ini: parseFechaISO(c.inicio), fin: parseFechaISO(c.fin)}))
-    .filter(c => c.fin < hoy)
-    .sort((a,b) => b.fin - a.fin);
-  return ciclosPasados.slice(0,3);
+  const hoy=new Date();hoy.setHours(0,0,0,0);
+  return CICLOS.map((c,i)=>({...c,idx:i,ini:parseFechaISO(c.inicio),fin:parseFechaISO(c.fin)})).filter(c=>c.fin<hoy).sort((a,b)=>b.fin-a.fin).slice(0,3);
 }
 
-// Lee Sheet Config y carga valores
 async function cargarConfigDesdeSheet(){
-  try {
-    const res = await fetch(CONFIG_API_URL);
-    if(!res.ok) throw new Error('No se pudo leer hoja Config');
-    const json = await res.json();
-    const rows = json.values || [];
-    rows.slice(1).forEach(r => {  // skip header
-      if(r.length>=2 && r[0]) {
-        const key = r[0].trim();
-        const val = parseFloat(String(r[1]).replace(/[$\s]/g,'').replace(/\./g,'').replace(',','.'));
-        if(!isNaN(val)) configSheet[key] = val;
+  try{
+    const res=await fetch(CONFIG_API_URL);if(!res.ok)throw new Error('No Config');
+    const json=await res.json();const rows=json.values||[];
+    rows.slice(1).forEach(r=>{
+      if(r.length>=2&&r[0]){
+        const key=r[0].trim();
+        const val=parseFloat(String(r[1]).replace(/[$\s]/g,'').replace(/\./g,'').replace(',','.'));
+        if(!isNaN(val))configSheet[key]=val;
       }
     });
-  } catch(e) {
-    console.warn('Config sheet load failed, usando defaults:', e);
-  }
+  }catch(e){console.warn('Config sheet load failed:',e)}
 }
 
-// Levanta cotizaciones del dólar
 async function cargarCotizaciones(){
-  const tipos = ['oficial','blue','bolsa'];
-  for(const tipo of tipos) {
-    try {
-      const res = await fetch(`${DOLAR_API_BASE}/${tipo}`);
-      if(!res.ok) continue;
-      const data = await res.json();
-      const key = tipo==='bolsa' ? 'mep' : tipo;
-      cotizaciones[key] = data.venta;
-    } catch(e) { console.warn('Cotización falló:', tipo, e); }
+  const tipos=['oficial','blue','bolsa'];
+  for(const tipo of tipos){
+    try{
+      const res=await fetch(`${DOLAR_API_BASE}/${tipo}`);if(!res.ok)continue;
+      const data=await res.json();
+      const key=tipo==='bolsa'?'mep':tipo;
+      cotizaciones[key]=data.venta;
+    }catch(e){console.warn('Cotización falló:',tipo,e)}
   }
 }
 
 function renderCotizaciones(){
-  const elOf=document.getElementById('cfg_cot_oficial');
-  const elBl=document.getElementById('cfg_cot_blue');
-  const elMep=document.getElementById('cfg_cot_mep');
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};
+  set('cfg_cot_oficial',cotizaciones.oficial?'$'+cotizaciones.oficial.toLocaleString('es-AR'):'—');
+  set('cfg_cot_blue',cotizaciones.blue?'$'+cotizaciones.blue.toLocaleString('es-AR'):'—');
+  set('cfg_cot_mep',cotizaciones.mep?'$'+cotizaciones.mep.toLocaleString('es-AR'):'—');
   const elFte=document.getElementById('cfg_cot_fuente');
-  if(elOf) elOf.textContent = cotizaciones.oficial ? '$'+cotizaciones.oficial.toLocaleString('es-AR') : '—';
-  if(elBl) elBl.textContent = cotizaciones.blue ? '$'+cotizaciones.blue.toLocaleString('es-AR') : '—';
-  if(elMep) elMep.textContent = cotizaciones.mep ? '$'+cotizaciones.mep.toLocaleString('es-AR') : '—';
-  if(elFte) {
-    if(cotizaciones.mep) elFte.textContent = 'Fuente: dolarapi.com — al día';
-    else elFte.textContent = 'API no respondió — usando valor del Sheet ('+ configSheet.cotizacion_dolar +')';
-  }
+  if(elFte)elFte.textContent=cotizaciones.mep?'Fuente: dolarapi.com — al día':'API no respondió — usando valor del Sheet ('+configSheet.cotizacion_dolar+')';
 }
 
-function getCotizacionUsada(){
-  return cotizaciones.mep || configSheet.cotizacion_dolar || 1430;
-}
+function getCotizacionUsada(){return cotizaciones.mep||configSheet.cotizacion_dolar||1430}
 
 function renderConfigBS3(){
-  const ingreso = configSheet.ingreso_mes_actual || 3800000;
-  const diezmo = Math.round(ingreso * 0.10);
-  
-  // Suma de techos BS3 (incluye sangrado Romina)
-  const sangrado = configSheet.sangrado_romina || 325000;
-  const sumaTechos = Object.values(TECHOS_BS3).reduce((s,v) => s+v, 0);
-  const excedente = ingreso - diezmo - sumaTechos - sangrado;
-  
-  // Mostrar ingreso y excedente
-  const elIng = document.getElementById('cfg_ingreso_display');
-  const elDz = document.getElementById('cfg_diezmo_auto');
-  const elEx = document.getElementById('cfg_excedente_bs3');
-  if(elIng) elIng.textContent = fp(ingreso);
-  if(elDz) elDz.textContent = fp(diezmo);
-  if(elEx) {
-    elEx.textContent = (excedente>=0?'+':'')+fp(excedente);
-    elEx.style.color = excedente>=0 ? '#fff' : '#FFD700';
+  const ingreso=configSheet.ingreso_mes_actual||3800000;
+  const diezmo=Math.round(ingreso*0.10);
+  const sangrado=configSheet.sangrado_romina||325000;
+  const sumaTechos=Object.values(TECHOS_BS3).reduce((s,v)=>s+v,0);
+  const excedente=ingreso-diezmo-sumaTechos-sangrado;
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};
+  set('cfg_ingreso_display',fp(ingreso));set('cfg_diezmo_auto',fp(diezmo));
+  const elEx=document.getElementById('cfg_excedente_bs3');
+  if(elEx){elEx.textContent=(excedente>=0?'+':'')+fp(excedente);elEx.style.color=excedente>=0?'#fff':'#FFD700'}
+  const cot=getCotizacionUsada();
+  const fondoUsd=configSheet.fondo_bs3_usd||3643;
+  const fondoPesos=Math.round(fondoUsd*cot);
+  const metaBS3=configSheet.meta_bs3_minimo||9000000;
+  const faltaBS3=metaBS3-fondoPesos;
+  const mesesBS3=excedente>0?Math.ceil(faltaBS3/excedente):0;
+  set('cfg_fondo_usd','USD '+fondoUsd.toLocaleString('es-AR'));
+  set('cfg_fondo_pesos',fp(fondoPesos)+' al MEP ($'+cot.toLocaleString('es-AR')+')');
+  set('cfg_meta_bs3',fp(metaBS3));
+  set('cfg_falta_bs3',faltaBS3>0?fp(faltaBS3):'✅ Cumplido');
+  set('cfg_meses_bs3',faltaBS3<=0?'🎉 ¡Logrado!':excedente<=0?'⚠️ Sin excedente':mesesBS3+' meses');
+  const promedios=calcularPromediosReales();
+  const elList=document.getElementById('cfg_categorias_list');
+  if(elList){
+    const orden=['Alimentación','Salud','Servicios','Educación','Vehículo','Hogar','Comida Fuera','Entretenimiento','Transporte','Indumentaria','Otros','Compras Online'];
+    elList.innerHTML=orden.map(cat=>{
+      const techo=TECHOS_BS3[cat]||0;const real=promedios[cat]||0;
+      const icon=ICONOS_CAT[cat]||'📦';const diff=real-techo;
+      const diffStr=diff>0?'+'+fp(diff)+' arriba':fp(Math.abs(diff))+' margen';
+      const diffColor=diff>0?'var(--red)':'var(--green)';
+      return`<div style="background:var(--white);border-radius:12px;padding:14px;box-shadow:var(--shadow-sm)"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:13px;font-weight:600">${icon} ${cat}</div><div style="font-size:11px;color:${diffColor};font-weight:600">${diffStr}</div></div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px"><span>Promedio real (3 ciclos)</span><span style="font-family:'Space Mono',monospace;color:var(--text)">${fp(real)}</span></div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted)"><span>Techo BS3 sugerido</span><span style="font-family:'Space Mono',monospace;color:var(--green);font-weight:700">${fp(techo)}</span></div></div>`;
+    }).join('')+
+    `<div style="background:var(--purple-light);border:1px solid rgba(124,92,191,0.2);border-radius:12px;padding:14px;margin-top:6px"><div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:13px;font-weight:600;color:var(--purple)">💜 Sangrado Romina</div><div style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--purple)">${fp(sangrado)}</div></div><div style="font-size:11px;color:var(--muted);margin-top:4px">Acuerdo: $75.000/semana</div></div>
+    <div style="background:var(--green-light);border:1px solid rgba(0,196,140,0.2);border-radius:12px;padding:14px;margin-top:6px"><div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:13px;font-weight:600;color:var(--green)">🙏 Diezmo (10%)</div><div style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--green)">${fp(diezmo)}</div></div><div style="font-size:11px;color:var(--muted);margin-top:4px">Automático según ingreso</div></div>`;
   }
-  
-  // Fondo BS3
-  const cot = getCotizacionUsada();
-  const fondoUsd = configSheet.fondo_bs3_usd || 3643;
-  const fondoPesos = Math.round(fondoUsd * cot);
-  const metaBS3 = configSheet.meta_bs3_minimo || 9000000;
-  const faltaBS3 = metaBS3 - fondoPesos;
-  const mesesBS3 = excedente > 0 ? Math.ceil(faltaBS3 / excedente) : 0;
-  
-  const elFondoUsd=document.getElementById('cfg_fondo_usd');
-  const elFondoPesos=document.getElementById('cfg_fondo_pesos');
-  const elMeta=document.getElementById('cfg_meta_bs3');
-  const elFalta=document.getElementById('cfg_falta_bs3');
-  const elMeses=document.getElementById('cfg_meses_bs3');
-  if(elFondoUsd) elFondoUsd.textContent = 'USD '+fondoUsd.toLocaleString('es-AR');
-  if(elFondoPesos) elFondoPesos.textContent = fp(fondoPesos)+' al MEP ($'+cot.toLocaleString('es-AR')+')';
-  if(elMeta) elMeta.textContent = fp(metaBS3);
-  if(elFalta) elFalta.textContent = faltaBS3>0 ? fp(faltaBS3) : '✅ Cumplido';
-  if(elMeses) {
-    if(faltaBS3<=0) elMeses.textContent = '🎉 ¡Logrado!';
-    else if(excedente<=0) elMeses.textContent = '⚠️ Sin excedente';
-    else elMeses.textContent = mesesBS3 + ' meses';
-  }
-  
-  // Categorías
-  const promedios = calcularPromediosReales();
-  const elList = document.getElementById('cfg_categorias_list');
-  if(elList) {
-    const orden = ['Alimentación','Salud','Servicios','Educación','Vehículo','Hogar','Comida Fuera','Entretenimiento','Transporte','Indumentaria','Otros','Compras Online'];
-    elList.innerHTML = orden.map(cat => {
-      const techo = TECHOS_BS3[cat] || 0;
-      const real = promedios[cat] || 0;
-      const icon = ICONOS_CAT[cat] || '📦';
-      const diff = real - techo;
-      const diffStr = diff>0 ? '+'+fp(diff)+' arriba' : fp(Math.abs(diff))+' margen';
-      const diffColor = diff>0 ? 'var(--red)' : 'var(--green)';
-      return `<div style="background:var(--white);border-radius:12px;padding:14px;box-shadow:var(--shadow-sm);cursor:pointer" onclick="toggleCfgCat('${cat}')">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div style="font-size:13px;font-weight:600">${icon} ${cat}</div>
-          <div style="font-size:11px;color:${diffColor};font-weight:600">${diffStr}</div>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px">
-          <span>Promedio real (3 ciclos)</span>
-          <span style="font-family:'Space Mono',monospace;color:var(--text)">${fp(real)}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted)">
-          <span>Techo BS3 sugerido</span>
-          <span style="font-family:'Space Mono',monospace;color:var(--green);font-weight:700">${fp(techo)}</span>
-        </div>
-      </div>`;
-    }).join('') + 
-    `<div style="background:var(--purple-light);border:1px solid rgba(124,92,191,0.2);border-radius:12px;padding:14px;margin-top:6px">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div style="font-size:13px;font-weight:600;color:var(--purple)">💜 Sangrado Romina</div>
-        <div style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--purple)">${fp(sangrado)}</div>
-      </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:4px">Acuerdo: $75.000/semana</div>
-    </div>
-    <div style="background:var(--green-light);border:1px solid rgba(0,196,140,0.2);border-radius:12px;padding:14px;margin-top:6px">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div style="font-size:13px;font-weight:600;color:var(--green)">🙏 Diezmo (10%)</div>
-        <div style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--green)">${fp(diezmo)}</div>
-      </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:4px">Automático según ingreso</div>
-    </div>`;
-  }
-  
-  // Resumen final
-  const rows = [
-    ['Ingreso del mes', ingreso, 'var(--text)', false],
-    ['(-) Diezmo 10%', diezmo, 'var(--green)', true],
-    ['(-) Techos categorías', sumaTechos, 'var(--muted)', true],
-    ['(-) Sangrado Romina', sangrado, 'var(--purple)', true],
-  ];
-  document.getElementById('cfg_resumen_rows').innerHTML = rows.map(([lbl,val,color,minus])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border)"><span style="color:var(--muted)">${lbl}</span><span style="font-family:'Space Mono',monospace;color:${color}">${minus?'- ':''}${fp(val)}</span></div>`).join('');
+  const rows=[['Ingreso del mes',ingreso,'var(--text)',false],['(-) Diezmo 10%',diezmo,'var(--green)',true],['(-) Techos categorías',sumaTechos,'var(--muted)',true],['(-) Sangrado Romina',sangrado,'var(--purple)',true]];
+  const rr=document.getElementById('cfg_resumen_rows');
+  if(rr)rr.innerHTML=rows.map(([lbl,val,color,minus])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border)"><span style="color:var(--muted)">${lbl}</span><span style="font-family:'Space Mono',monospace;color:${color}">${minus?'- ':''}${fp(val)}</span></div>`).join('');
   const elBal=document.getElementById('cfg_balance');
-  if(elBal) {
-    elBal.textContent = (excedente>=0?'':'-')+fp(excedente)+(excedente>=0?' ✅':' ⚠️');
-    elBal.style.color = excedente>=0 ? 'var(--green)' : 'var(--red)';
-  }
-  
-  // Actualizar también el presupuesto global con techos BS3 para Tab Categorías
-  Object.keys(TECHOS_BS3).forEach(cat => {
-    if(presupuesto[cat]) presupuesto[cat].limite = TECHOS_BS3[cat];
-  });
-  presupuesto['Diezmo'].limite = diezmo;
+  if(elBal){elBal.textContent=(excedente>=0?'':'-')+fp(excedente)+(excedente>=0?' ✅':' ⚠️');elBal.style.color=excedente>=0?'var(--green)':'var(--red)'}
+  Object.keys(TECHOS_BS3).forEach(cat=>{if(presupuesto[cat])presupuesto[cat].limite=TECHOS_BS3[cat]});
+  presupuesto['Diezmo'].limite=diezmo;
 }
 
-function toggleCfgCat(cat) {
-  // placeholder para futuro despliegue de subcategorías
-}
-
-async function recargarConfig() {
-  try {
-    const res = await fetch(CONFIG_API_URL);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const json = await res.json();
-    const rows = json.values || [];
-    rows.forEach(r => {
-      if (!r[0] || !r[1]) return;
-      const clave = String(r[0]).trim();
-      const valorStr = String(r[1]).replace(/[$\s\.]/g,'').replace(',','.');
-      const valor = parseFloat(valorStr);
-      if (isNaN(valor)) return;
-      if (clave === 'ingreso_mes_actual') configSheet.ingreso_mes_actual = valor;
-      if (clave === 'fondo_bs3_usd') configSheet.fondo_bs3_usd = valor;
-      if (clave === 'cotizacion_dolar') configSheet.cotizacion_dolar = valor;
-      if (clave === 'meta_bs3_minimo') configSheet.meta_bs3_minimo = valor;
+async function recargarConfig(){
+  try{
+    const res=await fetch(CONFIG_API_URL);if(!res.ok)throw new Error('HTTP '+res.status);
+    const json=await res.json();const rows=json.values||[];
+    rows.forEach(r=>{
+      if(!r[0]||!r[1])return;
+      const clave=String(r[0]).trim();
+      const valorStr=String(r[1]).replace(/[$\s\.]/g,'').replace(',','.');
+      const valor=parseFloat(valorStr);if(isNaN(valor))return;
+      if(clave==='ingreso_mes_actual')configSheet.ingreso_mes_actual=valor;
+      if(clave==='fondo_bs3_usd')configSheet.fondo_bs3_usd=valor;
+      if(clave==='cotizacion_dolar')configSheet.cotizacion_dolar=valor;
+      if(clave==='meta_bs3_minimo')configSheet.meta_bs3_minimo=valor;
     });
-    // Propagar ingreso a toda la app
-    const ingreso = configSheet.ingreso_mes_actual;
-    presupuesto['Diezmo'].limite = Math.round(ingreso * 0.1);
-    // Actualizar UI Config
-    const elIng = document.getElementById('cfg_ingreso_display');
-    if (elIng) elIng.textContent = fp(ingreso);
-    const elDiezmo = document.getElementById('cfg_diezmo_auto');
-    if (elDiezmo) elDiezmo.textContent = fp(ingreso * 0.1);
-    const totalTechos = Object.values(TECHOS_BS3).reduce((s,v)=>s+v,0);
-    const excedente = ingreso - ingreso*0.1 - totalTechos - (configSheet.sangrado_romina||325000);
-    const elExc = document.getElementById('cfg_excedente_bs3');
-    if (elExc) { elExc.textContent = (excedente>=0?'+':'')+fp(excedente); elExc.style.color = excedente>=0?'var(--green)':'var(--red)'; }
-    // Fondo BS3
-    const mep = configSheet.cotizacion_dolar;
-    const fondoUSD = configSheet.fondo_bs3_usd;
-    const fondoARS = fondoUSD * mep;
-    const meta = configSheet.meta_bs3_minimo;
-    const falta = Math.max(meta - fondoARS, 0);
-    const meses = excedente > 0 ? Math.ceil(falta / excedente) + ' meses' : '∞';
-    const elFUSD = document.getElementById('cfg_fondo_usd');
-    if (elFUSD) elFUSD.textContent = 'USD ' + fondoUSD.toLocaleString('es-AR');
-    const elFARS = document.getElementById('cfg_fondo_pesos');
-    if (elFARS) elFARS.textContent = fp(fondoARS) + ' al MEP';
-    const elMeta = document.getElementById('cfg_meta_bs3');
-    if (elMeta) elMeta.textContent = fp(meta);
-    const elFalta = document.getElementById('cfg_falta_bs3');
-    if (elFalta) elFalta.textContent = fp(falta);
-    const elMeses = document.getElementById('cfg_meses_bs3');
-    if (elMeses) elMeses.textContent = meses;
-    // Cotización
-    const elOficial = document.getElementById('cfg_cot_oficial');
-    if (elOficial) elOficial.textContent = '$' + (cotizaciones.oficial||'—');
-    const elBlue = document.getElementById('cfg_cot_blue');
-    if (elBlue) elBlue.textContent = '$' + (cotizaciones.blue||'—');
-    const elMep = document.getElementById('cfg_cot_mep');
-    if (elMep) elMep.textContent = '$' + mep.toLocaleString('es-AR');
-    // Resumen
+    presupuesto['Diezmo'].limite=Math.round(configSheet.ingreso_mes_actual*0.1);
     renderPresupuesto();
     mostrarAlert('✅','Config recargado','Valores actualizados desde el Sheet y cotizaciones del día.');
-  } catch(e) {
-    mostrarAlert('❌','Error al recargar','No se pudo conectar con el Sheet. Verificá tu conexión.');
-    console.error('recargarConfig:', e);
-  }
-  }
+  }catch(e){mostrarAlert('❌','Error al recargar','No se pudo conectar con el Sheet.');console.error('recargarConfig:',e)}
+}
 
 function renderPresupuesto(){
-  const cita = RAMSEY_FRASES[Math.floor(Math.random()*RAMSEY_FRASES.length)];
-  const elCita = document.getElementById('ramseyCita');
-  if(elCita) elCita.textContent = cita.texto;
+  const cita=RAMSEY_FRASES[Math.floor(Math.random()*RAMSEY_FRASES.length)];
+  const elCita=document.getElementById('ramseyCita');if(elCita)elCita.textContent=cita.texto;
   renderConfigBS3();
 }
 
-// Stubs vacíos para mantener compatibilidad con código viejo
-function recalcularConfig(){ renderConfigBS3(); }
-function guardarConfig(){ recargarConfig(); }
-function cargarConfigGuardada(){ /* ya no se usa - todo viene del Sheet */ }
+function recalcularConfig(){renderConfigBS3()}
+function guardarConfig(){recargarConfig()}
+function cargarConfigGuardada(){}
 
-function mostrarAlert(emoji,titulo,msg){ document.getElementById('alertEmoji').textContent=emoji; document.getElementById('alertTitle').textContent=titulo; document.getElementById('alertMsg').textContent=msg; document.getElementById('alertOverlay').classList.add('show'); }
-function cerrarAlert(){ document.getElementById('alertOverlay').classList.remove('show'); }
+function mostrarAlert(emoji,titulo,msg){document.getElementById('alertEmoji').textContent=emoji;document.getElementById('alertTitle').textContent=titulo;document.getElementById('alertMsg').textContent=msg;document.getElementById('alertOverlay').classList.add('show')}
+function cerrarAlert(){document.getElementById('alertOverlay').classList.remove('show')}
 
 function showTab(name,el){
   document.querySelectorAll('[id^="tab-"]').forEach(t=>t.style.display='none');
@@ -1412,21 +1259,15 @@ function showTab(name,el){
   el.classList.add('active');
 }
 
-// INIT
 async function init(){
-  cicloActual = detectarCicloActual();
+  cicloActual=detectarCicloActual();
   actualizarCicloUI();
-  // Cargar Config del Sheet + cotizaciones en paralelo, antes de fetchSheet
-  await Promise.all([
-    cargarConfigDesdeSheet(),
-    cargarCotizaciones()
-  ]);
+  await Promise.all([cargarConfigDesdeSheet(),cargarCotizaciones()]);
   renderCotizaciones();
   fetchSheet();
-  setInterval(fetchSheet, 5*60*1000);
-  setInterval(fetchMP, 5*60*1000);
-  // Recargar cotizaciones cada 30 min
-  setInterval(async()=>{ await cargarCotizaciones(); renderCotizaciones(); }, 30*60*1000);
+  setInterval(fetchSheet,5*60*1000);
+  setInterval(fetchMP,5*60*1000);
+  setInterval(async()=>{await cargarCotizaciones();renderCotizaciones()},30*60*1000);
 }
 init();
 </script>
