@@ -662,7 +662,7 @@ function generarCiclos(desde,hasta){const ciclos=[];const meses=['Enero','Febrer
 const CICLOS=generarCiclos(new Date(2024,8,1),new Date(2027,11,31));
 // Excepciones puntuales de cierre de ciclo (casos donde el corte real no coincidió con la regla "anteúltimo jueves").
 // La regla general NO cambia: esto solo corrige ciclos específicos confirmados manualmente.
-const EXCEPCIONES_CIERRE={'2026-06-18':'2026-06-22'};
+const EXCEPCIONES_CIERRE={'2026-06-18':'2026-06-25'};
 (function aplicarExcepcionesCierre(){
   for(let i=0;i<CICLOS.length;i++){
     const finOriginal=CICLOS[i].fin;
