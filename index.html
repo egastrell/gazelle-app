@@ -660,6 +660,22 @@ const RAMSEY_FRASES=[
 function anteultimoJueves(year,month){const j=[];const d=new Date(year,month-1,1);while(d.getMonth()===month-1){if(d.getDay()===4)j.push(new Date(d));d.setDate(d.getDate()+1)}return j[j.length-2]}
 function generarCiclos(desde,hasta){const ciclos=[];const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];let prev=anteultimoJueves(desde.getFullYear(),desde.getMonth()+1);let y=desde.getFullYear();let m=desde.getMonth()+2;while(true){if(m>12){m=1;y++}const fin=anteultimoJueves(y,m);const ini=new Date(prev);ini.setDate(ini.getDate()+1);ciclos.push({nombre:meses[m-1]+' '+y,inicio:ini.toISOString().split('T')[0],fin:fin.toISOString().split('T')[0]});prev=fin;if(fin>hasta)break;m++}return ciclos}
 const CICLOS=generarCiclos(new Date(2024,8,1),new Date(2027,11,31));
+// Excepciones puntuales de cierre de ciclo (casos donde el corte real no coincidió con la regla "anteúltimo jueves").
+// La regla general NO cambia: esto solo corrige ciclos específicos confirmados manualmente.
+const EXCEPCIONES_CIERRE={'2026-06-18':'2026-06-22'};
+(function aplicarExcepcionesCierre(){
+  for(let i=0;i<CICLOS.length;i++){
+    const finOriginal=CICLOS[i].fin;
+    if(EXCEPCIONES_CIERRE[finOriginal]){
+      CICLOS[i].fin=EXCEPCIONES_CIERRE[finOriginal];
+      if(CICLOS[i+1]){
+        const nuevoIni=new Date(parseFechaISO(CICLOS[i].fin));
+        nuevoIni.setDate(nuevoIni.getDate()+1);
+        CICLOS[i+1].inicio=nuevoIni.toISOString().split('T')[0];
+      }
+    }
+  }
+})();
 let gastosMes=[],todosLosGastos=[],cicloActual=null,cicloIndex=-1,filtroActual='todos';
 let todosLosMP=[],gastosMPCiclo=[],filtroMP='todos';
 
