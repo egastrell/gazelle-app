@@ -612,8 +612,19 @@ let configSheet = {
 let cotizaciones = {oficial:null,blue:null,mep:null};
 
 function getParaTarjetas(){ return parseInt(localStorage.getItem('gazelle_para_tarjetas')||'0'); }
-function getDeudaVisa(){    return parseInt(localStorage.getItem('gazelle_deuda_visa')||'0'); }
-function getDeudaMaster(){  return parseInt(localStorage.getItem('gazelle_deuda_master')||'0'); }
+
+// Cálculo automático del saldo pendiente de cada tarjeta: suma de consumos (histórico completo,
+// Núcleo únicamente) MENOS suma de pagos registrados con Categoria='Pago Tarjeta', agrupado por
+// cuenta (Visa/Mastercard). Reemplaza la entrada manual anterior (localStorage gazelle_deuda_visa/master).
+function calcularSaldoTarjeta(keyword){
+  const kw=keyword.toLowerCase();
+  const matchCuenta=g=>(g.cuenta&&g.cuenta.toLowerCase().includes(kw));
+  const consumos=todosLosGastos.filter(g=>matchCuenta(g)).reduce((s,g)=>s+g.monto,0);
+  const pagos=pagosTarjeta.filter(g=>matchCuenta(g)).reduce((s,g)=>s+Math.abs(g.monto),0);
+  return Math.max(Math.round(consumos-pagos),0);
+}
+function getDeudaVisa(){   return calcularSaldoTarjeta('visa'); }
+function getDeudaMaster(){ return calcularSaldoTarjeta('mastercard'); }
 const DEUDA_INICIAL=3592872;
 
 let presupuesto = {
@@ -678,6 +689,7 @@ const EXCEPCIONES_CIERRE={'2026-06-18':'2026-06-25'};
 })();
 let gastosMes=[],todosLosGastos=[],cicloActual=null,cicloIndex=-1,filtroActual='todos';
 let todosLosMP=[],gastosMPCiclo=[],filtroMP='todos';
+let pagosTarjeta=[]; // filas con Categoria='Pago Tarjeta' (excluidas de todosLosGastos), usadas para calcular saldo real de deuda
 
 function detectarCicloActual(){const hoy=new Date();hoy.setHours(0,0,0,0);for(let i=0;i<CICLOS.length;i++){const ini=parseFechaISO(CICLOS[i].inicio);const fin=parseFechaISO(CICLOS[i].fin);if(hoy>=ini&&hoy<=fin){cicloIndex=i;return CICLOS[i]}}cicloIndex=CICLOS.length-1;return CICLOS[CICLOS.length-1]}
 function navegarCiclo(dir){const nuevoIdx=cicloIndex+dir;if(nuevoIdx<0||nuevoIdx>=CICLOS.length)return;cicloIndex=nuevoIdx;cicloActual=CICLOS[cicloIndex];actualizarCicloUI();aplicarFiltroCiclo();aplicarFiltroCicloMP();renderAll();renderMP()}
@@ -737,13 +749,18 @@ async function fetchSheet(){
       const fecha=String(get('Fecha')||'');
       const fechaDate=parseFechaStr(fecha);
       const cuenta=String(get('Cuenta')||'');
+      const ultimos4=String(get('Ultimos4')||'').trim();
       const esProhibido=PROHIBIDOS_DEF.some(p=>p.keys.some(k=>comercio.toLowerCase().includes(k)));
       const esDevolucion=monto<0;
       let quien='Eduardo';
       if(usuario.includes('ZIEGLER')||usuario.includes('ROMINA'))quien='Romina';
       else if(usuario.includes('SEGOVIA')||usuario.includes('ALFREDO'))quien='Padres';
-      return{fecha,fechaDate,comercio,monto,cat,signo,hormiga,quien,esProhibido,esDevolucion,cuenta};
-    }).filter(g=>g.quien!=='Padres'&&g.cat!=='Pago Tarjeta');
+      return{fecha,fechaDate,comercio,monto,cat,signo,hormiga,quien,esProhibido,esDevolucion,cuenta,ultimos4};
+    }).filter(g=>g.quien!=='Padres');
+    // Separamos los pagos de tarjeta (categoría 'Pago Tarjeta') para el cálculo automático de saldo,
+    // y los excluimos del resto de la app tal como antes (no deben aparecer en gastos/categorías).
+    pagosTarjeta=todosLosGastos.filter(g=>g.cat==='Pago Tarjeta');
+    todosLosGastos=todosLosGastos.filter(g=>g.cat!=='Pago Tarjeta');
     aplicarFiltroCiclo();
     setSyncState('ok',`Ciclo: ${gastosMes.filter(g=>!CATS_EXCLUIDAS.has(g.cat)).length} transacciones`);
     try{renderAll()}catch(e){console.error('renderAll:',e)}
