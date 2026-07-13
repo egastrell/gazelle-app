@@ -594,10 +594,13 @@ const MP_API_URL=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/valu
 const CONFIG_API_URL=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(CONFIG_SHEET_NAME+'!A1:B100')}?key=${SHEETS_API_KEY}`;
 const DOLAR_API_BASE='https://dolarapi.com/v1/dolares';
 
+// Techos recalibrados 13/07/2026 con promedio real de los últimos 4 ciclos cerrados
+// (Marzo-Junio 2026, datos de tarjeta Núcleo, +5% de margen, redondeado a la decena de mil).
+// PENDIENTE: sumar datos de MercadoPago (hoja MP no accesible vía este método) para el número definitivo.
 const TECHOS_BS3 = {
-  'Alimentación':500000,'Salud':480000,'Servicios':484000,'Educación':290000,
-  'Vehículo':280000,'Comida Fuera':50000,'Entretenimiento':50000,'Indumentaria':40000,
-  'Transporte':80000,'Compras Online':20000,'Hogar':210000,'Otros':40000,
+  'Alimentación':670000,'Salud':550000,'Servicios':380000,'Educación':420000,
+  'Vehículo':320000,'Comida Fuera':170000,'Entretenimiento':100000,'Indumentaria':150000,
+  'Transporte':80000,'Compras Online':130000,'Hogar':40000,'Otros':140000,
 };
 const ICONOS_CAT = {
   'Alimentación':'🛒','Salud':'🏥','Servicios':'💡','Educación':'📚','Vehículo':'🚗',
