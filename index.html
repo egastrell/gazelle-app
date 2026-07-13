@@ -741,6 +741,7 @@ async function fetchSheet(){
       const get=l=>{const i=cols.indexOf(l);return i>=0&&r[i]!==undefined?String(r[i]):''};
       const comercio=String(get('Comercio')||get('DescripcionRaw')||'');
       const cat=String(get('Categoria')||'Otros').trim();
+      const subcat=String(get('Subcategoria')||'').trim();
       const signo=String(get('Signo')||'S');
       const montoStr=get('Monto').replace(/\$/g,'').replace(/\./g,'').replace(',','.').trim();
       const montoRaw=parseFloat(montoStr)||0;
@@ -758,7 +759,7 @@ async function fetchSheet(){
       let quien='Eduardo';
       if(usuario.includes('ZIEGLER')||usuario.includes('ROMINA'))quien='Romina';
       else if(usuario.includes('SEGOVIA')||usuario.includes('ALFREDO'))quien='Padres';
-      return{fecha,fechaDate,comercio,monto,cat,signo,hormiga,quien,esProhibido,esDevolucion,cuenta,ultimos4};
+      return{fecha,fechaDate,comercio,monto,cat,subcat,signo,hormiga,quien,esProhibido,esDevolucion,cuenta,ultimos4};
     }).filter(g=>g.quien!=='Padres');
     // Separamos los pagos de tarjeta (categoría 'Pago Tarjeta') para el cálculo automático de saldo,
     // y los excluimos del resto de la app tal como antes (no deben aparecer en gastos/categorías).
@@ -898,7 +899,7 @@ function renderAll(){renderResumen();renderMiPlan();renderResumenPersonas();rend
 
 function gastosReales(lista){return lista.filter(g=>!CATS_EXCLUIDAS.has(g.cat)&&g.monto>0)}
 function gastosMPReales(lista){return lista.filter(g=>g.monto<0&&MP_CATS_GASTO.has(g.cat))}
-function mpComoGastos(lista){return gastosMPReales(lista).map(g=>({fecha:g.fecha,fechaDate:g.fechaDate,comercio:g.tipo?g.tipo.substring(0,40):g.cat,monto:Math.abs(g.monto),cat:g.cat,signo:'S',hormiga:['Comida Fuera','Entretenimiento','Indumentaria','Compras Online'].includes(g.cat),quien:'Eduardo',esProhibido:PROHIBIDOS_DEF.some(p=>p.keys.some(k=>(g.tipo||'').toLowerCase().includes(k))),esDevolucion:false,cuenta:'MercadoPago',fuenteMP:true}))}
+function mpComoGastos(lista){return gastosMPReales(lista).map(g=>({fecha:g.fecha,fechaDate:g.fechaDate,comercio:g.tipo?g.tipo.substring(0,40):g.cat,monto:Math.abs(g.monto),cat:g.cat,subcat:g.subcat||'',signo:'S',hormiga:['Comida Fuera','Entretenimiento','Indumentaria','Compras Online'].includes(g.cat),quien:'Eduardo',esProhibido:PROHIBIDOS_DEF.some(p=>p.keys.some(k=>(g.tipo||'').toLowerCase().includes(k))),esDevolucion:false,cuenta:'MercadoPago',fuenteMP:true}))}
 function gastosUnificados(){return[...gastosReales(gastosMes),...mpComoGastos(gastosMPCiclo)]}
 
 function renderResumen(){
@@ -1056,8 +1057,24 @@ function renderCategorias(){
     const idCat='cat-'+cat.replace(/[^a-z0-9]/gi,'');
     const div=document.createElement('div');div.className='cat-card';div.id=idCat;
     div.onclick=()=>{const det=document.getElementById('det-'+idCat);if(det)det.style.display=det.style.display==='none'?'block':'none'};
-    const gastosCat=gastosUnificados().filter(g=>g.cat===cat).sort((a,b)=>b.monto-a.monto);
-    div.innerHTML=`<div class="cat-header"><div class="cat-name">${cfg.icon} ${cat}</div><div class="cat-amounts"><div class="cat-spent" style="color:${pct>=80?'var(--red)':pct>=60?'var(--yellow)':'var(--text)'}">${fp(gastado)}</div><div class="cat-limit">de ${fp(cfg.limite)}</div></div></div><div class="cat-bar-track"><div class="cat-bar-fill ${cl}" style="width:0%" data-pct="${pct}"></div></div><div class="cat-detalle" id="det-${idCat}">${gastosCat.map(g=>`<div class="cat-detalle-item"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:65%">${g.esProhibido?'🚫 ':''}${g.comercio} <span class="chip ${g.fuenteMP?'chip-mp':g.quien==='Romina'?'chip-romi':'chip-edu'}">${g.fuenteMP?'MP':g.quien.substring(0,3).toUpperCase()}</span></span><span style="font-family:'Space Mono',monospace;white-space:nowrap">${fp(g.monto)}</span></div>`).join('')||'<div style="color:var(--muted);font-size:11px;padding:4px 0">Sin movimientos</div>'}</div>`;
+    const gastosCat=gastosUnificados().filter(g=>g.cat===cat);
+    // Nivel 2: agrupar por subcategoría
+    const porSubcat={};
+    gastosCat.forEach(g=>{
+      const sc=g.subcat&&g.subcat.trim()?g.subcat.trim():'Sin subcategoría';
+      (porSubcat[sc]=porSubcat[sc]||[]).push(g);
+    });
+    const subcatEntries=Object.entries(porSubcat).map(([sc,items])=>({
+      sc,items:items.sort((a,b)=>b.monto-a.monto),total:items.reduce((s,g)=>s+g.monto,0)
+    })).sort((a,b)=>b.total-a.total);
+    const idSubBase=idCat+'-sub';
+    const subcatHtml=subcatEntries.length?subcatEntries.map((s,i)=>{
+      const idSub=idSubBase+i;
+      // Nivel 3: movimientos individuales de la subcategoría
+      const movs=s.items.map(g=>`<div class="cat-detalle-item" style="padding-left:16px"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%">${g.esProhibido?'🚫 ':''}${g.comercio} <span class="chip ${g.fuenteMP?'chip-mp':g.quien==='Romina'?'chip-romi':'chip-edu'}">${g.fuenteMP?'MP':g.quien.substring(0,3).toUpperCase()}</span></span><span style="font-family:'Space Mono',monospace;white-space:nowrap">${fp(g.monto)}</span></div>`).join('');
+      return `<div class="cat-detalle-item" style="cursor:pointer;font-weight:600" onclick="event.stopPropagation();const d=document.getElementById('${idSub}');d.style.display=d.style.display==='none'?'block':'none'"><span>📂 ${s.sc} <span style="color:var(--muted);font-weight:400">(${s.items.length})</span></span><span style="font-family:'Space Mono',monospace">${fp(s.total)}</span></div><div id="${idSub}" style="display:none">${movs}</div>`;
+    }).join(''):'<div style="color:var(--muted);font-size:11px;padding:4px 0">Sin movimientos</div>';
+    div.innerHTML=`<div class="cat-header"><div class="cat-name">${cfg.icon} ${cat}</div><div class="cat-amounts"><div class="cat-spent" style="color:${pct>=80?'var(--red)':pct>=60?'var(--yellow)':'var(--text)'}">${fp(gastado)}</div><div class="cat-limit">de ${fp(cfg.limite)}</div></div></div><div class="cat-bar-track"><div class="cat-bar-fill ${cl}" style="width:0%" data-pct="${pct}"></div></div><div class="cat-detalle" id="det-${idCat}">${subcatHtml}</div>`;
     c.appendChild(div);
   });
   setTimeout(()=>{document.querySelectorAll('.cat-bar-fill[data-pct]').forEach(el=>{el.style.width=el.dataset.pct+'%'})},50);
