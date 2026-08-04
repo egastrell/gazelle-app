@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Modo Gazelle</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1A1D23">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gazelle">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -63,6 +71,42 @@ body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',
 .tabs::-webkit-scrollbar { display:none; }
 .tab { padding:10px 16px; border-radius:12px 12px 0 0; font-size:12px; font-weight:600; cursor:pointer; border:none; background:transparent; color:rgba(255,255,255,0.4); transition:all .2s; white-space:nowrap; flex-shrink:0; }
 .tab.active { background:var(--bg); color:var(--text); }
+.tabs-wrapper { display:none; }
+
+body { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
+
+.bottom-nav {
+  position:fixed; left:0; right:0; bottom:0; z-index:900;
+  background:#1A1D23; border-top:1px solid rgba(255,255,255,0.08);
+  display:flex; padding-bottom:env(safe-area-inset-bottom);
+  box-shadow:0 -4px 20px rgba(0,0,0,0.2);
+}
+.bnav-item {
+  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:2px; padding:10px 4px 8px; background:none; border:none; cursor:pointer;
+  color:rgba(255,255,255,0.5); font-family:inherit;
+}
+.bnav-item .bnav-icon { font-size:20px; line-height:1; }
+.bnav-item .bnav-label { font-size:10px; font-weight:600; }
+.bnav-item.active { color:var(--green); }
+
+.more-sheet-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:950;
+  display:none; align-items:flex-end;
+}
+.more-sheet-overlay.show { display:flex; }
+.more-sheet {
+  background:var(--white); width:100%; border-radius:20px 20px 0 0;
+  padding:8px 8px calc(20px + env(safe-area-inset-bottom));
+  animation:sheetUp .2s ease-out;
+}
+@keyframes sheetUp { from{transform:translateY(30px);opacity:0} to{transform:translateY(0);opacity:1} }
+.more-sheet-handle { width:36px; height:4px; background:var(--border); border-radius:4px; margin:8px auto 12px; }
+.more-sheet-item {
+  display:flex; align-items:center; gap:12px; padding:14px 16px; border-radius:12px;
+  font-size:15px; font-weight:600; color:var(--text); cursor:pointer;
+}
+.more-sheet-item:active { background:var(--bg); }
 .content { padding:20px 16px; }
 .card { background:var(--white); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow-sm); margin-bottom:14px; }
 .card-title { font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--muted); margin-bottom:14px; }
@@ -315,6 +359,34 @@ body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',
     <div class="tab" onclick="showTab('transacciones',this)">📋 Movimientos TC</div>
     <div class="tab" onclick="showTab('mercadopago',this)">📱 MP</div>
     <div class="tab" onclick="showTab('presupuesto',this)">⚙️ Config</div>
+  </div>
+</div>
+
+<nav class="bottom-nav">
+  <button class="bnav-item active" data-tab="resumen" onclick="showTab('resumen',this)">
+    <span class="bnav-icon">📊</span><span class="bnav-label">Resumen</span>
+  </button>
+  <button class="bnav-item" data-tab="transacciones" onclick="showTab('transacciones',this)">
+    <span class="bnav-icon">📋</span><span class="bnav-label">Movimientos</span>
+  </button>
+  <button class="bnav-item" data-tab="ramsey" onclick="showTab('ramsey',this)">
+    <span class="bnav-icon">🎯</span><span class="bnav-label">Mi Plan</span>
+  </button>
+  <button class="bnav-item" data-tab="presupuesto" onclick="showTab('presupuesto',this)">
+    <span class="bnav-icon">⚙️</span><span class="bnav-label">Config</span>
+  </button>
+  <button class="bnav-item" id="bnavMore" onclick="openMoreSheet()">
+    <span class="bnav-icon">⋯</span><span class="bnav-label">Más</span>
+  </button>
+</nav>
+
+<div class="more-sheet-overlay" id="moreSheetOverlay" onclick="if(event.target===this)closeMoreSheet()">
+  <div class="more-sheet">
+    <div class="more-sheet-handle"></div>
+    <div class="more-sheet-item" onclick="showTabFromSheet('pagar')">💳 A Pagar</div>
+    <div class="more-sheet-item" onclick="showTabFromSheet('categorias')">📂 Categorías</div>
+    <div class="more-sheet-item" onclick="showTabFromSheet('prohibidos')">🚫 Prohibidos</div>
+    <div class="more-sheet-item" onclick="showTabFromSheet('mercadopago')">📱 MercadoPago</div>
   </div>
 </div>
 
@@ -1309,8 +1381,16 @@ function showTab(name,el){
   document.querySelectorAll('[id^="tab-"]').forEach(t=>t.style.display='none');
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('tab-'+name).style.display='block';
-  el.classList.add('active');
+  if(el&&el.classList)el.classList.add('active');
+  document.querySelectorAll('.bnav-item').forEach(b=>b.classList.remove('active'));
+  const bnavBtn=document.querySelector('.bnav-item[data-tab="'+name+'"]');
+  if(bnavBtn)bnavBtn.classList.add('active');
+  else document.getElementById('bnavMore').classList.add('active');
+  window.scrollTo(0,0);
 }
+function showTabFromSheet(name){ showTab(name,null); closeMoreSheet(); }
+function openMoreSheet(){ document.getElementById('moreSheetOverlay').classList.add('show'); }
+function closeMoreSheet(){ document.getElementById('moreSheetOverlay').classList.remove('show'); }
 
 async function init(){
   cicloActual=detectarCicloActual();
