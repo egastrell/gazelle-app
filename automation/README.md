@@ -5,14 +5,16 @@ Sheet de Gazelle con el monto de referencia de cada proveedor.
 
 ## Setup
 
-1. Crear un service account de Google Cloud con la API de Drive y de
-   Sheets habilitadas, y descargar su clave como `credenciales_google.json`
-   (este archivo NO se commitea, ver `.gitignore`).
-2. Compartir con el email del service account:
-   - La carpeta de Drive `1AygsLwG30QaMfFNMuRXZVZNbN-_eANyf` (lectura).
-   - El Sheet `15TzS_-VQazdA427n8S7H_FnPD5Fj0eDrRMuETIdNLgQ` (editor).
-3. `pip install gspread google-api-python-client google-auth-httplib2 google-auth-oauthlib pdfplumber`
-4. Colocar `credenciales_google.json` en esta carpeta (o pasar `--credenciales ruta`).
+1. Instalar gcloud CLI (una vez) y loguearte: `gcloud auth login`.
+2. Correr `./setup_service_account.sh` — crea el proyecto de GCP, habilita
+   Drive + Sheets, crea el service account y descarga su clave como
+   `credenciales_google.json` (este archivo NO se commitea, ver
+   `.gitignore`). Al final imprime el email del service account.
+3. Compartir con permiso de **Editor** ese email en:
+   - La carpeta de Drive `1AygsLwG30QaMfFNMuRXZVZNbN-_eANyf`.
+   - El Sheet `15TzS_-VQazdA427n8S7H_FnPD5Fj0eDrRMuETIdNLgQ`.
+   (o pasale el email a Claude para que lo comparta con la herramienta de Drive).
+4. `pip install gspread google-api-python-client google-auth-httplib2 google-auth-oauthlib pdfplumber`
 
 ## Uso
 
@@ -36,4 +38,13 @@ credenciales inyectado como archivo en tiempo de ejecución.
   crear filas nuevas, ajustá `aplicar_actualizaciones` para no hacer
   `append_row` automáticamente.
 - Cada archivo procesado (con o sin actualización) queda registrado en
-  `procesadas.json` para no reprocesarlo en la próxima corrida.
+  `procesadas.json` (solo los `fileId`, lo que lee el script) para no
+  reprocesarlo en la próxima corrida. `historial.json` tiene el mismo
+  registro con detalle humano (proveedor, monto, vencimiento, motivo) para
+  auditoría — no lo lee el script.
+- Corrida inicial (30/08/2026): ya se cargaron a mano en Config
+  `swiss_medical` ($462.120,48), `edenor_eduardo` ($269.150,22),
+  `gas_natural_eduardo` ($137.076,07) e `internet_urunet` ($35.382,00), y
+  los 12 archivos de esa carpeta a esa fecha quedaron marcados como
+  procesados en `procesadas.json` para que la primera corrida real del
+  script no los vuelva a tocar.

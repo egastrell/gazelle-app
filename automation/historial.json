@@ -1,0 +1,121 @@
+{
+  "procesados": [
+    {
+      "file_id": "1r_G-AYFGnkR8HyOsK50OoDrvYz2nm-nZ",
+      "nombre": "1761456-26-02.pdf",
+      "proveedor": "gas_natural_eduardo",
+      "estado": "historico_no_usado",
+      "monto": 24436.69,
+      "vencimiento": "16/04/2026",
+      "nota": "Ciclo viejo, superado por 1761456-26-04 (1).pdf",
+      "fecha_procesado": "2026-08-30"
+    },
+    {
+      "file_id": "1rJGde6XfoCb7bRR59opCa_aIKREESiAX",
+      "nombre": "1761456-26-03 (1).pdf",
+      "proveedor": "gas_natural_eduardo",
+      "estado": "historico_no_usado",
+      "monto": 51436.40,
+      "vencimiento": "21/05/2026",
+      "nota": "Ciclo viejo, superado por 1761456-26-04 (1).pdf",
+      "fecha_procesado": "2026-08-30"
+    },
+    {
+      "file_id": "1w-11iHghuIyEgc0OyN3VOvWos-kVchd_",
+      "nombre": "1761456-26-03.pdf",
+      "proveedor": "gas_natural_eduardo",
+      "estado": "historico_no_usado",
+      "monto": 50806.99,
+      "vencimiento": "16/06/2026",
+      "nota": "Ciclo viejo, superado por 1761456-26-04 (1).pdf",
+      "fecha_procesado": "2026-08-30"
+    },
+    {
+      "file_id": "1OiC89REWztrTidJpqDgw3Pga8302Ts9r",
+      "nombre": "1761456-26-04 (1).pdf",
+      "proveedor": "gas_natural_eduardo",
+      "estado": "usado_config",
+      "monto": 137076.07,
+      "vencimiento": "17/07/2026",
+      "nota": "Monto de referencia actual cargado en Config",
+      "fecha_procesado": "2026-08-30"
+    },
+    {
+      "file_id": "1dqFKcxDzDiz1emyzHpNcrGzG5tzwio4m",
+      "nombre": "1761456-26-04.pdf",
+      "proveedor": "gas_natural_eduardo",
+      "estado": "duplicado",
+      "monto": 137076.07,
+      "vencimiento": "17/07/2026",
+      "nota": "Duplicado de 1761456-26-04 (1).pdf, mismo ciclo",
+      "fecha_procesado": "2026-08-30"
+    },
+    {
+      "file_id": "1GLJ0usEx8vM0WncnX7CBSqBK-Q_6vVKf",
+      "nombre": "3047769858_08-2026_factura_27_08_2026-12_05_29.pdf",
+      "proveedor": "edenor_eduardo",
+      "estado": "usado_config",
+      "monto": 269150.22,
+      "vencimiento": "14/08/2026",
+      "titular": "GASTRELL EDUARDO FRANCO",
+      "fecha_procesado": "2026-08-30"
+    },
+    {
+      "file_id": "1RCTkCpC9WIyXkrpH5-0SCWZV5nOnnLMd",
+      "nombre": "0161127175_08-2026_factura_27_08_2026-12_04_08.pdf",
+      "proveedor": "edenor_eduardo",
+      "estado": "excluido",
+      "monto": 35934.06,
+      "vencimiento": "14/08/2026",
+      "titular": "SEGOVIA MIRTA ELENA",
+      "nota": "Excluido siempre por titular",
+      "fecha_procesado": "2026-08-30"
+    },
+    {
+      "file_id": "1DkGL3wJyayeR0iE6IfuwVUtuNEpBIhIg",
+      "nombre": "0_FACTURA_B_NO_1346-20410041.pdf",
+      "proveedor": "swiss_medical",
+      "estado": "usado_config",
+      "monto": 462120.48,
+      "vencimiento": "14/09/2026",
+      "nota": "Cuota Setiembre 2026",
+      "fecha_procesado": "2026-08-30"
+    },
+    {
+      "file_id": "1QDcSBuOQck9ifXKq1-hiWNcQqksk1fvv",
+      "nombre": "FACHA JUBILACIÓN Chat de WhatsApp con Melina Mule Estudio Arce (Sílvia Arce)",
+      "proveedor": null,
+      "estado": "ignorado_no_factura",
+      "nota": "Archivo zip, no es una factura",
+      "fecha_procesado": "2026-08-30"
+    },
+    {
+      "file_id": "1riWBBalhYCOnKBuVM-3gIvNhxJy2oozJ",
+      "nombre": "COMPROBANTE_PAGO_953196160.pdf",
+      "proveedor": null,
+      "estado": "ignorado_no_factura",
+      "nota": "Comprobante de pago de Swiss Medical, no es la factura",
+      "fecha_procesado": "2026-08-30"
+    },
+    {
+      "file_id": "1s32deekd6iTXougbrpa9CCTsZONNP2y6",
+      "nombre": "FACTURA_07_SMG.pdf",
+      "proveedor": "swiss_medical",
+      "estado": "historico_no_usado",
+      "monto": 445997.08,
+      "vencimiento": "18/08/2026",
+      "nota": "Cuota Agosto 2026, ya pagada (ver COMPROBANTE_PAGO_953196160.pdf), superada por 0_FACTURA_B_NO_1346-20410041.pdf",
+      "fecha_procesado": "2026-08-30"
+    },
+    {
+      "file_id": "1S-Kusbtw9Ci___455Nl0HZspDSlE6f4K",
+      "nombre": "FX 5-9342 01_08_26.pdf",
+      "proveedor": "internet_urunet",
+      "estado": "usado_config",
+      "monto": 35382.00,
+      "vencimiento": "10/08/2026",
+      "titular": "ZIEGLER ROMINA EMILIA",
+      "fecha_procesado": "2026-08-30"
+    }
+  ]
+}
