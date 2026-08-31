@@ -3,7 +3,15 @@
 Monitorea la carpeta de Drive de facturas y actualiza la hoja `Config` del
 Sheet de Gazelle con el monto de referencia de cada proveedor.
 
-## Setup
+## Camino recomendado: Apps Script (sin terminal)
+
+Ver **[`apps_script/`](./apps_script/)** — corre adentro del mismo Sheet,
+no necesita instalar nada ni guardar credenciales. Es lo que está activo
+hoy. El resto de este documento (script en Python + service account de
+GCP) queda como alternativa para quien prefiera correrlo fuera de Sheets
+(cron, GitHub Action, etc.).
+
+## Setup (alternativa Python + gcloud)
 
 1. Instalar gcloud CLI (una vez) y loguearte: `gcloud auth login`.
 2. Correr `./setup_service_account.sh` — crea el proyecto de GCP, habilita
