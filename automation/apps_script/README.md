@@ -30,20 +30,47 @@ Después de ese único click, no volvés a tocar nada nunca más.
 
 ## Qué hace cada vez que corre
 
-- Lee la carpeta de facturas, ignora lo que ya procesó (los archivos
-  procesados se mueven a la subcarpeta **Procesadas**).
+Con las facturas (PDF de Swiss Medical, Edenor, Gas Natural, Urunet):
+
+- Lee la carpeta, ignora lo que ya procesó (los archivos procesados se
+  mueven a la subcarpeta **Procesadas**).
 - Identifica proveedor, titular, monto y vencimiento por OCR.
 - Excluye siempre a SEGOVIA MIRTA ELENA y GASTRELL ALFREDO EDUARDO.
 - En Edenor y Gas Natural, si hay dos cuentas en el mismo lote, usa la de
   mayor monto.
 - Si el proveedor ya existe en Config, actualiza el valor.
 - Si el proveedor **no** existe en Config, NO crea la fila solo: la deja
-  anotada en la pestaña **Pendientes_Confirmacion** del mismo Sheet y no
-  la vuelve a tocar hasta que decidas.
-- Todo movimiento queda en la pestaña **Log_Automatizacion** (proveedor,
-  titular, estado, monto anterior/nuevo, archivo).
+  anotada en la pestaña **Pendientes_Confirmacion** y no la vuelve a
+  tocar hasta que decidas.
+
+Con comprobantes de transferencia (fotos o PDF: diezmo, etc.):
+
+- También lee fotos (JPG/PNG), no solo PDF.
+- Reconoce quién la hizo con la misma lógica de nombre que ya usa la
+  pestaña Tarjetas (USUARIO): si el que transfiere es SEGOVIA MIRTA ELENA
+  o GASTRELL ALFREDO EDUARDO, la descarta directo; si dice ZIEGLER
+  ROMINA EMILIA, queda a nombre de Romina; si no dice nada distinto,
+  asume Eduardo (es su Drive).
+  Reconoce a quién fue la transferencia por el nombre del beneficiario,
+  CUIT o CVU (hoy solo "Asociación Civil Centro Familia Y Vida" → 
+  categoría **Diezmo**; se puede sumar más beneficiarios en
+  `BENEFICIARIOS_TRANSFERENCIA` dentro de `Codigo.gs`).
+- Si reconoce el beneficiario, agrega una fila nueva en la pestaña
+  **Tarjetas** con Medio = "Transferencia" (nunca "Tarjeta Crédito", para
+  no mezclarla con consumos de tarjeta) y Categoria = "Diezmo" — la app
+  ya tiene un techo de presupuesto para Diezmo, así que aparece sola en
+  Mi Plan y en el resumen del ciclo/mes que corresponda según la fecha
+  de la transferencia.
+- Si el beneficiario no lo reconoce, lo anota en **Pendientes_Confirmacion**
+  como `transferencia_sin_clasificar` en vez de adivinar la categoría.
+
+En ambos casos:
+
+- Todo movimiento queda en la pestaña **Log_Automatizacion** (proveedor o
+  categoría, titular, estado, monto, fecha, archivo).
 - Si actualizó algo, manda un mail a efgastrell@gmail.com con el resumen
-  (proveedor, monto anterior → nuevo, % de variación).
+  (facturas: monto anterior → nuevo y % de variación; transferencias:
+  categoría, monto y fecha).
 
 ## Ajustar la frecuencia
 
