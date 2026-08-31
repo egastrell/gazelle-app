@@ -246,7 +246,17 @@ function extraerTextoArchivo_(file) {
   var tempDoc = Drive.Files.create(resource, file.getBlob(), { ocr: true, ocrLanguage: 'es' });
   var texto = DocumentApp.openById(tempDoc.id).getBody().getText();
   DriveApp.getFileById(tempDoc.id).setTrashed(true);
-  return texto;
+  return normalizarSuperindices_(texto);
+}
+
+// Mercado Pago muestra los centavos como superíndice (ej. "$166.575²²"). El
+// OCR de Drive a veces preserva esos caracteres unicode y a veces los
+// concatena directo como dígitos normales — esto normaliza el primer caso
+// para que quede igual que el segundo, y parsearMonto_ ya sabe separar los
+// últimos 2 dígitos pegados como centavos.
+function normalizarSuperindices_(texto) {
+  var mapa = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9' };
+  return texto.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, function (ch) { return mapa[ch]; });
 }
 
 // ---------- helpers: facturas (Config) ----------
@@ -378,7 +388,7 @@ function extraerHoraTransferencia_(texto) {
 function extraerNroOperacion_(texto) {
   var patrones = [
     /Nro\.?\s*de\s*[Oo]peraci[oó]n[:\s]*([A-Za-z0-9]+)/i,
-    /N[°º]\.?\s*de\s*operaci[oó]n[^\n:]*[:\s]*([A-Za-z0-9]+)/i,
+    /N[°º.\s]*de\s*operaci[oó]n[^\n:]*[:\s]*([A-Za-z0-9]+)/i,
     /N[uú]mero\s*de\s*[Tt]ransacci[oó]n[:\s]*([A-Za-z0-9]+)/i,
     /C[oó]digo\s*de\s*operaci[oó]n[:\s]*([A-Za-z0-9]+)/i
   ];
