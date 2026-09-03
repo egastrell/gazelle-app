@@ -940,10 +940,10 @@ INSTRUCCIONES:
 - Sin markdown con asteriscos ni hashtags. Texto limpio.`;
 
   try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
+    const res=await fetch('https://gazelle-asesor.efgastrell.workers.dev',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,messages:[{role:'user',content:prompt}]})
+      body:JSON.stringify({model:'claude-sonnet-5',max_tokens:800,messages:[{role:'user',content:prompt}]})
     });
     const data=await res.json();
     const texto=data.content?.[0]?.text||'';
