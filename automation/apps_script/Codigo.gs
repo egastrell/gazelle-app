@@ -501,6 +501,46 @@ function enviarResumen_(reporteConfig, reporteTransferencias) {
 }
 
 /**
+ * Utilidad de una sola vez: carga en Config los 4 proveedores que ya
+ * habían quedado confirmados por chat (Edenor Eduardo, Swiss Medical,
+ * Gas Natural Eduardo, Internet Urunet) con sus montos correctos, y
+ * limpia esas 4 filas de Pendientes_Confirmacion. Se puede borrar esta
+ * función después de correrla una vez.
+ */
+function cargarProveedoresIniciales() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var configSheet = ss.getSheetByName(CONFIG_SHEET_NAME);
+  var pendientesSheet = ss.getSheetByName(PENDIENTES_SHEET_NAME);
+
+  var valores = {
+    edenor_eduardo: 269150.22,
+    swiss_medical: 462120.48,
+    gas_natural_eduardo: 137076.07,
+    internet_urunet: 35382
+  };
+
+  var configActual = leerConfig_(configSheet);
+  var hechas = [];
+  Object.keys(valores).forEach(function (clave) {
+    if (configActual[clave]) {
+      configSheet.getRange(configActual[clave].fila, 2).setValue(valores[clave]);
+    } else {
+      configSheet.appendRow([clave, valores[clave]]);
+    }
+    hechas.push(clave + ' = ' + valores[clave]);
+  });
+
+  if (pendientesSheet) {
+    var data = pendientesSheet.getDataRange().getValues();
+    for (var i = data.length - 1; i >= 1; i--) {
+      if (valores.hasOwnProperty(data[i][1])) pendientesSheet.deleteRow(i + 1);
+    }
+  }
+
+  SpreadsheetApp.getUi().alert('✅ Config actualizado:\n' + hechas.join('\n'));
+}
+
+/**
  * Correr ESTA función una sola vez desde el editor de Apps Script
  * (▶ Ejecutar) para autorizar el acceso y dejar el trigger horario
  * configurado. Es el único clic manual de todo el proceso.
