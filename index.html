@@ -1396,6 +1396,7 @@ async function init(){
   cicloActual=detectarCicloActual();
   actualizarCicloUI();
   await Promise.all([cargarConfigDesdeSheet(),cargarCotizaciones()]);
+  presupuesto['Diezmo'].limite=Math.round((configSheet.ingreso_mes_actual||3800000)*0.10);
   renderCotizaciones();
   fetchSheet();
   setInterval(fetchSheet,5*60*1000);
