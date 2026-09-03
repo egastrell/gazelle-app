@@ -585,6 +585,26 @@ function limpiarDuplicadosDiezmo() {
 }
 
 /**
+ * Utilidad de una sola vez: actualiza el fondo BS3 en Config al último
+ * depósito confirmado por chat (USD 3.997,49, antes era USD 3.643). Se
+ * puede borrar esta función después de correrla una vez.
+ */
+function actualizarFondoBS3() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var configSheet = ss.getSheetByName(CONFIG_SHEET_NAME);
+  var configActual = leerConfig_(configSheet);
+
+  var nuevoValor = 3997.49;
+  if (configActual['fondo_bs3_usd']) {
+    configSheet.getRange(configActual['fondo_bs3_usd'].fila, 2).setValue(nuevoValor);
+  } else {
+    configSheet.appendRow(['fondo_bs3_usd', nuevoValor]);
+  }
+
+  Logger.log('fondo_bs3_usd actualizado a ' + nuevoValor);
+}
+
+/**
  * Correr ESTA función una sola vez desde el editor de Apps Script
  * (▶ Ejecutar) para autorizar el acceso y dejar el trigger horario
  * configurado. Es el único clic manual de todo el proceso.
