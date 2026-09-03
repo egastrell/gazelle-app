@@ -541,6 +541,50 @@ function cargarProveedoresIniciales() {
 }
 
 /**
+ * Utilidad de una sola vez: borra las filas de diezmo duplicadas en
+ * Tarjetas (mismo Fecha+Monto, Categoria=Diezmo, Fuente=Foto) dejando
+ * solo una de cada una, y borra de Pendientes_Confirmacion la fila del
+ * comprobante que ya identificamos como transferencia entre cuentas
+ * propias. Se puede borrar esta función después de correrla una vez.
+ */
+function limpiarDuplicadosDiezmo() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var tarjetasSheet = ss.getSheetByName(TARJETAS_SHEET_NAME);
+  var pendientesSheet = ss.getSheetByName(PENDIENTES_SHEET_NAME);
+
+  var data = tarjetasSheet.getDataRange().getValues();
+  var vistos = {};
+  var filasABorrar = [];
+  for (var i = 1; i < data.length; i++) {
+    var categoria = data[i][8];
+    var fuente = data[i][13];
+    if (categoria !== 'Diezmo' || fuente !== 'Foto') continue;
+    var clave = data[i][0] + '|' + data[i][6];
+    if (vistos[clave]) {
+      filasABorrar.push(i + 1);
+    } else {
+      vistos[clave] = true;
+    }
+  }
+  filasABorrar.sort(function (a, b) { return b - a; });
+  filasABorrar.forEach(function (fila) { tarjetasSheet.deleteRow(fila); });
+
+  var pendientesBorradas = 0;
+  if (pendientesSheet) {
+    var pdata = pendientesSheet.getDataRange().getValues();
+    for (var j = pdata.length - 1; j >= 1; j--) {
+      if (pdata[j][4] === 'DOC-20260830-WA0002.pdf') {
+        pendientesSheet.deleteRow(j + 1);
+        pendientesBorradas++;
+      }
+    }
+  }
+
+  Logger.log('Filas de Tarjetas borradas (duplicados de diezmo): ' + filasABorrar.length +
+    '\nFilas de Pendientes_Confirmacion borradas: ' + pendientesBorradas);
+}
+
+/**
  * Correr ESTA función una sola vez desde el editor de Apps Script
  * (▶ Ejecutar) para autorizar el acceso y dejar el trigger horario
  * configurado. Es el único clic manual de todo el proceso.
