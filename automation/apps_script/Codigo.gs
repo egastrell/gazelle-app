@@ -537,7 +537,7 @@ function cargarProveedoresIniciales() {
     }
   }
 
-  SpreadsheetApp.getUi().alert('✅ Config actualizado:\n' + hechas.join('\n'));
+  Logger.log('Config actualizado:\n' + hechas.join('\n'));
 }
 
 /**
