@@ -199,6 +199,23 @@ function procesarTransferencia_(texto, file, tarjetasSheet, logSheet, pendientes
     return null; // se deja en la carpeta para revisar a mano
   }
 
+  // Transferencia entre cuentas propias (ej. de Banco Nación a Mercado Pago
+  // antes de mandar el diezmo): no es un gasto real, se registra excluida
+  // del presupuesto (misma categoría que ya usa la app, "Transferencia Interna").
+  if (esTransferenciaInterna_(texto)) {
+    var cuentaInterna = extraerCuentaBanco_(texto);
+    tarjetasSheet.appendRow([
+      fecha || '', cuentaInterna, 'Transferencia', extraerNroOperacion_(texto),
+      'Transferencia entre cuentas propias', 'Transferencia entre cuentas propias', monto, 'S',
+      'Transferencia Interna', '', 'Núcleo', 'N',
+      'Conciliado', 'Foto', '', originante,
+      extraerHoraTransferencia_(texto), 1, '', '', 'TRANSFERENCIA'
+    ]);
+    registrarLog_(logSheet, 'Transferencia Interna', originante, 'transferencia_interna', null, monto, fecha, file.getName());
+    moverAProcesadas_(file, procesadasFolder);
+    return null;
+  }
+
   var beneficiario = identificarBeneficiarioTransferencia_(texto);
   if (!beneficiario) {
     pendientesSheet.appendRow([new Date(), 'transferencia_sin_clasificar', monto, fecha, file.getName(), file.getUrl()]);
@@ -324,6 +341,14 @@ function identificarBeneficiarioTransferencia_(texto) {
     }
   }
   return null;
+}
+
+// Si el nombre del titular aparece dos veces (como origen Y como destino),
+// es una transferencia entre cuentas propias, no un pago a un tercero.
+function esTransferenciaInterna_(texto) {
+  var patron = /GASTRELL\s*,?\s*EDUARDO\s*FRANCO|EDUARDO\s*FRANCO\s*GASTRELL/gi;
+  var matches = texto.match(patron);
+  return !!matches && matches.length >= 2;
 }
 
 function esOrdenTransferencia_(texto) {
