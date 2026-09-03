@@ -83,6 +83,11 @@ function actualizarMontosReferencia() {
       continue;
     }
 
+    if (esResumenTarjeta_(texto)) {
+      moverAProcesadas_(file, procesadasFolder);
+      continue; // resumen de tarjeta de crédito: puede mencionar un proveedor de pasada, no es su factura
+    }
+
     var clave = identificarProveedor_(texto);
     if (clave) {
       var titular = identificarTitular_(texto);
@@ -278,6 +283,13 @@ function normalizarSuperindices_(texto) {
 
 // ---------- helpers: facturas (Config) ----------
 
+// Un resumen de tarjeta de crédito puede mencionar "Swiss Medical", "Edenor",
+// etc. como uno de decenas de consumos — eso no lo convierte en una factura
+// de ese proveedor. Se detecta por sus etiquetas propias de resumen.
+function esResumenTarjeta_(texto) {
+  return /Estado\s*de\s*cuenta|Pago\s*M[ií]nimo|L[ií]mite\s*de\s*Compra|Cierre\s*Anterior/i.test(texto);
+}
+
 function identificarProveedor_(texto) {
   for (var clave in PROVEEDORES) {
     var patrones = PROVEEDORES[clave];
@@ -300,6 +312,10 @@ function identificarTitular_(texto) {
 
 function extraerMontoTotal_(texto) {
   var m = texto.match(/TOTAL\s*A\s*PAGAR[^\d$]{0,40}\$?\s*([\d.]+,\d{2})/i);
+  // Swiss Medical no usa "TOTAL A PAGAR" para el monto (ese texto está pegado
+  // a una fecha en su formato); su primer monto real y confiable es el de
+  // "Vencimiento al [fecha]" (el de la cuota al día, antes de los recargos).
+  if (!m) m = texto.match(/Vencimiento\s*al\s*[\d\/]+[^\d$]{0,20}\$?\s*([\d.]+,\d{2})/i);
   if (!m) m = texto.match(/\$\s*([\d]{1,3}(?:\.\d{3})*,\d{2})/);
   if (!m) return null;
   return parseFloat(m[1].replace(/\./g, '').replace(',', '.'));
