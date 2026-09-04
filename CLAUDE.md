@@ -411,7 +411,214 @@ Orden sugerido:
    (hacer copia del Sheet antes — borra filas, no se deshace fácil).
 
 Estos scripts se compartieron como archivos en el chat, no están commiteados al repo
-(son operaciones sobre el Sheet, no sobre el código de la app).
+(son operaciones sobre el Sheet, no sobre el código de la app). Código completo,
+por si se perdieron los archivos:
+
+```javascript
+// Pegar en Extensions > Apps Script del Sheet Gazelle (o crear proyecto nuevo en
+// script.google.com y pegar esto). Correr en este orden: corregirTodo() →
+// agregarColumnaMoneda() → ordenarPorFecha() → previsualizarDuplicados() (revisar
+// el log) → eliminarDuplicados(). Hacer copia del Sheet antes de ordenarPorFecha()
+// y de eliminarDuplicados() (reordenan/borran filas, no se deshace fácil).
+
+const SHEET_ID = '15TzS_-VQazdA427n8S7H_FnPD5Fj0eDrRMuETIdNLgQ';
+
+// Reglas: si Comercio CONTIENE el texto, se fuerza Categoria/Subcategoria.
+const REGLAS = [
+  { contiene: 'MERPAGO*MERCADOLIBRE', categoria: 'Compras Online', subcategoria: 'MercadoLibre' },
+  { contiene: 'MBONAERENSES',         categoria: 'Alimentación',   subcategoria: 'Supermercado' },
+  { contiene: 'DAMIANAELIZAB',        categoria: 'Salud',          subcategoria: 'Médico/Hospital' },
+  { contiene: 'FOGGIASHOW',           categoria: 'Entretenimiento',subcategoria: 'Salidas/Eventos' },
+  { contiene: 'MARIADELROSAR',        categoria: 'Hogar',          subcategoria: 'Decoración' },
+  { contiene: 'QUONDAM',              categoria: 'Educación',      subcategoria: 'Libros' },
+  { contiene: 'SIPAGO *FUNDACION',    categoria: 'Transporte',     subcategoria: 'Estacionamiento' },
+  { contiene: 'SIPAGO*FUNDACION',     categoria: 'Transporte',     subcategoria: 'Estacionamiento' },
+  { contiene: 'GRUPOPLANETA',         categoria: 'Educación',      subcategoria: 'Libros' },
+  { contiene: 'DLO*Gaelle',           categoria: 'Indumentaria',   subcategoria: 'Calzado' },
+  { contiene: 'DLO*DiDi',             categoria: 'Transporte',     subcategoria: 'Taxi/Remis' }
+];
+
+function corregirTodo() {
+  const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName('Tarjetas');
+  const data = sheet.getDataRange().getValues();
+  const header = data[0];
+  const colComercio = header.indexOf('Comercio');
+  const colCategoria = header.indexOf('Categoria');
+  const colSubcategoria = header.indexOf('Subcategoria');
+
+  let corregidas = 0;
+  let fallidas = [];
+
+  for (let i = 1; i < data.length; i++) {
+    const comercio = String(data[i][colComercio]);
+    const categoriaActual = String(data[i][colCategoria]).trim();
+    const subcategoriaActual = String(data[i][colSubcategoria]).trim();
+
+    const regla = REGLAS.find(r => comercio.indexOf(r.contiene) !== -1);
+    if (!regla) continue;
+
+    const yaEstaBien = categoriaActual === regla.categoria && subcategoriaActual === regla.subcategoria;
+    if (yaEstaBien) continue;
+
+    try {
+      sheet.getRange(i + 1, colCategoria + 1).setValue(regla.categoria);
+      SpreadsheetApp.flush();
+      sheet.getRange(i + 1, colSubcategoria + 1).setValue(regla.subcategoria);
+      SpreadsheetApp.flush();
+      corregidas++;
+    } catch (e) {
+      fallidas.push('Fila ' + (i + 1) + ' (' + comercio + '): ' + e.message);
+    }
+  }
+
+  Logger.log('Filas corregidas: ' + corregidas);
+  if (fallidas.length > 0) {
+    Logger.log('Filas que fallaron (revisar a mano):');
+    fallidas.forEach(f => Logger.log(f));
+  } else {
+    Logger.log('Ninguna fallo. Todo bien.');
+  }
+}
+
+// Crea la columna "Moneda" (si no existe) y la completa: USD para los gastos en dolares
+// (Claude, ChatGPT, Google One, Make.com, y cualquier fila con "(...,USD,...)" en el texto),
+// ARS para el resto. El Monto de esas filas NO se toca -- ya esta en la moneda correcta,
+// solo faltaba decir cual es.
+const MERCADERES_USD = ['GOOGLE *CLAUDE', 'GOOGLE *CHATGPT', 'GOOGLE *GOOGLE O', 'WWW.MAKE.COM'];
+
+function agregarColumnaMoneda() {
+  const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName('Tarjetas');
+  const data = sheet.getDataRange().getValues();
+  const header = data[0];
+
+  let colMoneda = header.indexOf('Moneda');
+  if (colMoneda === -1) {
+    colMoneda = header.length;
+    sheet.getRange(1, colMoneda + 1).setValue('Moneda');
+  }
+
+  const colComercio = header.indexOf('Comercio');
+  const colDescripcion = header.indexOf('DescripcionRaw');
+
+  let marcadasUsd = 0;
+  for (let i = 1; i < data.length; i++) {
+    const comercio = String(data[i][colComercio] || '').toUpperCase();
+    const descripcion = String(data[i][colDescripcion] || '').toUpperCase();
+    const esUsd = /,\s*USD\s*,/.test(comercio) || /,\s*USD\s*,/.test(descripcion) ||
+                  MERCADERES_USD.some(m => comercio.indexOf(m) !== -1);
+    const valorActual = String(data[i][colMoneda] || '').trim();
+    const valorNuevo = esUsd ? 'USD' : 'ARS';
+    if (valorActual !== valorNuevo) {
+      sheet.getRange(i + 1, colMoneda + 1).setValue(valorNuevo);
+      if (esUsd) marcadasUsd++;
+    }
+  }
+  SpreadsheetApp.flush();
+  Logger.log('Columna Moneda lista. Filas marcadas USD: ' + marcadasUsd);
+}
+
+// Ordena la hoja Tarjetas por Fecha (y Hora si existe), de mas vieja a mas nueva.
+function parseFechaDDMMYYYY(fechaStr, horaStr) {
+  const partes = String(fechaStr).trim().split('/');
+  if (partes.length !== 3) return new Date(0);
+  const [d, m, y] = partes.map(Number);
+  let hh = 0, mm = 0;
+  if (horaStr) {
+    const hp = String(horaStr).trim().split(':');
+    if (hp.length >= 2) { hh = Number(hp[0]) || 0; mm = Number(hp[1]) || 0; }
+  }
+  return new Date(y, m - 1, d, hh, mm);
+}
+
+function ordenarPorFecha() {
+  const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName('Tarjetas');
+  const range = sheet.getDataRange();
+  const data = range.getValues();
+  const header = data[0];
+  const colFecha = header.indexOf('Fecha');
+  const colHora = header.indexOf('Hora');
+
+  const filas = data.slice(1);
+  filas.sort((a, b) => {
+    const fa = parseFechaDDMMYYYY(a[colFecha], a[colHora]);
+    const fb = parseFechaDDMMYYYY(b[colFecha], b[colHora]);
+    return fa - fb; // mas vieja primero. Para invertir, cambiar a fb - fa.
+  });
+
+  const nuevaData = [header, ...filas];
+  range.setValues(nuevaData);
+  Logger.log('Ordenadas ' + filas.length + ' filas por Fecha/Hora.');
+}
+
+// ============================================================
+// DUPLICADOS Email vs PDF
+// ============================================================
+// Regla: el PDF es el resumen final de la tarjeta, siempre manda.
+// El email es el aviso previo -- si el mismo gasto (misma Fecha+Comercio+Monto+Signo)
+// aparece por Email Y por PDF, la fila de Email sobra y hay que borrarla.
+// PRIMERO correr previsualizarDuplicados() y mirar el log.
+// RECIEN DESPUES, si el log se ve bien, correr eliminarDuplicados().
+
+function encontrarDuplicados_(sheet) {
+  const data = sheet.getDataRange().getValues();
+  const header = data[0];
+  const colFecha = header.indexOf('Fecha');
+  const colComercio = header.indexOf('Comercio');
+  const colMonto = header.indexOf('Monto');
+  const colSigno = header.indexOf('Signo');
+  const colFuente = header.indexOf('Fuente');
+
+  const grupos = {};
+  for (let i = 1; i < data.length; i++) {
+    const clave = [data[i][colFecha], data[i][colComercio], data[i][colMonto], data[i][colSigno]].join('||');
+    if (!grupos[clave]) grupos[clave] = [];
+    grupos[clave].push(i); // indice dentro de "data" (0 = header, i = fila real i+1 en el Sheet)
+  }
+
+  const filasABorrar = []; // indices dentro de "data"
+  for (const clave in grupos) {
+    const indices = grupos[clave];
+    if (indices.length < 2) continue;
+    const email = indices.filter(idx => String(data[idx][colFuente]).trim() === 'Email');
+    const pdf = indices.filter(idx => String(data[idx][colFuente]).trim() === 'PDF');
+    if (email.length === 0 || pdf.length === 0) continue;
+    // Solo borramos hasta la cantidad que el PDF confirma. Si hay mas Email que PDF,
+    // dejamos el excedente de Email (podria ser un gasto real que el PDF todavia no proceso).
+    const aBorrar = Math.min(email.length, pdf.length);
+    for (let k = 0; k < aBorrar; k++) filasABorrar.push(email[k]);
+  }
+  return { data, header, colFecha, colComercio, colMonto, colSigno, filasABorrar };
+}
+
+function previsualizarDuplicados() {
+  const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName('Tarjetas');
+  const { data, colFecha, colComercio, colMonto, filasABorrar } = encontrarDuplicados_(sheet);
+
+  let total = 0;
+  Logger.log('=== FILAS DE EMAIL QUE SE BORRARIAN (' + filasABorrar.length + ') ===');
+  filasABorrar.sort((a, b) => a - b).forEach(idx => {
+    const fila = data[idx];
+    const monto = parseFloat(String(fila[colMonto]).replace(/\./g, '').replace(',', '.')) || 0;
+    total += monto;
+    Logger.log('Fila ' + (idx + 1) + ': ' + fila[colFecha] + ' | ' + fila[colComercio] + ' | ' + fila[colMonto]);
+  });
+  Logger.log('=== TOTAL a restar si se borran: ' + total.toFixed(2) + ' ===');
+  Logger.log('Si esta lista se ve bien, correr eliminarDuplicados().');
+}
+
+function eliminarDuplicados() {
+  const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName('Tarjetas');
+  const { filasABorrar } = encontrarDuplicados_(sheet);
+
+  // Borrar de abajo hacia arriba para no correr los indices de las filas que faltan borrar.
+  const filasOrdenadas = filasABorrar.slice().sort((a, b) => b - a);
+  filasOrdenadas.forEach(idx => {
+    sheet.deleteRow(idx + 1); // +1 porque data[idx] corresponde a la fila (idx+1) del Sheet
+  });
+  SpreadsheetApp.flush();
+  Logger.log('Filas borradas: ' + filasABorrar.length);
+}
+```
 
 ### Pendiente de Eduardo (no ejecutable por Claude sin PC/teléfono)
 
