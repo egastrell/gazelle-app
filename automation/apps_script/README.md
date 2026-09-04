@@ -77,3 +77,25 @@ En ambos casos:
 Por defecto corre cada 6 horas. Para cambiarla, editá en `Codigo.gs` la
 línea `.everyHours(6)` dentro de `configurarTrigger` y volvé a correr esa
 función (borra el trigger viejo y crea el nuevo).
+
+## Ritmo semanal (reservas de MP)
+
+Ya no hay sangrado fijo a Romina — se maneja con reservas dentro de
+Mercado Pago, en espejo con los techos de cada categoría en Gazelle. Para
+saber cuánto conviene tener reservado por categoría y a qué ritmo gastar
+por día/semana (sobre todo en Alimentación), hay una segunda función,
+independiente de `configurarTrigger`:
+
+1. En el mismo selector de funciones, elegí **`configurarTriggerRitmo`** y
+   apretá **▶ Ejecutar** (una sola vez).
+2. Queda un trigger corriendo todos los días a las 7am que:
+   - Recalcula, con los gastos reales de Tarjetas, cuánto queda de techo
+     por categoría y a qué ritmo diario/semanal hay que gastar para
+     llegar holgado al fin del ciclo.
+   - Deja esos números siempre actualizados en una pestaña nueva,
+     **Ritmo_Semanal** — ahí podés mirar en cualquier momento cuánto
+     reservar en cada categoría de MP.
+   - Manda un mail resumen todos los lunes, y además cualquier día que
+     alguna categoría empiece a gastarse más rápido de lo que corresponde
+     según cuánto pasó del ciclo (para ajustar la reserva de MP antes de
+     que sea tarde, no después).

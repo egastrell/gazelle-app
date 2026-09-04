@@ -666,3 +666,245 @@ function configurarTrigger() {
   ScriptApp.newTrigger('actualizarMontosReferencia').timeBased().everyHours(6).create();
   actualizarMontosReferencia(); // primera corrida inmediata
 }
+
+// ======================================================================
+// RITMO SEMANAL — cuánto se puede gastar por día/semana en cada categoría
+// para llegar holgado al techo del ciclo. Se recalcula solo, todos los
+// días, con los datos reales de Tarjetas — no depende de que se abra la
+// app ni de que nadie lo pida. El sangrado a Romina quedó eliminado: ya
+// no se maneja como transferencia fija, se cubre con reservas de MP.
+//
+// IMPORTANTE: estos techos son un espejo de TECHOS_BS3 en index.html. Si
+// se cambia un techo en un lado, hay que cambiarlo en el otro también.
+// ======================================================================
+
+var TECHOS_BS3 = {
+  'Alimentación': 670000, 'Salud': 550000, 'Servicios': 380000, 'Educación': 420000,
+  'Vehículo': 320000, 'Comida Fuera': 170000, 'Entretenimiento': 100000, 'Indumentaria': 150000,
+  'Transporte': 80000, 'Compras Online': 130000, 'Hogar': 40000, 'Otros': 140000
+};
+
+var CATS_EXCLUIDAS_RITMO = ['Pago Tarjeta', 'Banco', 'Transferencia Interna', 'Diezmo'];
+
+var RITMO_SHEET_NAME = 'Ritmo_Semanal';
+
+// Segundo jueves-anteúltimo del mes: mismo criterio que usa la app (index.html,
+// anteultimoJueves) para cerrar los ciclos mensuales de presupuesto.
+function anteultimoJueves_(year, month) {
+  var jueves = [];
+  var d = new Date(year, month - 1, 1);
+  while (d.getMonth() === month - 1) {
+    if (d.getDay() === 4) jueves.push(new Date(d));
+    d.setDate(d.getDate() + 1);
+  }
+  return jueves[jueves.length - 2];
+}
+
+function obtenerCicloActual_() {
+  var hoy = new Date();
+  var y = hoy.getFullYear(), m = hoy.getMonth() + 1;
+  var mesAnt = m - 1, yAnt = y; if (mesAnt < 1) { mesAnt = 12; yAnt = y - 1; }
+  var mesSig = m + 1, ySig = y; if (mesSig > 12) { mesSig = 1; ySig = y + 1; }
+
+  var finEsteMes = anteultimoJueves_(y, m);
+  var finMesAnterior = anteultimoJueves_(yAnt, mesAnt);
+  var finMesSiguiente = anteultimoJueves_(ySig, mesSig);
+
+  var inicio, fin;
+  if (hoy > finMesAnterior && hoy <= finEsteMes) {
+    inicio = new Date(finMesAnterior); inicio.setDate(inicio.getDate() + 1);
+    fin = finEsteMes;
+  } else if (hoy > finEsteMes) {
+    inicio = new Date(finEsteMes); inicio.setDate(inicio.getDate() + 1);
+    fin = finMesSiguiente;
+  } else {
+    var mesAnt2 = mesAnt - 1, yAnt2 = yAnt; if (mesAnt2 < 1) { mesAnt2 = 12; yAnt2 = yAnt - 1; }
+    var finMesAntAnt = anteultimoJueves_(yAnt2, mesAnt2);
+    inicio = new Date(finMesAntAnt); inicio.setDate(inicio.getDate() + 1);
+    fin = finMesAnterior;
+  }
+  inicio.setHours(0, 0, 0, 0);
+  fin.setHours(23, 59, 59, 999);
+  return { inicio: inicio, fin: fin };
+}
+
+function parsearFechaCelda_(valor) {
+  if (valor instanceof Date) return valor;
+  var m = String(valor).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!m) return null;
+  return new Date(parseInt(m[3], 10), parseInt(m[2], 10) - 1, parseInt(m[1], 10));
+}
+
+// Gasto real por categoría dentro del ciclo, replicando exactamente la
+// lógica de gastosReales() en index.html: excluye a SEGOVIA/ALFREDO
+// (Padres), excluye categorías no presupuestables, cuotas se dividen solo
+// si la fila no vino de un resumen en PDF, y solo cuenta Signo='S' (egreso).
+function calcularGastoPorCategoria_(tarjetasSheet, inicio, fin) {
+  var data = tarjetasSheet.getDataRange().getValues();
+  var headers = data[0];
+  var idx = {};
+  headers.forEach(function (h, i) { idx[h] = i; });
+  var totales = {};
+
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    if (!row[0]) continue;
+    var usuario = String(row[idx['USUARIO']] || '');
+    if (usuario.indexOf('SEGOVIA') !== -1 || usuario.indexOf('ALFREDO') !== -1) continue;
+
+    var cat = String(row[idx['Categoria']] || 'Otros').trim();
+    if (CATS_EXCLUIDAS_RITMO.indexOf(cat) !== -1) continue;
+
+    var fecha = parsearFechaCelda_(row[idx['Fecha']]);
+    if (!fecha || fecha < inicio || fecha > fin) continue;
+
+    var montoRaw = parseFloat(row[idx['Monto']]);
+    if (isNaN(montoRaw)) continue;
+    var signo = String(row[idx['Signo']] || 'S');
+    var fuente = String(row[idx['Fuente']] || '');
+    var numCuotas = 1;
+    if (fuente !== 'PDF') {
+      var cr = parseFloat(row[idx['Cuotas']]);
+      if (!isNaN(cr) && cr > 0) numCuotas = Math.max(cr, 1);
+    }
+    var monto = signo === 'E' ? -montoRaw : montoRaw / numCuotas;
+    if (monto <= 0) continue;
+
+    totales[cat] = (totales[cat] || 0) + monto;
+  }
+  return totales;
+}
+
+function calcularRitmoSemanal_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var tarjetasSheet = ss.getSheetByName(TARJETAS_SHEET_NAME);
+  var ciclo = obtenerCicloActual_();
+  var gastado = calcularGastoPorCategoria_(tarjetasSheet, ciclo.inicio, ciclo.fin);
+
+  var hoy = new Date();
+  var diasRestantes = Math.max(Math.ceil((ciclo.fin - hoy) / 86400000) + 1, 0);
+  var diasTotales = Math.max(Math.ceil((ciclo.fin - ciclo.inicio) / 86400000) + 1, 1);
+  var diasTranscurridos = diasTotales - diasRestantes;
+  var pctTiempo = diasTranscurridos / diasTotales;
+
+  var resultado = [];
+  Object.keys(TECHOS_BS3).forEach(function (cat) {
+    var techo = TECHOS_BS3[cat];
+    var real = gastado[cat] || 0;
+    var restante = Math.max(techo - real, 0);
+    var ritmoDiario = diasRestantes > 0 ? restante / diasRestantes : restante;
+    var ritmoSemanal = ritmoDiario * 7;
+    var pctGastado = techo > 0 ? real / techo : 0;
+    var riesgo = real >= techo ? 'agotado' : (pctGastado - pctTiempo > 0.15 ? 'riesgo' : 'ok');
+    resultado.push({
+      categoria: cat, techo: techo, gastado: real, restante: restante,
+      diasRestantes: diasRestantes, ritmoDiario: ritmoDiario, ritmoSemanal: ritmoSemanal,
+      pctGastado: pctGastado, pctTiempo: pctTiempo, riesgo: riesgo
+    });
+  });
+  return { ciclo: ciclo, items: resultado };
+}
+
+function escribirHojaRitmoSemanal_(reporte) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(RITMO_SHEET_NAME);
+  if (!sheet) sheet = ss.insertSheet(RITMO_SHEET_NAME);
+  sheet.clear();
+  sheet.appendRow(['Categoría', 'Techo mensual', 'Gastado en el ciclo', 'Restante', 'Días restantes', 'Ritmo diario sugerido', 'Ritmo semanal sugerido', 'Estado', 'Ciclo desde', 'Ciclo hasta']);
+  reporte.items.forEach(function (it) {
+    sheet.appendRow([
+      it.categoria, it.techo, Math.round(it.gastado * 100) / 100, Math.round(it.restante * 100) / 100,
+      it.diasRestantes, Math.round(it.ritmoDiario), Math.round(it.ritmoSemanal),
+      it.riesgo === 'agotado' ? '🚫 Techo alcanzado' : it.riesgo === 'riesgo' ? '⚠️ Por encima del ritmo' : '✅ En ritmo',
+      reporte.ciclo.inicio, reporte.ciclo.fin
+    ]);
+  });
+}
+
+function formatearPesos_(n) {
+  return '$' + Math.round(n).toLocaleString('es-AR');
+}
+
+/**
+ * Recalcula el ritmo diario/semanal de cada categoría (mismos techos que
+ * la app, sin sangrado a Romina) y lo deja siempre actualizado en la
+ * pestaña Ritmo_Semanal. Manda mail: reporte completo los lunes, y aviso
+ * inmediato cualquier día si alguna categoría ya viene gastando más rápido
+ * de lo que corresponde según los días transcurridos del ciclo (para poder
+ * ajustar las reservas de MP antes de que sea tarde, no después).
+ */
+function actualizarRitmoSemanal() {
+  var reporte = calcularRitmoSemanal_();
+  escribirHojaRitmoSemanal_(reporte);
+
+  var esLunes = new Date().getDay() === 1;
+  var enRiesgo = reporte.items.filter(function (it) { return it.riesgo !== 'ok'; });
+
+  if (!esLunes && enRiesgo.length === 0) return; // nada urgente y no toca el resumen semanal
+
+  var alimentacion = reporte.items.filter(function (it) { return it.categoria === 'Alimentación'; })[0];
+  var lineas = [];
+  lineas.push('Ciclo actual: ' + Utilities.formatDate(reporte.ciclo.inicio, Session.getScriptTimeZone(), 'dd/MM') +
+    ' al ' + Utilities.formatDate(reporte.ciclo.fin, Session.getScriptTimeZone(), 'dd/MM') +
+    ' (quedan ' + (alimentacion ? alimentacion.diasRestantes : '-') + ' días)');
+  lineas.push('');
+
+  if (alimentacion) {
+    lineas.push('🛒 Alimentación — la que pediste seguir de cerca:');
+    lineas.push('  Gastado: ' + formatearPesos_(alimentacion.gastado) + ' de ' + formatearPesos_(alimentacion.techo));
+    lineas.push('  Para llegar holgado: ' + formatearPesos_(alimentacion.ritmoDiario) + '/día · ' + formatearPesos_(alimentacion.ritmoSemanal) + '/semana');
+    lineas.push('');
+  }
+
+  if (enRiesgo.length > 0) {
+    lineas.push('⚠️ Categorías gastando más rápido de lo que corresponde (ajustar reserva de MP ya):');
+    enRiesgo.forEach(function (it) {
+      lineas.push('  - ' + it.categoria + ': ' + Math.round(it.pctGastado * 100) + '% del techo gastado, va ' +
+        Math.round((it.pctGastado - it.pctTiempo) * 100) + ' puntos por delante del ritmo del ciclo.');
+    });
+    lineas.push('');
+  }
+
+  lineas.push('Ritmo sugerido por categoría (resto del ciclo):');
+  reporte.items.forEach(function (it) {
+    lineas.push('  - ' + it.categoria + ': ' + formatearPesos_(it.ritmoDiario) + '/día · ' + formatearPesos_(it.ritmoSemanal) + '/semana' +
+      (it.riesgo === 'agotado' ? ' — 🚫 techo alcanzado, evitar más gastos' : ''));
+  });
+
+  var asunto = enRiesgo.length > 0 && !esLunes
+    ? 'Gazelle: atención — ritmo de gasto por encima del presupuesto'
+    : 'Gazelle: ritmo semanal de reservas MP';
+  MailApp.sendEmail(EMAIL_NOTIFICACIONES, asunto, lineas.join('\n'));
+}
+
+/**
+ * Correr UNA SOLA VEZ desde el editor (▶ Ejecutar) para activar el
+ * chequeo diario de ritmo de gasto. Además de esto, no hace falta tocar
+ * nada más: la pestaña Ritmo_Semanal y el mail se actualizan solos.
+ */
+function configurarTriggerRitmo() {
+  ScriptApp.getProjectTriggers().forEach(function (t) {
+    if (t.getHandlerFunction() === 'actualizarRitmoSemanal') ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger('actualizarRitmoSemanal').timeBased().everyDays(1).atHour(7).create();
+  actualizarRitmoSemanal(); // primera corrida inmediata
+}
+
+// Función propia (no la escribí yo): deja anotado en Nota de Tarjetas qué
+// medidor de EDENORDA47769858 corresponde a Mirta aunque haya quedado
+// cargado en la tarjeta de Eduardo por error. No tocar la lógica, solo se
+// preserva acá para que no se pierda al pegar el archivo completo.
+function actualizarNotaEdenorMirta() {
+  const ss = SpreadsheetApp.openById('15TzS_-VQazdA427n8S7H_FnPD5Fj0eDrRMuETIdNLgQ');
+  const sheet = ss.getSheetByName('Tarjetas');
+  const data = sheet.getDataRange().getValues();
+  let actualizados = 0;
+  for (let i = 1; i < data.length; i++) {
+    const comercio = String(data[i][4]).trim();
+    if (comercio.includes('EDENORDA47769858')) {
+      sheet.getRange(i + 1, 15).setValue('Confirmado 13/07: es el medidor de Mirta, cargado por error en la tarjeta de Eduardo. Familia=Padres es correcto. PENDIENTE: migrar este débito a un medio de pago de Mirta.');
+      actualizados++;
+    }
+  }
+  Logger.log('Notas actualizadas: ' + actualizados);
+}

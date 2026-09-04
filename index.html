@@ -682,7 +682,7 @@ const ICONOS_CAT = {
 
 let configSheet = {
   ingreso_mes_actual:3800000,fondo_bs3_usd:3643,cotizacion_dolar:1430,
-  meta_bs3_minimo:9000000,sangrado_romina:325000,
+  meta_bs3_minimo:9000000,
 };
 let cotizaciones = {oficial:null,blue:null,mep:null};
 
@@ -719,6 +719,13 @@ let presupuesto = {
 };
 
 const CATS_EXCLUIDAS=new Set(['Pago Tarjeta','Banco','Transferencia Interna']);
+
+// Días que faltan del ciclo actual (incluye hoy). Base del ritmo diario/semanal
+// por categoría: cuánto se puede gastar por día para llegar holgado al techo.
+function diasRestantesCiclo(){
+  if(!cicloActual)return 0;
+  return Math.max(Math.ceil((parseFechaISO(cicloActual.fin)-new Date())/864e5)+1,0);
+}
 const MP_EXCLUIR=new Set(['Ingreso','Banco','Transferencia Interna']);
 const MP_CATS_GASTO=new Set(['Alimentación','Salud','Servicios','Educación','Vehículo','Comida Fuera','Entretenimiento','Indumentaria','Transporte','Compras Online','Hogar','Diezmo','Otros']);
 
@@ -1034,8 +1041,7 @@ function renderMiPlan(){
   const ingreso=configSheet.ingreso_mes_actual||3800000;
   const diezmo=Math.round(ingreso*0.10);
   const sumaTechos=Object.values(TECHOS_BS3).reduce((s,v)=>s+v,0);
-  const sangrado=configSheet.sangrado_romina||325000;
-  const excedente=ingreso-diezmo-sumaTechos-sangrado;
+  const excedente=ingreso-diezmo-sumaTechos;
   const meses=excedente>0?Math.ceil(falta/excedente):0;
   const elDesc=document.getElementById('bsDesc');
   if(elDesc)elDesc.textContent=`¡Deudas eliminadas! Ahora construí un fondo de 3 a 6 meses de gastos. USD ${fondoUsd} (~${fp(fondoPesos)}) = ${Math.round(pct)}% de la meta. ¡No los toques!`;
@@ -1146,7 +1152,14 @@ function renderCategorias(){
       const movs=s.items.map(g=>`<div class="cat-detalle-item" style="padding-left:16px"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%">${g.esProhibido?'🚫 ':''}${g.comercio} <span class="chip ${g.fuenteMP?'chip-mp':g.quien==='Romina'?'chip-romi':'chip-edu'}">${g.fuenteMP?'MP':g.quien.substring(0,3).toUpperCase()}</span></span><span style="font-family:'Space Mono',monospace;white-space:nowrap">${fp(g.monto)}</span></div>`).join('');
       return `<div class="cat-detalle-item" style="cursor:pointer;font-weight:600" onclick="event.stopPropagation();const d=document.getElementById('${idSub}');d.style.display=d.style.display==='none'?'block':'none'"><span>📂 ${s.sc} <span style="color:var(--muted);font-weight:400">(${s.items.length})</span></span><span style="font-family:'Space Mono',monospace">${fp(s.total)}</span></div><div id="${idSub}" style="display:none">${movs}</div>`;
     }).join(''):'<div style="color:var(--muted);font-size:11px;padding:4px 0">Sin movimientos</div>';
-    div.innerHTML=`<div class="cat-header"><div class="cat-name">${cfg.icon} ${cat}</div><div class="cat-amounts"><div class="cat-spent" style="color:${pct>=80?'var(--red)':pct>=60?'var(--yellow)':'var(--text)'}">${fp(gastado)}</div><div class="cat-limit">de ${fp(cfg.limite)}</div></div></div><div class="cat-bar-track"><div class="cat-bar-fill ${cl}" style="width:0%" data-pct="${pct}"></div></div><div class="cat-detalle" id="det-${idCat}">${subcatHtml}</div>`;
+    const restante=Math.max(cfg.limite-gastado,0);
+    const diasRest=diasRestantesCiclo();
+    const ritmoDiario=diasRest>0?restante/diasRest:restante;
+    const ritmoSemanal=ritmoDiario*7;
+    const ritmoHtml=cat==='Diezmo'?'':gastado>=cfg.limite
+      ?'<div style="font-size:10px;color:var(--red);font-weight:600;margin-top:3px">⚠️ Techo alcanzado — evitar más gastos en lo que queda del ciclo</div>'
+      :diasRest>0?`<div style="font-size:10px;color:var(--muted);margin-top:3px">Ritmo para llegar holgado: <b style="color:var(--text)">${fp(ritmoDiario)}/día</b> · ${fp(ritmoSemanal)}/semana</div>`:'';
+    div.innerHTML=`<div class="cat-header"><div class="cat-name">${cfg.icon} ${cat}</div><div class="cat-amounts"><div class="cat-spent" style="color:${pct>=80?'var(--red)':pct>=60?'var(--yellow)':'var(--text)'}">${fp(gastado)}</div><div class="cat-limit">de ${fp(cfg.limite)}</div></div></div><div class="cat-bar-track"><div class="cat-bar-fill ${cl}" style="width:0%" data-pct="${pct}"></div></div>${ritmoHtml}<div class="cat-detalle" id="det-${idCat}">${subcatHtml}</div>`;
     c.appendChild(div);
   });
   setTimeout(()=>{document.querySelectorAll('.cat-bar-fill[data-pct]').forEach(el=>{el.style.width=el.dataset.pct+'%'})},50);
@@ -1303,9 +1316,8 @@ function getCotizacionUsada(){return cotizaciones.mep||configSheet.cotizacion_do
 function renderConfigBS3(){
   const ingreso=configSheet.ingreso_mes_actual||3800000;
   const diezmo=Math.round(ingreso*0.10);
-  const sangrado=configSheet.sangrado_romina||325000;
   const sumaTechos=Object.values(TECHOS_BS3).reduce((s,v)=>s+v,0);
-  const excedente=ingreso-diezmo-sumaTechos-sangrado;
+  const excedente=ingreso-diezmo-sumaTechos;
   const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};
   set('cfg_ingreso_display',fp(ingreso));set('cfg_diezmo_auto',fp(diezmo));
   const elEx=document.getElementById('cfg_excedente_bs3');
@@ -1332,10 +1344,9 @@ function renderConfigBS3(){
       const diffColor=diff>0?'var(--red)':'var(--green)';
       return`<div style="background:var(--white);border-radius:12px;padding:14px;box-shadow:var(--shadow-sm)"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:13px;font-weight:600">${icon} ${cat}</div><div style="font-size:11px;color:${diffColor};font-weight:600">${diffStr}</div></div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px"><span>Promedio real (3 ciclos)</span><span style="font-family:'Space Mono',monospace;color:var(--text)">${fp(real)}</span></div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted)"><span>Techo BS3 sugerido</span><span style="font-family:'Space Mono',monospace;color:var(--green);font-weight:700">${fp(techo)}</span></div></div>`;
     }).join('')+
-    `<div style="background:var(--purple-light);border:1px solid rgba(124,92,191,0.2);border-radius:12px;padding:14px;margin-top:6px"><div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:13px;font-weight:600;color:var(--purple)">💜 Sangrado Romina</div><div style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--purple)">${fp(sangrado)}</div></div><div style="font-size:11px;color:var(--muted);margin-top:4px">Acuerdo: $75.000/semana</div></div>
-    <div style="background:var(--green-light);border:1px solid rgba(0,196,140,0.2);border-radius:12px;padding:14px;margin-top:6px"><div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:13px;font-weight:600;color:var(--green)">🙏 Diezmo (10%)</div><div style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--green)">${fp(diezmo)}</div></div><div style="font-size:11px;color:var(--muted);margin-top:4px">Automático según ingreso</div></div>`;
+    `<div style="background:var(--green-light);border:1px solid rgba(0,196,140,0.2);border-radius:12px;padding:14px;margin-top:6px"><div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:13px;font-weight:600;color:var(--green)">🙏 Diezmo (10%)</div><div style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--green)">${fp(diezmo)}</div></div><div style="font-size:11px;color:var(--muted);margin-top:4px">Automático según ingreso</div></div>`;
   }
-  const rows=[['Ingreso del mes',ingreso,'var(--text)',false],['(-) Diezmo 10%',diezmo,'var(--green)',true],['(-) Techos categorías',sumaTechos,'var(--muted)',true],['(-) Sangrado Romina',sangrado,'var(--purple)',true]];
+  const rows=[['Ingreso del mes',ingreso,'var(--text)',false],['(-) Diezmo 10%',diezmo,'var(--green)',true],['(-) Techos categorías',sumaTechos,'var(--muted)',true]];
   const rr=document.getElementById('cfg_resumen_rows');
   if(rr)rr.innerHTML=rows.map(([lbl,val,color,minus])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border)"><span style="color:var(--muted)">${lbl}</span><span style="font-family:'Space Mono',monospace;color:${color}">${minus?'- ':''}${fp(val)}</span></div>`).join('');
   const elBal=document.getElementById('cfg_balance');
