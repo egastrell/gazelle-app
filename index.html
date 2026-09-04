@@ -414,6 +414,11 @@ body { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
     <div class="disp-sub" id="disponibleSub">sincronizando...</div>
     <div class="disp-msg" id="judgeMsg">Conectando con Google Sheets...</div>
   </div>
+  <div class="hormigas-card" id="usdCard" style="display:none">
+    <div class="hormiga-label">💵 Gastos en dólares del ciclo (no se mezclan con los pesos)</div>
+    <div class="hormiga-total" id="usdTotal">US$0</div>
+    <div class="hormiga-items" id="usdItems"></div>
+  </div>
   <div class="stats-row">
     <div class="stat-card"><div class="stat-val" id="statTxn" style="color:var(--blue)">—</div><div class="stat-lbl">Gastos</div></div>
     <div class="stat-card"><div class="stat-val" id="statHormigas" style="color:var(--orange)">—</div><div class="stat-lbl">Hormigas</div></div>
@@ -799,6 +804,7 @@ function actualizarCicloUI(){
 }
 
 const fp=n=>'$'+Math.round(Math.abs(n)).toLocaleString('es-AR');
+const fpUsd=n=>'US$'+Math.abs(n).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
 
 async function fetchSheet(){
   setSyncState('loading','Sincronizando...');
@@ -815,6 +821,11 @@ async function fetchSheet(){
       const cat=String(get('Categoria')||'Otros').trim();
       const subcat=String(get('Subcategoria')||'').trim();
       const signo=String(get('Signo')||'S');
+      const monedaCol=get('Moneda').trim().toUpperCase();
+      const MERCADERES_USD=['GOOGLE *CLAUDE','GOOGLE *CHATGPT','GOOGLE *GOOGLE O','WWW.MAKE.COM'];
+      const comercioUpper=comercio.toUpperCase();
+      const monedaDetectada=/,\s*USD\s*,/i.test(comercio)||/,\s*USD\s*,/i.test(get('DescripcionRaw'))||MERCADERES_USD.some(m=>comercioUpper.includes(m))?'USD':'';
+      const moneda=monedaCol||monedaDetectada||'ARS';
       const montoStr=get('Monto').replace(/\$/g,'').replace(/\./g,'').replace(',','.').trim();
       const montoRaw=parseFloat(montoStr)||0;
       const cuotasRaw=get('Cuotas');
@@ -831,7 +842,7 @@ async function fetchSheet(){
       let quien='Eduardo';
       if(usuario.includes('ZIEGLER')||usuario.includes('ROMINA'))quien='Romina';
       else if(usuario.includes('SEGOVIA')||usuario.includes('ALFREDO'))quien='Padres';
-      return{fecha,fechaDate,comercio,monto,cat,subcat,signo,hormiga,quien,esProhibido,esDevolucion,cuenta,ultimos4};
+      return{fecha,fechaDate,comercio,monto,cat,subcat,signo,hormiga,quien,esProhibido,esDevolucion,cuenta,ultimos4,moneda};
     }).filter(g=>g.quien!=='Padres');
     // Separamos los pagos de tarjeta (categoría 'Pago Tarjeta') para el cálculo automático de saldo,
     // y los excluimos del resto de la app tal como antes (no deben aparecer en gastos/categorías).
@@ -969,10 +980,11 @@ INSTRUCCIONES:
 
 function renderAll(){renderResumen();renderMiPlan();renderResumenPersonas();renderDeuda();renderPagar();renderCategorias();renderProhibidos();renderTxn();renderPresupuesto();renderRamsey()}
 
-function gastosReales(lista){return lista.filter(g=>!CATS_EXCLUIDAS.has(g.cat)&&g.monto>0)}
+function gastosReales(lista){return lista.filter(g=>!CATS_EXCLUIDAS.has(g.cat)&&g.monto>0&&g.moneda!=='USD')}
+function gastosUSD(lista){return lista.filter(g=>!CATS_EXCLUIDAS.has(g.cat)&&g.monto>0&&g.moneda==='USD').sort((a,b)=>(b.fechaDate||0)-(a.fechaDate||0))}
 function gastosMPReales(lista){return lista.filter(g=>g.monto<0&&MP_CATS_GASTO.has(g.cat))}
 function mpComoGastos(lista){return gastosMPReales(lista).map(g=>({fecha:g.fecha,fechaDate:g.fechaDate,comercio:g.tipo?g.tipo.substring(0,40):g.cat,monto:Math.abs(g.monto),cat:g.cat,subcat:g.subcat||'',signo:'S',hormiga:['Comida Fuera','Entretenimiento','Indumentaria','Compras Online'].includes(g.cat),quien:'Eduardo',esProhibido:PROHIBIDOS_DEF.some(p=>p.keys.some(k=>(g.tipo||'').toLowerCase().includes(k))),esDevolucion:false,cuenta:'MercadoPago',fuenteMP:true}))}
-function gastosUnificados(){return[...gastosReales(gastosMes),...mpComoGastos(gastosMPCiclo)]}
+function gastosUnificados(){return[...gastosReales(gastosMes),...mpComoGastos(gastosMPCiclo)].sort((a,b)=>(b.fechaDate||0)-(a.fechaDate||0))}
 
 function renderResumen(){
   const gastos=gastosUnificados();
@@ -995,6 +1007,18 @@ function renderResumen(){
   document.getElementById('hormigaTotal').textContent=fp(totalH);
   const tags=document.getElementById('hormigaItems');tags.innerHTML='';
   hormigas.slice(0,10).forEach(h=>{const t=document.createElement('span');t.className='hormiga-tag';t.textContent=h.comercio.substring(0,16)+' '+fp(h.monto);tags.appendChild(t)});
+  // Gastos en USD: se muestran aparte, nunca sumados a los totales en pesos.
+  const usd=gastosUSD(gastosMes);
+  const usdCard=document.getElementById('usdCard');
+  if(usd.length>0){
+    usdCard.style.display='';
+    const totalUsd=usd.reduce((s,g)=>s+g.monto,0);
+    document.getElementById('usdTotal').textContent=fpUsd(totalUsd);
+    const usdTags=document.getElementById('usdItems');usdTags.innerHTML='';
+    usd.forEach(u=>{const t=document.createElement('span');t.className='hormiga-tag';t.textContent=u.comercio.substring(0,20)+' '+fpUsd(u.monto);usdTags.appendChild(t)});
+  }else{
+    usdCard.style.display='none';
+  }
 }
 
 function renderResumenPersonas(){
