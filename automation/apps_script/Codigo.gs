@@ -247,7 +247,44 @@ function procesarTransferencia_(texto, file, tarjetasSheet, logSheet, pendientes
 
   registrarLog_(logSheet, beneficiario.categoria, originante, 'transferencia_registrada', null, monto, fecha, file.getName());
   moverAProcesadas_(file, procesadasFolder);
+
+  // El diezmo es siempre el 10% del ingreso: cada vez que llega uno nuevo
+  // (más reciente que el último usado), se recalcula solo ingreso_mes_actual
+  // en Config. Así nunca hay que cargar el sueldo a mano.
+  if (beneficiario.categoria === 'Diezmo') {
+    actualizarIngresoDesdeDiezmo_(fecha, monto);
+  }
+
   return { categoria: beneficiario.categoria, monto: monto, fecha: fecha, archivo: file.getName() };
+}
+
+// El ingreso se deriva siempre del diezmo más reciente que se haya procesado
+// (ingreso = diezmo ÷ 10%), guardando esa fecha en las propiedades del
+// script para no dejar que un diezmo viejo (ej. de un backfill) pise un
+// ingreso ya actualizado con uno más nuevo.
+function actualizarIngresoDesdeDiezmo_(fecha, montoDiezmo) {
+  if (!fecha) return;
+  var props = PropertiesService.getScriptProperties();
+  var fechaGuardada = props.getProperty('ingreso_fecha_base');
+  var fechaNueva = parsearFechaComparable_(fecha);
+  if (fechaGuardada && fechaNueva <= parsearFechaComparable_(fechaGuardada)) return;
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var configSheet = ss.getSheetByName(CONFIG_SHEET_NAME);
+  var configActual = leerConfig_(configSheet);
+  var ingreso = Math.round((montoDiezmo / 0.10) * 100) / 100;
+  if (configActual['ingreso_mes_actual']) {
+    configSheet.getRange(configActual['ingreso_mes_actual'].fila, 2).setValue(ingreso);
+  } else {
+    configSheet.appendRow(['ingreso_mes_actual', ingreso]);
+  }
+  props.setProperty('ingreso_fecha_base', fecha);
+}
+
+function parsearFechaComparable_(fechaStr) {
+  var partes = String(fechaStr).split('/');
+  if (partes.length !== 3) return 0;
+  return parseInt(partes[2], 10) * 10000 + parseInt(partes[1], 10) * 100 + parseInt(partes[0], 10);
 }
 
 // ---------- helpers: archivos y OCR ----------
@@ -605,23 +642,16 @@ function actualizarFondoBS3() {
 }
 
 /**
- * Utilidad de una sola vez: actualiza el ingreso del mes en Config,
- * calculado a partir del diezmo real de agosto 2026 ($491.783,76 ÷ 10%).
- * Se puede borrar esta función después de correrla una vez.
+ * Utilidad de una sola vez: primer cálculo automático del ingreso, a
+ * partir del diezmo real del 30/08/2026 ($491.783,76 ÷ 10%), y deja
+ * marcada esa fecha como base para que de ahora en más el ingreso se
+ * recalcule solo con cada diezmo nuevo. Se puede borrar esta función
+ * después de correrla una vez.
  */
-function actualizarIngresoSeptiembre() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var configSheet = ss.getSheetByName(CONFIG_SHEET_NAME);
-  var configActual = leerConfig_(configSheet);
-
-  var nuevoValor = 4917837.60;
-  if (configActual['ingreso_mes_actual']) {
-    configSheet.getRange(configActual['ingreso_mes_actual'].fila, 2).setValue(nuevoValor);
-  } else {
-    configSheet.appendRow(['ingreso_mes_actual', nuevoValor]);
-  }
-
-  Logger.log('ingreso_mes_actual actualizado a ' + nuevoValor);
+function primerIngresoAutomatico() {
+  actualizarIngresoDesdeDiezmo_('30/08/2026', 491783.76);
+  var props = PropertiesService.getScriptProperties();
+  Logger.log('ingreso_mes_actual y ingreso_fecha_base (' + props.getProperty('ingreso_fecha_base') + ') actualizados.');
 }
 
 /**
