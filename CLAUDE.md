@@ -326,3 +326,98 @@ para tu familia." — Daniel González
 
 "El rico gobierna al pobre; el que pide prestado es esclavo del que presta." —
 Proverbios 22:7
+
+---
+
+## Sesión 03-04/09/2026 — Hallazgos y trabajo en curso
+
+Contexto para cualquier sesión de Claude que retome este proyecto: esto es lo que se
+encontró y se hizo en la sesión del 3 y 4 de septiembre de 2026. Varios ítems quedaron
+listos en código/scripts pero pendientes de que Eduardo los ejecute desde su PC
+(Apps Script no se puede correr desde el celular ni desde esta sesión — solo lectura
+del Sheet vía Google Drive, sin permiso de escritura).
+
+### Ya mergeado en producción (github.com/egastrell/gazelle-app, rama main)
+
+- **PR #2:** este archivo CLAUDE.md.
+- **PR #3:** Cloudflare Worker (`cloudflare-worker.js`) para el asesor Dave & Daniel.
+  Falta que Eduardo cree la cuenta en Cloudflare, pegue el archivo y cargue el secret
+  `ANTHROPIC_API_KEY`. URL esperada: `gazelle-asesor.efgastrell.workers.dev`.
+- **PR #4:** en `index.html` — `gastosUnificados()` ahora ordena por fecha, y
+  `gastosReales()` excluye `moneda==='USD'` de todos los totales en pesos (antes un
+  cargo de US$20 se sumaba como $20 pesos). Nueva tarjeta en Resumen muestra el total
+  en USD del ciclo aparte, sin mezclar. La detección de moneda funciona por texto
+  `(...,USD,...)` o por comercios conocidos (Claude, ChatGPT, Google One, Make.com)
+  aunque la columna "Moneda" del Sheet todavía no exista.
+
+### Bug crítico confirmado: 113 filas duplicadas en el Sheet, $3.201.416 de más
+
+El pipeline carga cada gasto dos veces: una vez por el email en tiempo real (Fuente=Email,
+NroComprobante=0) y otra vez cuando se procesa el PDF del resumen (Fuente=PDF, comprobante
+real). Cuando ambas versiones coinciden en Fecha+Comercio+Monto+Signo, la de Email sobra.
+Confirmado con Eduardo: el PDF manda siempre, la de Email se borra.
+Afecta a TODO el historial, no solo un mes — ej. julio 2026 solo, el Sheet mostraba
+$4.892.721 contra $2.957.521 reales del PDF.
+
+### Bug corregido (parcial): USUARIO mal asignado en tarjeta de Romina
+
+29 filas con Ultimos4=1343 (tarjeta de Romina); 22 estaban mal etiquetadas como
+GASTRELL EDUARDO FRANCO. **Ya corregido y confirmado 100% en el Sheet** (corrida
+manual de Eduardo, verificado leyendo el Sheet: las 29 dicen ZIEGLER ROMINA EMIL).
+
+### Categorización: comercios nuevos identificados (confirmados por Eduardo)
+
+- MBONAERENSES → Alimentación / Supermercado
+- MERPAGO*DAMIANAELIZAB → Salud / Médico/Hospital (psicóloga de los chicos)
+- MERPAGO*FOGGIASHOW → Entretenimiento / Salidas/Eventos (recital banda Petra)
+- MERPAGO*MARIADELROSAR → Hogar / Decoración (ceramista de Santa Anita)
+- QUONDAM (y sus cuotas) → Educación / Libros (librería feria del libro, La Rural)
+- SIPAGO*FUNDACION → Transporte / Estacionamiento (estacionamiento en La Rural)
+- MERPAGO*GRUPOPLANETA → Educación / Libros (feria del libro)
+- DLO*Gaelle → Indumentaria / Calzado (zapatillas marca Gaelle)
+- DLO*DiDi → Transporte / Taxi/Remis (app de viajes)
+- MERPAGO*MERCADOLIBRE en "Otros" → Compras Online / MercadoLibre (regla ya existía,
+  nunca se había aplicado a las filas viejas)
+
+Quedaron sin identificar (montos chicos, no vale la pena seguir): STONE SA,
+TRADE VISIONS GROUP, MERPAGO*HOLY, ELI S.A, MERPAGO*LAARGENTINA, MERPAGO*POLGRAFSH,
+MERPAGO*MICROPAY, MUNDOVENDINGTU, GOOGLE*CLOUD (dos cargos ínfimos).
+
+Hallazgo aparte sin resolver: 120 filas con Ultimos4="1234" (Mastercard BNA), repartidas
+entre Eduardo y Romina — parece un valor placeholder, no un número de tarjeta real.
+No se tocó, falta investigar la causa.
+
+### Fraude con tarjeta (Filipinas/Boracay, junio 2026) — investigado a fondo
+
+Ya reportado al banco por Eduardo. Auditoría completa cruzando los PDFs reales de
+julio y agosto 2026 (no solo el Sheet):
+- 15 cargos ($346) confirmados revertidos a favor.
+- **$10,88 (TGH GRILLHOUSE BORACAY, cupón 00796, 26/06)**: investigación cerrada el
+  23/07 SIN crédito — quedó a cargo de Eduardo. Necesita apelar.
+- **4 cargos ($92,57 total, todos del 25/06)**: segunda instancia de investigación
+  abierta el 29/06, sigue sin resolución en el resumen del 20/08 (2+ meses).
+Se le dio a Eduardo un guión de llamada con los datos exactos (cupones, montos,
+fechas) para reclamar ambos casos. Estado de la llamada: no confirmado en este chat.
+
+### Scripts listos para correr en la PC (Extensiones > Apps Script del Sheet)
+
+Todos apuntan al Sheet ID `15TzS_-VQazdA427n8S7H_FnPD5Fj0eDrRMuETIdNLgQ`, hoja "Tarjetas".
+Orden sugerido:
+1. `corregirTodo()` — aplica las reglas de categorización de la lista de arriba.
+2. `agregarColumnaMoneda()` — crea columna "Moneda" y la completa (ARS/USD), sin tocar montos.
+3. `ordenarPorFecha()` — reordena las 3599 filas por Fecha/Hora (hacer copia del Sheet antes).
+4. `previsualizarDuplicados()` — muestra en el log qué filas de Email se borrarían, sin borrar nada.
+5. `eliminarDuplicados()` — recién después de revisar el log del paso 4, borra esas filas
+   (hacer copia del Sheet antes — borra filas, no se deshace fácil).
+
+Estos scripts se compartieron como archivos en el chat, no están commiteados al repo
+(son operaciones sobre el Sheet, no sobre el código de la app).
+
+### Pendiente de Eduardo (no ejecutable por Claude sin PC/teléfono)
+
+- Correr los 5 scripts de arriba.
+- Pegar el prompt corregido de Gemini en Make.com (incluye reglas de USUARIO y Moneda).
+- Crear cuenta en Cloudflare y completar el setup del Worker (PR #3).
+- Llamar al banco por el fraude ($10,88 + $92,57 sin resolver).
+- Migrar débito Municipalidad Morón, dar de baja Gas Mirta (llamadas telefónicas).
+- Presupuesto de Walter para el techo de la galería en Santa Anita.
