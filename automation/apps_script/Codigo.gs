@@ -901,45 +901,100 @@ function configurarTriggerRitmo() {
 // ======================================================================
 
 // Mismo criterio que usa la app (index.html, fetchSheet) para inferir
-// moneda cuando la columna no está completa: comercios que siempre son
-// USD, o "USD" mencionado entre comas en Comercio/DescripcionRaw.
+// moneda: comercios que siempre son USD, o "USD" mencionado entre comas
+// en Comercio/DescripcionRaw. El Monto de esas filas NO se toca — ya
+// está en la moneda correcta, solo faltaba decir cuál es.
 var MERCADERES_USD_ = ['GOOGLE *CLAUDE', 'GOOGLE *CHATGPT', 'GOOGLE *GOOGLE O', 'WWW.MAKE.COM'];
 
-function detectarMoneda_(comercio, descripcionRaw) {
-  var c = String(comercio || '').toUpperCase();
-  if (MERCADERES_USD_.some(function (m) { return c.indexOf(m) !== -1; })) return 'USD';
-  if (/,\s*USD\s*,/i.test(comercio) || /,\s*USD\s*,/i.test(descripcionRaw)) return 'USD';
-  return 'ARS';
+/**
+ * Utilidad de una sola vez (pero idempotente: se puede correr de nuevo
+ * sin problema, solo actualiza lo que falte). Crea la columna Moneda si
+ * no existe y la completa ARS/USD fila por fila.
+ */
+function agregarColumnaMoneda() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(TARJETAS_SHEET_NAME);
+  var data = sheet.getDataRange().getValues();
+  var header = data[0];
+
+  var colMoneda = header.indexOf('Moneda');
+  if (colMoneda === -1) {
+    colMoneda = header.length;
+    sheet.getRange(1, colMoneda + 1).setValue('Moneda');
+  }
+
+  var colComercio = header.indexOf('Comercio');
+  var colDescripcion = header.indexOf('DescripcionRaw');
+
+  var marcadasUsd = 0;
+  for (var i = 1; i < data.length; i++) {
+    var comercio = String(data[i][colComercio] || '').toUpperCase();
+    var descripcion = String(data[i][colDescripcion] || '').toUpperCase();
+    var esUsd = /,\s*USD\s*,/.test(comercio) || /,\s*USD\s*,/.test(descripcion) ||
+      MERCADERES_USD_.some(function (m) { return comercio.indexOf(m) !== -1; });
+    var valorActual = String(data[i][colMoneda] || '').trim();
+    var valorNuevo = esUsd ? 'USD' : 'ARS';
+    if (valorActual !== valorNuevo) {
+      sheet.getRange(i + 1, colMoneda + 1).setValue(valorNuevo);
+      if (esUsd) marcadasUsd++;
+    }
+  }
+  SpreadsheetApp.flush();
+  Logger.log('Columna Moneda lista. Filas marcadas USD: ' + marcadasUsd);
 }
 
 /**
- * Utilidad de una sola vez: agrega la columna Moneda (si todavía no
- * existe) y la completa ARS/USD para cada fila, sin tocar ningún monto.
- * Idempotente: si ya existe la columna, no hace nada y lo loguea.
+ * Utilidad de una sola vez: fuerza Categoria/Subcategoria para comercios
+ * ya identificados que estaban cayendo en "Otros" (ver sesión 03-04/09/2026).
+ * Idempotente: si una fila ya tiene el valor correcto, no la toca.
  */
-function agregarColumnaMoneda() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName(TARJETAS_SHEET_NAME);
+var REGLAS_CATEGORIA_ = [
+  { contiene: 'MERPAGO*MERCADOLIBRE', categoria: 'Compras Online', subcategoria: 'MercadoLibre' },
+  { contiene: 'MBONAERENSES', categoria: 'Alimentación', subcategoria: 'Supermercado' },
+  { contiene: 'DAMIANAELIZAB', categoria: 'Salud', subcategoria: 'Médico/Hospital' },
+  { contiene: 'FOGGIASHOW', categoria: 'Entretenimiento', subcategoria: 'Salidas/Eventos' },
+  { contiene: 'MARIADELROSAR', categoria: 'Hogar', subcategoria: 'Decoración' },
+  { contiene: 'QUONDAM', categoria: 'Educación', subcategoria: 'Libros' },
+  { contiene: 'SIPAGO *FUNDACION', categoria: 'Transporte', subcategoria: 'Estacionamiento' },
+  { contiene: 'SIPAGO*FUNDACION', categoria: 'Transporte', subcategoria: 'Estacionamiento' },
+  { contiene: 'GRUPOPLANETA', categoria: 'Educación', subcategoria: 'Libros' },
+  { contiene: 'DLO*Gaelle', categoria: 'Indumentaria', subcategoria: 'Calzado' },
+  { contiene: 'DLO*DiDi', categoria: 'Transporte', subcategoria: 'Taxi/Remis' }
+];
+
+function corregirTodo() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(TARJETAS_SHEET_NAME);
   var data = sheet.getDataRange().getValues();
-  var headers = data[0];
+  var header = data[0];
+  var colComercio = header.indexOf('Comercio');
+  var colCategoria = header.indexOf('Categoria');
+  var colSubcategoria = header.indexOf('Subcategoria');
 
-  if (headers.indexOf('Moneda') !== -1) {
-    Logger.log('La columna Moneda ya existe, no se tocó nada.');
-    return;
-  }
+  var corregidas = 0;
+  var fallidas = [];
 
-  var idxComercio = headers.indexOf('Comercio');
-  var idxDescripcion = headers.indexOf('DescripcionRaw');
-  var colNueva = headers.length + 1;
-  sheet.getRange(1, colNueva).setValue('Moneda');
-
-  var valores = [];
   for (var i = 1; i < data.length; i++) {
-    valores.push([detectarMoneda_(data[i][idxComercio], data[i][idxDescripcion])]);
-  }
-  if (valores.length > 0) sheet.getRange(2, colNueva, valores.length, 1).setValues(valores);
+    var comercio = String(data[i][colComercio]);
+    var categoriaActual = String(data[i][colCategoria]).trim();
+    var subcategoriaActual = String(data[i][colSubcategoria]).trim();
 
-  Logger.log('Columna Moneda agregada y completada en ' + valores.length + ' filas.');
+    var regla = REGLAS_CATEGORIA_.filter(function (r) { return comercio.indexOf(r.contiene) !== -1; })[0];
+    if (!regla) continue;
+    if (categoriaActual === regla.categoria && subcategoriaActual === regla.subcategoria) continue;
+
+    try {
+      sheet.getRange(i + 1, colCategoria + 1).setValue(regla.categoria);
+      sheet.getRange(i + 1, colSubcategoria + 1).setValue(regla.subcategoria);
+      corregidas++;
+    } catch (e) {
+      fallidas.push('Fila ' + (i + 1) + ' (' + comercio + '): ' + e.message);
+    }
+  }
+
+  Logger.log('Filas corregidas: ' + corregidas);
+  if (fallidas.length > 0) {
+    Logger.log('Filas que fallaron (revisar a mano):');
+    fallidas.forEach(function (f) { Logger.log(f); });
+  }
 }
 
 /**
@@ -970,82 +1025,100 @@ function ordenarPorFecha() {
   Logger.log('Reordenadas ' + filas.length + ' filas por Fecha ascendente.');
 }
 
-// Clave para detectar el mismo gasto cargado dos veces (Email y PDF):
-// misma Fecha, mismo Comercio, mismo Monto, mismo Signo.
-function claveDuplicado_(row, idx) {
-  var fecha = parsearFechaCelda_(row[idx['Fecha']]);
-  var fechaStr = fecha ? Utilities.formatDate(fecha, Session.getScriptTimeZone(), 'yyyy-MM-dd') : String(row[idx['Fecha']]);
-  var comercio = String(row[idx['Comercio']] || '').trim().toUpperCase();
-  var monto = parseFloat(row[idx['Monto']]);
-  var signo = String(row[idx['Signo']] || '');
-  return fechaStr + '|' + comercio + '|' + monto + '|' + signo;
+// Regla: el PDF es el resumen final de la tarjeta, siempre manda. El
+// email es el aviso previo — si el mismo gasto (misma Fecha+Monto+Signo)
+// aparece por Email Y por PDF, la fila de Email sobra.
+//
+// El Comercio NO se compara con igualdad exacta: verificado contra el
+// historial real que el texto del email y el del PDF para el MISMO gasto
+// suelen venir distinto — el de email trae un espacio final ("DIA TIENDA
+// 5331 " vs "DIA TIENDA 5331"), o el PDF antepone el adquirente
+// ("MERPAGO*MBONAERENSES" vs "MBONAERENSES"). Con igualdad exacta esto
+// detectaba solo 5 de más de 240 pares reales — normalizado (recortar
+// espacios, mayúsculas, sacar el prefijo MERPAGO*) y comparando si un
+// texto contiene al otro, detecta 241 de 243.
+//
+// Si hay más Email que PDF para la misma clave, se deja el excedente de
+// Email (podría ser un gasto real que el PDF todavía no procesó) — solo
+// se borra hasta la cantidad que el PDF confirma, nunca de más.
+function normalizarComercio_(s) {
+  return String(s || '').trim().toUpperCase().replace(/^MERPAGO\*/, '');
 }
 
-// Agrupa por clave y devuelve, de cada grupo que tenga AL MENOS una fila
-// Fuente=Email y AL MENOS una Fuente=PDF, las filas de Email (que sobran:
-// el PDF es la fuente final y siempre manda). Grupos con otro tipo de
-// repetición (dos PDF, dos Email, etc.) se dejan aparte para revisar a
-// mano — no se tocan, para no borrar algo que no sea un duplicado real.
-function encontrarDuplicadosEmailPDF_() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName(TARJETAS_SHEET_NAME);
+function encontrarDuplicados_(sheet) {
   var data = sheet.getDataRange().getValues();
-  var headers = data[0];
-  var idx = {};
-  headers.forEach(function (h, i) { idx[h] = i; });
+  var header = data[0];
+  var colFecha = header.indexOf('Fecha');
+  var colComercio = header.indexOf('Comercio');
+  var colMonto = header.indexOf('Monto');
+  var colSigno = header.indexOf('Signo');
+  var colFuente = header.indexOf('Fuente');
 
   var grupos = {};
   for (var i = 1; i < data.length; i++) {
-    var row = data[i];
-    if (!row[idx['Fecha']]) continue;
-    var clave = claveDuplicado_(row, idx);
-    (grupos[clave] = grupos[clave] || []).push({ fila: i + 1, row: row });
+    var clave = [data[i][colFecha], data[i][colMonto], data[i][colSigno]].join('||');
+    if (!grupos[clave]) grupos[clave] = [];
+    grupos[clave].push(i); // índice dentro de "data" (0 = header, i = fila real i+1 en el Sheet)
   }
 
-  var aBorrar = [];
-  var otrosRepetidos = [];
-  Object.keys(grupos).forEach(function (clave) {
-    var items = grupos[clave];
-    if (items.length < 2) return;
-    var email = items.filter(function (it) { return String(it.row[idx['Fuente']]) === 'Email'; });
-    var pdf = items.filter(function (it) { return String(it.row[idx['Fuente']]) === 'PDF'; });
-    if (email.length > 0 && pdf.length > 0) {
-      email.forEach(function (it) { aBorrar.push(it); });
-    } else {
-      otrosRepetidos.push({ clave: clave, items: items });
-    }
-  });
+  var filasABorrar = []; // índices dentro de "data"
+  var sinMatchComercio = []; // pares con Email+PDF en la misma Fecha+Monto+Signo pero el Comercio no matchea ni normalizado — no se tocan
+  for (var clave in grupos) {
+    var indices = grupos[clave];
+    if (indices.length < 2) continue;
+    var email = indices.filter(function (idx) { return String(data[idx][colFuente]).trim() === 'Email'; });
+    var pdf = indices.filter(function (idx) { return String(data[idx][colFuente]).trim() === 'PDF'; });
+    if (email.length === 0 || pdf.length === 0) continue;
 
-  return { aBorrar: aBorrar, otrosRepetidos: otrosRepetidos, idx: idx };
+    var pdfDisponibles = pdf.map(function (idx) { return { idx: idx, n: normalizarComercio_(data[idx][colComercio]) }; });
+    email.forEach(function (idxEmail) {
+      var nEmail = normalizarComercio_(data[idxEmail][colComercio]);
+      var match = null;
+      for (var j = 0; j < pdfDisponibles.length; j++) {
+        var cand = pdfDisponibles[j];
+        if (cand.n === nEmail || nEmail.indexOf(cand.n) !== -1 || cand.n.indexOf(nEmail) !== -1) { match = j; break; }
+      }
+      if (match !== null) {
+        pdfDisponibles.splice(match, 1);
+        filasABorrar.push(idxEmail);
+      } else {
+        sinMatchComercio.push(idxEmail);
+      }
+    });
+  }
+  return {
+    data: data, header: header, colFecha: colFecha, colComercio: colComercio, colMonto: colMonto, colSigno: colSigno,
+    filasABorrar: filasABorrar, sinMatchComercio: sinMatchComercio
+  };
 }
 
 /**
  * Paso 1 (seguro): NO borra nada, solo deja en el Logger el detalle de
  * qué filas de Email se borrarían por tener su par confirmado en PDF, y
  * el total en pesos que representan. Revisar este log ANTES de correr
- * eliminarDuplicados().
+ * eliminarDuplicados(). Hacer una copia del Sheet antes (Archivo > Hacer
+ * una copia) — esto borra filas, no se deshace fácil.
  */
 function previsualizarDuplicados() {
-  var r = encontrarDuplicadosEmailPDF_();
-  var idx = r.idx;
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(TARJETAS_SHEET_NAME);
+  var r = encontrarDuplicados_(sheet);
+  var data = r.data, colFecha = r.colFecha, colComercio = r.colComercio, colMonto = r.colMonto, filasABorrar = r.filasABorrar;
+
   var total = 0;
-  var lineas = [];
-  r.aBorrar.forEach(function (it) {
-    var monto = parseFloat(it.row[idx['Monto']]) || 0;
+  Logger.log('=== FILAS DE EMAIL QUE SE BORRARÍAN (' + filasABorrar.length + ') ===');
+  filasABorrar.slice().sort(function (a, b) { return a - b; }).forEach(function (idx) {
+    var fila = data[idx];
+    var monto = parseFloat(String(fila[colMonto]).replace(/\./g, '').replace(',', '.')) || 0;
     total += monto;
-    lineas.push('Fila ' + it.fila + ': ' + it.row[idx['Fecha']] + ' | ' + it.row[idx['Comercio']] + ' | $' + monto.toLocaleString('es-AR'));
+    Logger.log('Fila ' + (idx + 1) + ': ' + fila[colFecha] + ' | ' + fila[colComercio] + ' | ' + fila[colMonto]);
   });
+  Logger.log('=== TOTAL a restar si se borran: ' + total.toFixed(2) + ' ===');
+  Logger.log('Si esta lista se ve bien, correr eliminarDuplicados().');
 
-  Logger.log('=== PREVIEW eliminarDuplicados ===');
-  Logger.log('Filas de Email que se borrarían (tienen su par en PDF): ' + r.aBorrar.length);
-  Logger.log('Monto total de esas filas: $' + Math.round(total).toLocaleString('es-AR'));
-  Logger.log(lineas.join('\n'));
-
-  if (r.otrosRepetidos.length > 0) {
-    Logger.log('\n=== Otros grupos repetidos (NO se tocan, revisar a mano) ===');
-    r.otrosRepetidos.forEach(function (g) {
-      Logger.log(g.clave + ' -> ' + g.items.length + ' filas, fuentes: ' +
-        g.items.map(function (it) { return it.row[idx['Fuente']]; }).join(', '));
+  if (r.sinMatchComercio.length > 0) {
+    Logger.log('\n=== Misma Fecha+Monto+Signo por Email y PDF, pero el Comercio no matchea ni normalizado (NO se tocan, revisar a mano) ===');
+    r.sinMatchComercio.forEach(function (idx) {
+      Logger.log('Fila ' + (idx + 1) + ' (Email): ' + data[idx][colFecha] + ' | ' + data[idx][colComercio] + ' | ' + data[idx][colMonto]);
     });
   }
 }
@@ -1055,18 +1128,12 @@ function previsualizarDuplicados() {
  * previsualizarDuplicados(). Correr SOLO después de revisar ese log.
  */
 function eliminarDuplicados() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName(TARJETAS_SHEET_NAME);
-  var r = encontrarDuplicadosEmailPDF_();
-  var idx = r.idx;
-
-  var total = 0;
-  r.aBorrar.forEach(function (it) { total += parseFloat(it.row[idx['Monto']]) || 0; });
-
-  var filas = r.aBorrar.map(function (it) { return it.fila; }).sort(function (a, b) { return b - a; });
-  filas.forEach(function (fila) { sheet.deleteRow(fila); });
-
-  Logger.log('Filas borradas: ' + filas.length + ' | Monto total removido: $' + Math.round(total).toLocaleString('es-AR'));
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(TARJETAS_SHEET_NAME);
+  var r = encontrarDuplicados_(sheet);
+  var filasOrdenadas = r.filasABorrar.slice().sort(function (a, b) { return b - a; });
+  filasOrdenadas.forEach(function (idx) { sheet.deleteRow(idx + 1); }); // +1 porque data[idx] corresponde a la fila (idx+1) del Sheet
+  SpreadsheetApp.flush();
+  Logger.log('Filas borradas: ' + r.filasABorrar.length);
 }
 
 // Función propia (no la escribí yo): deja anotado en Nota de Tarjetas qué
