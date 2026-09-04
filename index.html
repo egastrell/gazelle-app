@@ -972,7 +972,7 @@ function renderAll(){renderResumen();renderMiPlan();renderResumenPersonas();rend
 function gastosReales(lista){return lista.filter(g=>!CATS_EXCLUIDAS.has(g.cat)&&g.monto>0)}
 function gastosMPReales(lista){return lista.filter(g=>g.monto<0&&MP_CATS_GASTO.has(g.cat))}
 function mpComoGastos(lista){return gastosMPReales(lista).map(g=>({fecha:g.fecha,fechaDate:g.fechaDate,comercio:g.tipo?g.tipo.substring(0,40):g.cat,monto:Math.abs(g.monto),cat:g.cat,subcat:g.subcat||'',signo:'S',hormiga:['Comida Fuera','Entretenimiento','Indumentaria','Compras Online'].includes(g.cat),quien:'Eduardo',esProhibido:PROHIBIDOS_DEF.some(p=>p.keys.some(k=>(g.tipo||'').toLowerCase().includes(k))),esDevolucion:false,cuenta:'MercadoPago',fuenteMP:true}))}
-function gastosUnificados(){return[...gastosReales(gastosMes),...mpComoGastos(gastosMPCiclo)]}
+function gastosUnificados(){return[...gastosReales(gastosMes),...mpComoGastos(gastosMPCiclo)].sort((a,b)=>(b.fechaDate||0)-(a.fechaDate||0))}
 
 function renderResumen(){
   const gastos=gastosUnificados();
