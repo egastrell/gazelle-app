@@ -605,6 +605,26 @@ function actualizarFondoBS3() {
 }
 
 /**
+ * Utilidad de una sola vez: actualiza el ingreso del mes en Config,
+ * calculado a partir del diezmo real de agosto 2026 ($491.783,76 ÷ 10%).
+ * Se puede borrar esta función después de correrla una vez.
+ */
+function actualizarIngresoSeptiembre() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var configSheet = ss.getSheetByName(CONFIG_SHEET_NAME);
+  var configActual = leerConfig_(configSheet);
+
+  var nuevoValor = 4917837.60;
+  if (configActual['ingreso_mes_actual']) {
+    configSheet.getRange(configActual['ingreso_mes_actual'].fila, 2).setValue(nuevoValor);
+  } else {
+    configSheet.appendRow(['ingreso_mes_actual', nuevoValor]);
+  }
+
+  Logger.log('ingreso_mes_actual actualizado a ' + nuevoValor);
+}
+
+/**
  * Correr ESTA función una sola vez desde el editor de Apps Script
  * (▶ Ejecutar) para autorizar el acceso y dejar el trigger horario
  * configurado. Es el único clic manual de todo el proceso.
