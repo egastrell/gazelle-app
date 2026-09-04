@@ -890,6 +890,185 @@ function configurarTriggerRitmo() {
   actualizarRitmoSemanal(); // primera corrida inmediata
 }
 
+// ======================================================================
+// LIMPIEZA DE HISTORIAL — columna Moneda, orden cronológico y duplicados
+// Email/PDF. Detectado en la sesión del 03-04/09/2026 (ver CLAUDE.md):
+// cada gasto se carga dos veces, una por mail en tiempo real
+// (Fuente=Email) y otra al procesar el PDF del resumen (Fuente=PDF). El
+// PDF es siempre la fuente final — cuando coinciden Fecha+Comercio+Monto+
+// Signo, la fila de Email sobra. Afecta a TODO el historial (ej.: julio
+// 2026 mostraba $4.892.721 cuando el PDF real era $2.957.521).
+// ======================================================================
+
+// Mismo criterio que usa la app (index.html, fetchSheet) para inferir
+// moneda cuando la columna no está completa: comercios que siempre son
+// USD, o "USD" mencionado entre comas en Comercio/DescripcionRaw.
+var MERCADERES_USD_ = ['GOOGLE *CLAUDE', 'GOOGLE *CHATGPT', 'GOOGLE *GOOGLE O', 'WWW.MAKE.COM'];
+
+function detectarMoneda_(comercio, descripcionRaw) {
+  var c = String(comercio || '').toUpperCase();
+  if (MERCADERES_USD_.some(function (m) { return c.indexOf(m) !== -1; })) return 'USD';
+  if (/,\s*USD\s*,/i.test(comercio) || /,\s*USD\s*,/i.test(descripcionRaw)) return 'USD';
+  return 'ARS';
+}
+
+/**
+ * Utilidad de una sola vez: agrega la columna Moneda (si todavía no
+ * existe) y la completa ARS/USD para cada fila, sin tocar ningún monto.
+ * Idempotente: si ya existe la columna, no hace nada y lo loguea.
+ */
+function agregarColumnaMoneda() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(TARJETAS_SHEET_NAME);
+  var data = sheet.getDataRange().getValues();
+  var headers = data[0];
+
+  if (headers.indexOf('Moneda') !== -1) {
+    Logger.log('La columna Moneda ya existe, no se tocó nada.');
+    return;
+  }
+
+  var idxComercio = headers.indexOf('Comercio');
+  var idxDescripcion = headers.indexOf('DescripcionRaw');
+  var colNueva = headers.length + 1;
+  sheet.getRange(1, colNueva).setValue('Moneda');
+
+  var valores = [];
+  for (var i = 1; i < data.length; i++) {
+    valores.push([detectarMoneda_(data[i][idxComercio], data[i][idxDescripcion])]);
+  }
+  if (valores.length > 0) sheet.getRange(2, colNueva, valores.length, 1).setValues(valores);
+
+  Logger.log('Columna Moneda agregada y completada en ' + valores.length + ' filas.');
+}
+
+/**
+ * Utilidad de una sola vez: reordena todas las filas de Tarjetas por
+ * Fecha ascendente (el encabezado no se toca). Corré esto ANTES de
+ * previsualizarDuplicados_/eliminarDuplicados, no cambia ningún dato,
+ * solo el orden de las filas.
+ */
+function ordenarPorFecha() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(TARJETAS_SHEET_NAME);
+  var range = sheet.getDataRange();
+  var data = range.getValues();
+  var headers = data[0];
+  var idxFecha = headers.indexOf('Fecha');
+  var filas = data.slice(1);
+
+  filas.sort(function (a, b) {
+    var fa = parsearFechaCelda_(a[idxFecha]);
+    var fb = parsearFechaCelda_(b[idxFecha]);
+    if (!fa && !fb) return 0;
+    if (!fa) return 1;
+    if (!fb) return -1;
+    return fa - fb;
+  });
+
+  if (filas.length > 0) sheet.getRange(2, 1, filas.length, headers.length).setValues(filas);
+  Logger.log('Reordenadas ' + filas.length + ' filas por Fecha ascendente.');
+}
+
+// Clave para detectar el mismo gasto cargado dos veces (Email y PDF):
+// misma Fecha, mismo Comercio, mismo Monto, mismo Signo.
+function claveDuplicado_(row, idx) {
+  var fecha = parsearFechaCelda_(row[idx['Fecha']]);
+  var fechaStr = fecha ? Utilities.formatDate(fecha, Session.getScriptTimeZone(), 'yyyy-MM-dd') : String(row[idx['Fecha']]);
+  var comercio = String(row[idx['Comercio']] || '').trim().toUpperCase();
+  var monto = parseFloat(row[idx['Monto']]);
+  var signo = String(row[idx['Signo']] || '');
+  return fechaStr + '|' + comercio + '|' + monto + '|' + signo;
+}
+
+// Agrupa por clave y devuelve, de cada grupo que tenga AL MENOS una fila
+// Fuente=Email y AL MENOS una Fuente=PDF, las filas de Email (que sobran:
+// el PDF es la fuente final y siempre manda). Grupos con otro tipo de
+// repetición (dos PDF, dos Email, etc.) se dejan aparte para revisar a
+// mano — no se tocan, para no borrar algo que no sea un duplicado real.
+function encontrarDuplicadosEmailPDF_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(TARJETAS_SHEET_NAME);
+  var data = sheet.getDataRange().getValues();
+  var headers = data[0];
+  var idx = {};
+  headers.forEach(function (h, i) { idx[h] = i; });
+
+  var grupos = {};
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    if (!row[idx['Fecha']]) continue;
+    var clave = claveDuplicado_(row, idx);
+    (grupos[clave] = grupos[clave] || []).push({ fila: i + 1, row: row });
+  }
+
+  var aBorrar = [];
+  var otrosRepetidos = [];
+  Object.keys(grupos).forEach(function (clave) {
+    var items = grupos[clave];
+    if (items.length < 2) return;
+    var email = items.filter(function (it) { return String(it.row[idx['Fuente']]) === 'Email'; });
+    var pdf = items.filter(function (it) { return String(it.row[idx['Fuente']]) === 'PDF'; });
+    if (email.length > 0 && pdf.length > 0) {
+      email.forEach(function (it) { aBorrar.push(it); });
+    } else {
+      otrosRepetidos.push({ clave: clave, items: items });
+    }
+  });
+
+  return { aBorrar: aBorrar, otrosRepetidos: otrosRepetidos, idx: idx };
+}
+
+/**
+ * Paso 1 (seguro): NO borra nada, solo deja en el Logger el detalle de
+ * qué filas de Email se borrarían por tener su par confirmado en PDF, y
+ * el total en pesos que representan. Revisar este log ANTES de correr
+ * eliminarDuplicados().
+ */
+function previsualizarDuplicados() {
+  var r = encontrarDuplicadosEmailPDF_();
+  var idx = r.idx;
+  var total = 0;
+  var lineas = [];
+  r.aBorrar.forEach(function (it) {
+    var monto = parseFloat(it.row[idx['Monto']]) || 0;
+    total += monto;
+    lineas.push('Fila ' + it.fila + ': ' + it.row[idx['Fecha']] + ' | ' + it.row[idx['Comercio']] + ' | $' + monto.toLocaleString('es-AR'));
+  });
+
+  Logger.log('=== PREVIEW eliminarDuplicados ===');
+  Logger.log('Filas de Email que se borrarían (tienen su par en PDF): ' + r.aBorrar.length);
+  Logger.log('Monto total de esas filas: $' + Math.round(total).toLocaleString('es-AR'));
+  Logger.log(lineas.join('\n'));
+
+  if (r.otrosRepetidos.length > 0) {
+    Logger.log('\n=== Otros grupos repetidos (NO se tocan, revisar a mano) ===');
+    r.otrosRepetidos.forEach(function (g) {
+      Logger.log(g.clave + ' -> ' + g.items.length + ' filas, fuentes: ' +
+        g.items.map(function (it) { return it.row[idx['Fuente']]; }).join(', '));
+    });
+  }
+}
+
+/**
+ * Paso 2 (destructivo): borra las filas de Email identificadas por
+ * previsualizarDuplicados(). Correr SOLO después de revisar ese log.
+ */
+function eliminarDuplicados() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(TARJETAS_SHEET_NAME);
+  var r = encontrarDuplicadosEmailPDF_();
+  var idx = r.idx;
+
+  var total = 0;
+  r.aBorrar.forEach(function (it) { total += parseFloat(it.row[idx['Monto']]) || 0; });
+
+  var filas = r.aBorrar.map(function (it) { return it.fila; }).sort(function (a, b) { return b - a; });
+  filas.forEach(function (fila) { sheet.deleteRow(fila); });
+
+  Logger.log('Filas borradas: ' + filas.length + ' | Monto total removido: $' + Math.round(total).toLocaleString('es-AR'));
+}
+
 // Función propia (no la escribí yo): deja anotado en Nota de Tarjetas qué
 // medidor de EDENORDA47769858 corresponde a Mirta aunque haya quedado
 // cargado en la tarjeta de Eduardo por error. No tocar la lógica, solo se
