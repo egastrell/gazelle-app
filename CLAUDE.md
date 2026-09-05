@@ -350,14 +350,27 @@ del Sheet vía Google Drive, sin permiso de escritura).
   `(...,USD,...)` o por comercios conocidos (Claude, ChatGPT, Google One, Make.com)
   aunque la columna "Moneda" del Sheet todavía no exista.
 
-### Bug crítico confirmado: 113 filas duplicadas en el Sheet, $3.201.416 de más
+### Bug crítico confirmado: 241 filas duplicadas en el Sheet, $4.686.973 de más
+
+> **Corregido el 05/09/2026.** La cifra original de esta sección era "113 filas /
+> $3.201.416", calculada con una detección que comparaba el Comercio por igualdad
+> exacta. Verificado contra el historial completo: así se detectaban solo **5 de 243
+> pares reales**, porque el texto de Email y el de PDF no coinciden nunca al carácter
+> (el de email trae un espacio final — `"DIA TIENDA 5331 "` — y el PDF antepone el
+> adquirente — `"MERPAGO*MBONAERENSES"` vs `"MBONAERENSES"`). Normalizando y comparando
+> por contención, la cifra real es **241 pares / $4.686.973,45**.
 
 El pipeline carga cada gasto dos veces: una vez por el email en tiempo real (Fuente=Email,
 NroComprobante=0) y otra vez cuando se procesa el PDF del resumen (Fuente=PDF, comprobante
-real). Cuando ambas versiones coinciden en Fecha+Comercio+Monto+Signo, la de Email sobra.
-Confirmado con Eduardo: el PDF manda siempre, la de Email se borra.
-Afecta a TODO el historial, no solo un mes — ej. julio 2026 solo, el Sheet mostraba
-$4.892.721 contra $2.957.521 reales del PDF.
+real). Cuando ambas versiones coinciden en Fecha+Monto+Signo y el Comercio matchea
+normalizado, la de Email sobra. Confirmado con Eduardo: el PDF manda siempre, la de
+Email se borra. Afecta a TODO el historial, no solo un mes — ej. julio 2026 solo, el
+Sheet mostraba $4.892.721 contra $2.957.521 reales del PDF.
+
+**Causa raíz encontrada el 05/09/2026:** además del doble pipeline, `moverAProcesadas_`
+podía dejar el archivo en la carpeta original (Drive no garantiza el orden de
+`getParents()`), y el trigger lo reprocesaba cada 6 horas generando más duplicados.
+Corregido en `automation/apps_script/Codigo.gs`.
 
 ### Bug corregido (parcial): USUARIO mal asignado en tarjeta de Romina
 
@@ -399,226 +412,36 @@ julio y agosto 2026 (no solo el Sheet):
 Se le dio a Eduardo un guión de llamada con los datos exactos (cupones, montos,
 fechas) para reclamar ambos casos. Estado de la llamada: no confirmado en este chat.
 
-### Scripts listos para correr en la PC (Extensiones > Apps Script del Sheet)
+### Scripts de limpieza del Sheet — AHORA VIVEN EN EL REPO
 
-Todos apuntan al Sheet ID `15TzS_-VQazdA427n8S7H_FnPD5Fj0eDrRMuETIdNLgQ`, hoja "Tarjetas".
-Orden sugerido:
-1. `corregirTodo()` — aplica las reglas de categorización de la lista de arriba.
-2. `agregarColumnaMoneda()` — crea columna "Moneda" y la completa (ARS/USD), sin tocar montos.
-3. `ordenarPorFecha()` — reordena las 3599 filas por Fecha/Hora (hacer copia del Sheet antes).
+> **Actualizado el 05/09/2026.** Esta sección contenía una copia completa del código
+> de los scripts. Esa copia quedó OBSOLETA y con bugs confirmados, así que se
+> eliminó para que ninguna sesión futura la use como fuente. **La única fuente de
+> verdad es `automation/apps_script/Codigo.gs` en este repo.**
+>
+> Bugs que tenía la copia vieja y que ya están corregidos en el repo:
+> - `encontrarDuplicados_` comparaba Comercio por igualdad exacta → detectaba 5 de
+>   243 pares reales.
+> - El total de `previsualizarDuplicados()` usaba `String(monto).replace(/\./g,'')`,
+>   que sobre una celda numérica (8389.41) devuelve 838941 — **100x inflado**. Era el
+>   número con el que se decidía si borrar 241 filas.
+> - La clave de agrupación usaba valores crudos: un mismo gasto guardado como número
+>   en una fila y como texto `"8.389,41"` en otra nunca se detectaba como duplicado.
+>   (La columna Monto tiene 3.073 celdas numéricas y 526 de texto.)
+> - Sin guarda contra Comercio vacío: `"".indexOf('')` es 0, así que una fila en
+>   blanco matcheaba con cualquier otra del mismo día y monto, y se borraba un gasto real.
+
+Todos operan sobre el Sheet `15TzS_-VQazdA427n8S7H_FnPD5Fj0eDrRMuETIdNLgQ`, hoja
+"Tarjetas". Se corren desde Extensiones > Apps Script, en este orden:
+
+1. `corregirTodo()` — aplica las reglas de categorización de la lista de arriba (61 filas).
+2. `agregarColumnaMoneda()` — crea la columna "Moneda" y la completa (ARS/USD), sin tocar montos.
+3. `ordenarPorFecha()` — reordena las filas por Fecha ascendente.
 4. `previsualizarDuplicados()` — muestra en el log qué filas de Email se borrarían, sin borrar nada.
-5. `eliminarDuplicados()` — recién después de revisar el log del paso 4, borra esas filas
-   (hacer copia del Sheet antes — borra filas, no se deshace fácil).
+5. `eliminarDuplicados()` — recién después de revisar ese log.
 
-Estos scripts se compartieron como archivos en el chat, no están commiteados al repo
-(son operaciones sobre el Sheet, no sobre el código de la app). Código completo,
-por si se perdieron los archivos:
-
-```javascript
-// Pegar en Extensions > Apps Script del Sheet Gazelle (o crear proyecto nuevo en
-// script.google.com y pegar esto). Correr en este orden: corregirTodo() →
-// agregarColumnaMoneda() → ordenarPorFecha() → previsualizarDuplicados() (revisar
-// el log) → eliminarDuplicados(). Hacer copia del Sheet antes de ordenarPorFecha()
-// y de eliminarDuplicados() (reordenan/borran filas, no se deshace fácil).
-
-const SHEET_ID = '15TzS_-VQazdA427n8S7H_FnPD5Fj0eDrRMuETIdNLgQ';
-
-// Reglas: si Comercio CONTIENE el texto, se fuerza Categoria/Subcategoria.
-const REGLAS = [
-  { contiene: 'MERPAGO*MERCADOLIBRE', categoria: 'Compras Online', subcategoria: 'MercadoLibre' },
-  { contiene: 'MBONAERENSES',         categoria: 'Alimentación',   subcategoria: 'Supermercado' },
-  { contiene: 'DAMIANAELIZAB',        categoria: 'Salud',          subcategoria: 'Médico/Hospital' },
-  { contiene: 'FOGGIASHOW',           categoria: 'Entretenimiento',subcategoria: 'Salidas/Eventos' },
-  { contiene: 'MARIADELROSAR',        categoria: 'Hogar',          subcategoria: 'Decoración' },
-  { contiene: 'QUONDAM',              categoria: 'Educación',      subcategoria: 'Libros' },
-  { contiene: 'SIPAGO *FUNDACION',    categoria: 'Transporte',     subcategoria: 'Estacionamiento' },
-  { contiene: 'SIPAGO*FUNDACION',     categoria: 'Transporte',     subcategoria: 'Estacionamiento' },
-  { contiene: 'GRUPOPLANETA',         categoria: 'Educación',      subcategoria: 'Libros' },
-  { contiene: 'DLO*Gaelle',           categoria: 'Indumentaria',   subcategoria: 'Calzado' },
-  { contiene: 'DLO*DiDi',             categoria: 'Transporte',     subcategoria: 'Taxi/Remis' }
-];
-
-function corregirTodo() {
-  const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName('Tarjetas');
-  const data = sheet.getDataRange().getValues();
-  const header = data[0];
-  const colComercio = header.indexOf('Comercio');
-  const colCategoria = header.indexOf('Categoria');
-  const colSubcategoria = header.indexOf('Subcategoria');
-
-  let corregidas = 0;
-  let fallidas = [];
-
-  for (let i = 1; i < data.length; i++) {
-    const comercio = String(data[i][colComercio]);
-    const categoriaActual = String(data[i][colCategoria]).trim();
-    const subcategoriaActual = String(data[i][colSubcategoria]).trim();
-
-    const regla = REGLAS.find(r => comercio.indexOf(r.contiene) !== -1);
-    if (!regla) continue;
-
-    const yaEstaBien = categoriaActual === regla.categoria && subcategoriaActual === regla.subcategoria;
-    if (yaEstaBien) continue;
-
-    try {
-      sheet.getRange(i + 1, colCategoria + 1).setValue(regla.categoria);
-      SpreadsheetApp.flush();
-      sheet.getRange(i + 1, colSubcategoria + 1).setValue(regla.subcategoria);
-      SpreadsheetApp.flush();
-      corregidas++;
-    } catch (e) {
-      fallidas.push('Fila ' + (i + 1) + ' (' + comercio + '): ' + e.message);
-    }
-  }
-
-  Logger.log('Filas corregidas: ' + corregidas);
-  if (fallidas.length > 0) {
-    Logger.log('Filas que fallaron (revisar a mano):');
-    fallidas.forEach(f => Logger.log(f));
-  } else {
-    Logger.log('Ninguna fallo. Todo bien.');
-  }
-}
-
-// Crea la columna "Moneda" (si no existe) y la completa: USD para los gastos en dolares
-// (Claude, ChatGPT, Google One, Make.com, y cualquier fila con "(...,USD,...)" en el texto),
-// ARS para el resto. El Monto de esas filas NO se toca -- ya esta en la moneda correcta,
-// solo faltaba decir cual es.
-const MERCADERES_USD = ['GOOGLE *CLAUDE', 'GOOGLE *CHATGPT', 'GOOGLE *GOOGLE O', 'WWW.MAKE.COM'];
-
-function agregarColumnaMoneda() {
-  const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName('Tarjetas');
-  const data = sheet.getDataRange().getValues();
-  const header = data[0];
-
-  let colMoneda = header.indexOf('Moneda');
-  if (colMoneda === -1) {
-    colMoneda = header.length;
-    sheet.getRange(1, colMoneda + 1).setValue('Moneda');
-  }
-
-  const colComercio = header.indexOf('Comercio');
-  const colDescripcion = header.indexOf('DescripcionRaw');
-
-  let marcadasUsd = 0;
-  for (let i = 1; i < data.length; i++) {
-    const comercio = String(data[i][colComercio] || '').toUpperCase();
-    const descripcion = String(data[i][colDescripcion] || '').toUpperCase();
-    const esUsd = /,\s*USD\s*,/.test(comercio) || /,\s*USD\s*,/.test(descripcion) ||
-                  MERCADERES_USD.some(m => comercio.indexOf(m) !== -1);
-    const valorActual = String(data[i][colMoneda] || '').trim();
-    const valorNuevo = esUsd ? 'USD' : 'ARS';
-    if (valorActual !== valorNuevo) {
-      sheet.getRange(i + 1, colMoneda + 1).setValue(valorNuevo);
-      if (esUsd) marcadasUsd++;
-    }
-  }
-  SpreadsheetApp.flush();
-  Logger.log('Columna Moneda lista. Filas marcadas USD: ' + marcadasUsd);
-}
-
-// Ordena la hoja Tarjetas por Fecha (y Hora si existe), de mas vieja a mas nueva.
-function parseFechaDDMMYYYY(fechaStr, horaStr) {
-  const partes = String(fechaStr).trim().split('/');
-  if (partes.length !== 3) return new Date(0);
-  const [d, m, y] = partes.map(Number);
-  let hh = 0, mm = 0;
-  if (horaStr) {
-    const hp = String(horaStr).trim().split(':');
-    if (hp.length >= 2) { hh = Number(hp[0]) || 0; mm = Number(hp[1]) || 0; }
-  }
-  return new Date(y, m - 1, d, hh, mm);
-}
-
-function ordenarPorFecha() {
-  const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName('Tarjetas');
-  const range = sheet.getDataRange();
-  const data = range.getValues();
-  const header = data[0];
-  const colFecha = header.indexOf('Fecha');
-  const colHora = header.indexOf('Hora');
-
-  const filas = data.slice(1);
-  filas.sort((a, b) => {
-    const fa = parseFechaDDMMYYYY(a[colFecha], a[colHora]);
-    const fb = parseFechaDDMMYYYY(b[colFecha], b[colHora]);
-    return fa - fb; // mas vieja primero. Para invertir, cambiar a fb - fa.
-  });
-
-  const nuevaData = [header, ...filas];
-  range.setValues(nuevaData);
-  Logger.log('Ordenadas ' + filas.length + ' filas por Fecha/Hora.');
-}
-
-// ============================================================
-// DUPLICADOS Email vs PDF
-// ============================================================
-// Regla: el PDF es el resumen final de la tarjeta, siempre manda.
-// El email es el aviso previo -- si el mismo gasto (misma Fecha+Comercio+Monto+Signo)
-// aparece por Email Y por PDF, la fila de Email sobra y hay que borrarla.
-// PRIMERO correr previsualizarDuplicados() y mirar el log.
-// RECIEN DESPUES, si el log se ve bien, correr eliminarDuplicados().
-
-function encontrarDuplicados_(sheet) {
-  const data = sheet.getDataRange().getValues();
-  const header = data[0];
-  const colFecha = header.indexOf('Fecha');
-  const colComercio = header.indexOf('Comercio');
-  const colMonto = header.indexOf('Monto');
-  const colSigno = header.indexOf('Signo');
-  const colFuente = header.indexOf('Fuente');
-
-  const grupos = {};
-  for (let i = 1; i < data.length; i++) {
-    const clave = [data[i][colFecha], data[i][colComercio], data[i][colMonto], data[i][colSigno]].join('||');
-    if (!grupos[clave]) grupos[clave] = [];
-    grupos[clave].push(i); // indice dentro de "data" (0 = header, i = fila real i+1 en el Sheet)
-  }
-
-  const filasABorrar = []; // indices dentro de "data"
-  for (const clave in grupos) {
-    const indices = grupos[clave];
-    if (indices.length < 2) continue;
-    const email = indices.filter(idx => String(data[idx][colFuente]).trim() === 'Email');
-    const pdf = indices.filter(idx => String(data[idx][colFuente]).trim() === 'PDF');
-    if (email.length === 0 || pdf.length === 0) continue;
-    // Solo borramos hasta la cantidad que el PDF confirma. Si hay mas Email que PDF,
-    // dejamos el excedente de Email (podria ser un gasto real que el PDF todavia no proceso).
-    const aBorrar = Math.min(email.length, pdf.length);
-    for (let k = 0; k < aBorrar; k++) filasABorrar.push(email[k]);
-  }
-  return { data, header, colFecha, colComercio, colMonto, colSigno, filasABorrar };
-}
-
-function previsualizarDuplicados() {
-  const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName('Tarjetas');
-  const { data, colFecha, colComercio, colMonto, filasABorrar } = encontrarDuplicados_(sheet);
-
-  let total = 0;
-  Logger.log('=== FILAS DE EMAIL QUE SE BORRARIAN (' + filasABorrar.length + ') ===');
-  filasABorrar.sort((a, b) => a - b).forEach(idx => {
-    const fila = data[idx];
-    const monto = parseFloat(String(fila[colMonto]).replace(/\./g, '').replace(',', '.')) || 0;
-    total += monto;
-    Logger.log('Fila ' + (idx + 1) + ': ' + fila[colFecha] + ' | ' + fila[colComercio] + ' | ' + fila[colMonto]);
-  });
-  Logger.log('=== TOTAL a restar si se borran: ' + total.toFixed(2) + ' ===');
-  Logger.log('Si esta lista se ve bien, correr eliminarDuplicados().');
-}
-
-function eliminarDuplicados() {
-  const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName('Tarjetas');
-  const { filasABorrar } = encontrarDuplicados_(sheet);
-
-  // Borrar de abajo hacia arriba para no correr los indices de las filas que faltan borrar.
-  const filasOrdenadas = filasABorrar.slice().sort((a, b) => b - a);
-  filasOrdenadas.forEach(idx => {
-    sheet.deleteRow(idx + 1); // +1 porque data[idx] corresponde a la fila (idx+1) del Sheet
-  });
-  SpreadsheetApp.flush();
-  Logger.log('Filas borradas: ' + filasABorrar.length);
-}
-```
+**Hacer una copia del Sheet antes del paso 5** (Archivo > Hacer una copia): es lo único
+irreversible de la lista.
 
 ### Pendiente de Eduardo (no ejecutable por Claude sin PC/teléfono)
 
@@ -628,3 +451,78 @@ function eliminarDuplicados() {
 - Llamar al banco por el fraude ($10,88 + $92,57 sin resolver).
 - Migrar débito Municipalidad Morón, dar de baja Gas Mirta (llamadas telefónicas).
 - Presupuesto de Walter para el techo de la galería en Santa Anita.
+
+---
+
+## Sesión 05/09/2026 — Auditoría completa y principio de frescura de datos
+
+Se auditó todo el sistema con tres pasadas en paralelo (Apps Script, matemática de
+index.html, y consistencia entre fuentes). Se encontraron ~20 errores y **todos, sin
+excepción, empujaban en la misma dirección: mostrar más margen de gasto del real.**
+
+### El hallazgo de fondo: la app no sabía qué tan viejo era su propio dato
+
+La hoja MercadoPago no tenía un movimiento nuevo desde el **30/04/2026** (128 días), y
+como el gasto diario del Núcleo va por reservas de MP, la app igual mostraba
+"Alimentación: $0 gastado, podés gastar $44.667/día". El número era falso y parecía
+confiable. Eso explica el síntoma que Eduardo venía reportando: el excedente nunca se
+transferí­a porque "hubo gastos en el medio" — el sistema autorizaba gasto fantasma.
+
+**Regla nueva, permanente: todo dato viaja con su edad, y si supera los 7 días el
+sistema dice que no sabe en vez de estimar.** Implementado en index.html (banner +
+estado por fuente + el ritmo por categoría se reemplaza por el aviso) y en Codigo.gs
+(manda un mail de "faltan datos" en vez de números, como mucho una vez por semana).
+No romper esto: es lo único que hace que la guía diaria sea confiable.
+
+### Correcciones aplicadas (ver commit ac556f8)
+
+- El motor de ritmo sumaba solo Tarjetas; ahora suma **Tarjetas + MercadoPago**.
+- La columna Monto tiene **3.073 celdas numéricas y 526 de texto** ("8.389,41").
+  `parseFloat` devolvía 8,389 — mil veces menos. Se parsea con formato argentino.
+- **`Familia='Padres'` no se leía en ningún lado**, pese a estar mandado en este
+  archivo: 197 filas y $4.009.227 históricos de Mirta y Alfredo se contaban como gasto
+  del Núcleo ($2,3M solo en Servicios). Ya se excluye en las dos fuentes.
+- Ciclo y días a medianoche + excepción de cierre de junio 2026: el script informaba
+  2 días de más que la app y el jueves de cierre saltaba de ciclo antes.
+- El ritmo semanal se topea con lo que queda del techo.
+- Se eliminó `calcularSaldoTarjeta()`/`renderDeuda()`: restaban pagos al consumo
+  histórico completo, daban $10M y $45M de deuda inexistente y pisaban la tarjeta del
+  fondo BS3 (escribían en los mismos ids y corrían después de `renderMiPlan()`).
+
+### Los techos están inflados y hay que recalibrarlos
+
+`TECHOS_BS3` se calibró con "promedio real Marzo-Junio 2026". Esa ventana está
+**inflada 17% por los duplicados** ($3.673.741 de $21.577.332) y además incluye
+$478.607 de gastos de los padres. Los techos reales deberían rondar los **$2.692.000**
+en vez de $3.150.000: unos **$458.000/mes de permiso de gasto que nunca existió**.
+
+**No recalibrar hasta haber corrido la limpieza** (`corregirTodo` → `agregarColumnaMoneda`
+→ `ordenarPorFecha` → `previsualizarDuplicados` → `eliminarDuplicados`).
+
+### CONTRADICCIONES SIN RESOLVER — no elegir una sin preguntarle a Eduardo
+
+1. **Ingreso.** Este archivo dice neto $5.112.000 y que el diezmo es 10% del **bruto**.
+   El Sheet tiene `ingreso_mes_actual = 4.917.837,60`, derivado de dividir el diezmo de
+   agosto por 0,10 — o sea un número bruto usado por la app como plata gastable. Los dos
+   no pueden ser correctos. Peor: la derivación es **circular** (el diezmo sale del
+   ingreso y el ingreso se recalcula del diezmo) y **amplifica ×10** cualquier error de
+   OCR. Lo correcto sería cargar el neto del recibo y derivar el diezmo de ahí, nunca al
+   revés. **Pendiente de que Eduardo confirme su neto real de bolsillo.**
+2. **Techos por categoría.** La tabla "Presupuesto base" de este archivo y `TECHOS_BS3`
+   en el código difieren hasta en $230.000 por categoría (desviación acumulada $940.000);
+   los totales cierran solo por compensación de errores.
+3. **Meta BS3.** Acá dice ~$9.390.000, el Sheet tiene 9.000.000.
+4. **Fondo BS3.** Acá dice US$3.652, el Sheet tiene 3.997,49.
+
+**Fuente única de verdad acordada: el Sheet (hoja Config para parámetros, Tarjetas
+deduplicada para hechos).** Este archivo debe quedar como metodología sin cifras; el
+código no debería tener números hardcodeados. Mientras eso no se haga, cualquier
+sesión que lea cifras de acá puede estar trabajando con datos contradictorios.
+
+### Lo que falta para que la guía diaria funcione de verdad
+
+El código ya es honesto, pero hoy dice "no sé" porque MercadoPago no tiene datos.
+`procesar_mp_csv.py` es manual y por eso no pasa. **Camino propuesto: extender el
+escenario de Make.com (que ya parsea los mails de consumo de la tarjeta cada 15
+minutos) a los mails de MercadoPago.** Misma infraestructura, ya paga, y daría el
+gasto diario en near-real-time sin intervención de Eduardo.
