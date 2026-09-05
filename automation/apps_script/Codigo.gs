@@ -204,10 +204,19 @@ function procesarTransferencia_(texto, file, tarjetasSheet, logSheet, pendientes
     return null; // se deja en la carpeta para revisar a mano
   }
 
+  // ORDEN IMPORTANTE: primero se busca un beneficiario conocido, y recién
+  // después se evalúa si es transferencia interna. Al revés, un comprobante de
+  // diezmo que imprima "GASTRELL EDUARDO FRANCO" dos veces (ordenante + titular
+  // de la cuenta, habitual en BNA+ y MP) matcheaba la heurística del nombre
+  // repetido, se guardaba como transferencia interna, quedaba fuera del
+  // presupuesto Y nunca corría actualizarIngresoDesdeDiezmo_: el ingreso se
+  // congelaba en el mes anterior sin ningún aviso.
+  var beneficiario = identificarBeneficiarioTransferencia_(texto);
+
   // Transferencia entre cuentas propias (ej. de Banco Nación a Mercado Pago
   // antes de mandar el diezmo): no es un gasto real, se registra excluida
   // del presupuesto (misma categoría que ya usa la app, "Transferencia Interna").
-  if (esTransferenciaInterna_(texto)) {
+  if (!beneficiario && esTransferenciaInterna_(texto)) {
     var cuentaInterna = extraerCuentaBanco_(texto);
     tarjetasSheet.appendRow([
       fecha || '', cuentaInterna, 'Transferencia', extraerNroOperacion_(texto),
@@ -221,7 +230,6 @@ function procesarTransferencia_(texto, file, tarjetasSheet, logSheet, pendientes
     return null;
   }
 
-  var beneficiario = identificarBeneficiarioTransferencia_(texto);
   if (!beneficiario) {
     pendientesSheet.appendRow([new Date(), 'transferencia_sin_clasificar', monto, fecha, file.getName(), file.getUrl()]);
     registrarLog_(logSheet, 'transferencia_sin_clasificar', originante, 'pendiente_confirmacion', null, monto, fecha, file.getName());
@@ -505,9 +513,20 @@ function obtenerOCrearSubcarpeta_(folder, nombre) {
   return it.hasNext() ? it.next() : folder.createFolder(nombre);
 }
 
+// Drive no garantiza el orden de getParents(). El código anterior hacía
+// addFile() y después getParents().next().removeFile(): si el primer padre que
+// devolvía era "Procesadas", sacaba el archivo de ahí y lo dejaba en la carpeta
+// original — a las 6 horas el trigger lo reprocesaba y volvía a cargar el mismo
+// diezmo. Esa es la causa de los duplicados que limpiarDuplicadosDiezmo() venía
+// borrando a mano. Ahora se saca explícitamente de todo padre que no sea el destino.
 function moverAProcesadas_(file, procesadasFolder) {
+  var destinoId = procesadasFolder.getId();
   procesadasFolder.addFile(file);
-  file.getParents().next().removeFile(file); // saca de la carpeta original (idempotencia)
+  var padres = file.getParents();
+  while (padres.hasNext()) {
+    var padre = padres.next();
+    if (padre.getId() !== destinoId) padre.removeFile(file);
+  }
 }
 
 function registrarLog_(logSheet, proveedor, titular, estado, anterior, nuevo, fechaOVencimiento, archivo) {
@@ -688,7 +707,27 @@ var CATS_EXCLUIDAS_RITMO = ['Pago Tarjeta', 'Banco', 'Transferencia Interna', 'D
 
 var RITMO_SHEET_NAME = 'Ritmo_Semanal';
 
-// Segundo jueves-anteúltimo del mes: mismo criterio que usa la app (index.html,
+var MP_SHEET_NAME = 'MercadoPago';
+
+// Categorías de la hoja MercadoPago que cuentan como gasto presupuestable
+// (espejo de MP_CATS_GASTO en index.html).
+var MP_CATS_GASTO_RITMO = ['Alimentación', 'Salud', 'Servicios', 'Educación', 'Vehículo',
+  'Comida Fuera', 'Entretenimiento', 'Indumentaria', 'Transporte', 'Compras Online', 'Hogar', 'Otros'];
+
+// La app corrigió a mano el cierre de junio 2026 (index.html, EXCEPCIONES_CIERRE).
+// Si el script no conoce la excepción, ese mes difiere una semana entera.
+var EXCEPCIONES_CIERRE_ = { '2026-06-18': '2026-06-25' };
+
+// Más de DIAS_DATO_CONFIABLE sin un movimiento nuevo en una fuente = no se
+// puede guiar el gasto diario con eso. La hoja MercadoPago estuvo 128 días
+// sin datos y el ritmo igual salía con números lindos y falsos.
+var DIAS_DATO_CONFIABLE = 7;
+
+function aISO_(d) {
+  return Utilities.formatDate(d, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+}
+
+// Anteúltimo jueves del mes: mismo criterio que usa la app (index.html,
 // anteultimoJueves) para cerrar los ciclos mensuales de presupuesto.
 function anteultimoJueves_(year, month) {
   var jueves = [];
@@ -697,11 +736,23 @@ function anteultimoJueves_(year, month) {
     if (d.getDay() === 4) jueves.push(new Date(d));
     d.setDate(d.getDate() + 1);
   }
-  return jueves[jueves.length - 2];
+  var fin = jueves[jueves.length - 2];
+  var iso = aISO_(fin);
+  if (EXCEPCIONES_CIERRE_[iso]) {
+    var p = EXCEPCIONES_CIERRE_[iso].split('-');
+    fin = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
+  }
+  fin.setHours(0, 0, 0, 0);
+  return fin;
 }
 
+// IMPORTANTE: todo se compara a medianoche, igual que detectarCicloActual() en
+// index.html. Antes 'fin' quedaba en 23:59:59 y 'hoy' traía la hora del trigger
+// (7am), así que el jueves de cierre el script saltaba al ciclo siguiente y
+// mandaba un mail diciendo "en ritmo, techos enteros disponibles" mientras la
+// app seguía —bien— en el ciclo que estaba cerrando.
 function obtenerCicloActual_() {
-  var hoy = new Date();
+  var hoy = new Date(); hoy.setHours(0, 0, 0, 0);
   var y = hoy.getFullYear(), m = hoy.getMonth() + 1;
   var mesAnt = m - 1, yAnt = y; if (mesAnt < 1) { mesAnt = 12; yAnt = y - 1; }
   var mesSig = m + 1, ySig = y; if (mesSig > 12) { mesSig = 1; ySig = y + 1; }
@@ -724,68 +775,135 @@ function obtenerCicloActual_() {
     fin = finMesAnterior;
   }
   inicio.setHours(0, 0, 0, 0);
-  fin.setHours(23, 59, 59, 999);
-  return { inicio: inicio, fin: fin };
+  fin.setHours(0, 0, 0, 0);
+  return { inicio: inicio, fin: fin, hoy: hoy };
 }
 
 function parsearFechaCelda_(valor) {
-  if (valor instanceof Date) return valor;
-  var m = String(valor).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (!m) return null;
-  return new Date(parseInt(m[3], 10), parseInt(m[2], 10) - 1, parseInt(m[1], 10));
+  if (valor instanceof Date) { var d = new Date(valor); d.setHours(0, 0, 0, 0); return d; }
+  var s = String(valor || '').trim();
+  var m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if (m) {
+    var anio = parseInt(m[3], 10); if (anio < 100) anio += 2000;
+    return new Date(anio, parseInt(m[2], 10) - 1, parseInt(m[1], 10));
+  }
+  var iso = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (iso) return new Date(parseInt(iso[1], 10), parseInt(iso[2], 10) - 1, parseInt(iso[3], 10));
+  return null;
 }
 
-// Gasto real por categoría dentro del ciclo, replicando exactamente la
-// lógica de gastosReales() en index.html: excluye a SEGOVIA/ALFREDO
-// (Padres), excluye categorías no presupuestables, cuotas se dividen solo
-// si la fila no vino de un resumen en PDF, y solo cuenta Signo='S' (egreso).
-function calcularGastoPorCategoria_(tarjetasSheet, inicio, fin) {
-  var data = tarjetasSheet.getDataRange().getValues();
-  var headers = data[0];
-  var idx = {};
-  headers.forEach(function (h, i) { idx[h] = i; });
+// La columna Monto tiene tipos mezclados: 3.073 celdas numéricas y 526 de
+// texto en formato argentino ("8.389,41"). parseFloat("8.389,41") devuelve
+// 8,389 —mil veces menos—, así que esas 526 filas entraban al presupuesto
+// casi en cero. Mismo criterio de limpieza que usa index.html (línea ~835).
+function parsearMontoCelda_(valor) {
+  if (typeof valor === 'number') return valor;
+  var s = String(valor || '').replace(/\$/g, '').trim();
+  if (!s) return NaN;
+  if (/,\d{1,2}$/.test(s)) s = s.replace(/\./g, '').replace(',', '.'); // 8.389,41
+  else s = s.replace(/,/g, '');                                       // 8389.41 / 8389
+  return parseFloat(s);
+}
+
+function esDeLosPadres_(usuario, familia) {
+  var u = String(usuario || '');
+  if (u.indexOf('SEGOVIA') !== -1 || u.indexOf('ALFREDO') !== -1) return true;
+  // CLAUDE.md manda excluir por Familia='Padres', pero ningún código lo leía:
+  // 197 filas ($4.009.227 histórico, $2,3M solo en Servicios) se contaban como
+  // gasto del Núcleo. Caso típico: el medidor de Mirta debitado en la tarjeta
+  // de Eduardo, donde USUARIO dice Eduardo y Familia dice Padres.
+  return String(familia || '').trim() === 'Padres';
+}
+
+// Gasto real por categoría en el ciclo, sumando las DOS fuentes: Tarjetas y
+// MercadoPago. Antes leía solo Tarjetas, y como el gasto diario del Núcleo va
+// por reservas de MP, Alimentación siempre daba ~$0 y el mail autorizaba a
+// gastar plata ya gastada.
+function calcularGastoPorCategoria_(inicio, fin) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
   var totales = {};
+  var suma = function (cat, monto) { totales[cat] = (totales[cat] || 0) + monto; };
 
-  for (var i = 1; i < data.length; i++) {
-    var row = data[i];
-    if (!row[0]) continue;
-    var usuario = String(row[idx['USUARIO']] || '');
-    if (usuario.indexOf('SEGOVIA') !== -1 || usuario.indexOf('ALFREDO') !== -1) continue;
+  // --- Tarjetas ---
+  var tarjetas = ss.getSheetByName(TARJETAS_SHEET_NAME);
+  var ultimaTC = null;
+  if (tarjetas) {
+    var data = tarjetas.getDataRange().getValues();
+    var idx = {}; data[0].forEach(function (h, i) { idx[h] = i; });
+    for (var i = 1; i < data.length; i++) {
+      var row = data[i];
+      if (!row[0]) continue;
+      var fecha = parsearFechaCelda_(row[idx['Fecha']]);
+      if (fecha && (!ultimaTC || fecha > ultimaTC)) ultimaTC = fecha;
 
-    var cat = String(row[idx['Categoria']] || 'Otros').trim();
-    if (CATS_EXCLUIDAS_RITMO.indexOf(cat) !== -1) continue;
+      if (esDeLosPadres_(row[idx['USUARIO']], row[idx['Familia']])) continue;
+      var cat = String(row[idx['Categoria']] || 'Otros').trim();
+      if (CATS_EXCLUIDAS_RITMO.indexOf(cat) !== -1) continue;
+      // Los gastos en USD se llevan aparte en la app (gastosUSD); sumarlos
+      // como pesos acá era mezclar unidades.
+      if (idx['Moneda'] !== undefined && String(row[idx['Moneda']] || '').trim().toUpperCase() === 'USD') continue;
+      if (!fecha || fecha < inicio || fecha > fin) continue;
 
-    var fecha = parsearFechaCelda_(row[idx['Fecha']]);
-    if (!fecha || fecha < inicio || fecha > fin) continue;
-
-    var montoRaw = parseFloat(row[idx['Monto']]);
-    if (isNaN(montoRaw)) continue;
-    var signo = String(row[idx['Signo']] || 'S');
-    var fuente = String(row[idx['Fuente']] || '');
-    var numCuotas = 1;
-    if (fuente !== 'PDF') {
-      var cr = parseFloat(row[idx['Cuotas']]);
-      if (!isNaN(cr) && cr > 0) numCuotas = Math.max(cr, 1);
+      var montoRaw = parsearMontoCelda_(row[idx['Monto']]);
+      if (isNaN(montoRaw)) continue;
+      var signo = String(row[idx['Signo']] || 'S');
+      var numCuotas = 1;
+      if (String(row[idx['Fuente']] || '') !== 'PDF') {
+        var cr = parsearMontoCelda_(row[idx['Cuotas']]);
+        if (!isNaN(cr) && cr > 0) numCuotas = Math.max(cr, 1);
+      }
+      var monto = signo === 'E' ? -montoRaw : montoRaw / numCuotas;
+      if (monto <= 0) continue;
+      suma(cat, monto);
     }
-    var monto = signo === 'E' ? -montoRaw : montoRaw / numCuotas;
-    if (monto <= 0) continue;
-
-    totales[cat] = (totales[cat] || 0) + monto;
   }
-  return totales;
+
+  // --- MercadoPago (egresos: monto negativo) ---
+  var mp = ss.getSheetByName(MP_SHEET_NAME);
+  var ultimaMP = null;
+  if (mp) {
+    var dataMP = mp.getDataRange().getValues();
+    var idxMP = {}; dataMP[0].forEach(function (h, i) { idxMP[h] = i; });
+    for (var j = 1; j < dataMP.length; j++) {
+      var rowMP = dataMP[j];
+      if (!rowMP[0]) continue;
+      var fMP = parsearFechaCelda_(rowMP[idxMP['Fecha']]);
+      if (fMP && (!ultimaMP || fMP > ultimaMP)) ultimaMP = fMP;
+
+      if (esDeLosPadres_('', rowMP[idxMP['Familia']])) continue;
+      var catMP = String(rowMP[idxMP['Categoria']] || '').trim();
+      if (MP_CATS_GASTO_RITMO.indexOf(catMP) === -1) continue;
+      if (CATS_EXCLUIDAS_RITMO.indexOf(catMP) !== -1) continue;
+      if (!fMP || fMP < inicio || fMP > fin) continue;
+
+      var montoMP = parsearMontoCelda_(rowMP[idxMP['Monto']]);
+      if (isNaN(montoMP) || montoMP >= 0) continue; // solo egresos
+      suma(catMP, Math.abs(montoMP));
+    }
+  }
+
+  return { totales: totales, ultimaTC: ultimaTC, ultimaMP: ultimaMP };
 }
 
 function calcularRitmoSemanal_() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var tarjetasSheet = ss.getSheetByName(TARJETAS_SHEET_NAME);
   var ciclo = obtenerCicloActual_();
-  var gastado = calcularGastoPorCategoria_(tarjetasSheet, ciclo.inicio, ciclo.fin);
+  var g = calcularGastoPorCategoria_(ciclo.inicio, ciclo.fin);
+  var gastado = g.totales;
 
-  var hoy = new Date();
-  var diasRestantes = Math.max(Math.ceil((ciclo.fin - hoy) / 86400000) + 1, 0);
+  // Días a medianoche, igual que actualizarCicloUI() en index.html: antes
+  // 'fin' estaba a las 23:59:59 y 'hoy' con hora, y el mail informaba 2 días
+  // más de los que mostraba la app.
+  var diasRestantes = Math.max(Math.ceil((ciclo.fin - ciclo.hoy) / 86400000) + 1, 0);
   var diasTotales = Math.max(Math.ceil((ciclo.fin - ciclo.inicio) / 86400000) + 1, 1);
-  var diasTranscurridos = diasTotales - diasRestantes;
-  var pctTiempo = diasTranscurridos / diasTotales;
+  var pctTiempo = (diasTotales - diasRestantes) / diasTotales;
+
+  var diasTC = g.ultimaTC ? Math.floor((ciclo.hoy - g.ultimaTC) / 86400000) : null;
+  var diasMP = g.ultimaMP ? Math.floor((ciclo.hoy - g.ultimaMP) / 86400000) : null;
+  var frescura = {
+    tc: { fecha: g.ultimaTC, dias: diasTC, vencido: diasTC === null || diasTC > DIAS_DATO_CONFIABLE },
+    mp: { fecha: g.ultimaMP, dias: diasMP, vencido: diasMP === null || diasMP > DIAS_DATO_CONFIABLE }
+  };
+  var confiable = !frescura.tc.vencido && !frescura.mp.vencido;
 
   var resultado = [];
   Object.keys(TECHOS_BS3).forEach(function (cat) {
@@ -793,16 +911,24 @@ function calcularRitmoSemanal_() {
     var real = gastado[cat] || 0;
     var restante = Math.max(techo - real, 0);
     var ritmoDiario = diasRestantes > 0 ? restante / diasRestantes : restante;
-    var ritmoSemanal = ritmoDiario * 7;
     var pctGastado = techo > 0 ? real / techo : 0;
-    var riesgo = real >= techo ? 'agotado' : (pctGastado - pctTiempo > 0.15 ? 'riesgo' : 'ok');
     resultado.push({
       categoria: cat, techo: techo, gastado: real, restante: restante,
-      diasRestantes: diasRestantes, ritmoDiario: ritmoDiario, ritmoSemanal: ritmoSemanal,
-      pctGastado: pctGastado, pctTiempo: pctTiempo, riesgo: riesgo
+      diasRestantes: diasRestantes, ritmoDiario: ritmoDiario,
+      // El semanal nunca puede superar lo que queda del techo.
+      ritmoSemanal: Math.min(ritmoDiario * 7, restante),
+      pctGastado: pctGastado, pctTiempo: pctTiempo,
+      riesgo: real >= techo ? 'agotado' : (pctGastado - pctTiempo > 0.15 ? 'riesgo' : 'ok')
     });
   });
-  return { ciclo: ciclo, items: resultado };
+  return { ciclo: ciclo, items: resultado, frescura: frescura, confiable: confiable };
+}
+
+function textoFrescura_(f) {
+  if (f.dias === null) return 'sin datos nunca';
+  return 'hace ' + f.dias + ' día' + (f.dias === 1 ? '' : 's') +
+    ' (último: ' + Utilities.formatDate(f.fecha, Session.getScriptTimeZone(), 'dd/MM/yyyy') + ')' +
+    (f.vencido ? ' ⚠️ VENCIDO' : '');
 }
 
 function escribirHojaRitmoSemanal_(reporte) {
@@ -810,12 +936,26 @@ function escribirHojaRitmoSemanal_(reporte) {
   var sheet = ss.getSheetByName(RITMO_SHEET_NAME);
   if (!sheet) sheet = ss.insertSheet(RITMO_SHEET_NAME);
   sheet.clear();
+
+  // La frescura va ARRIBA de todo: si los datos están vencidos, cualquier
+  // número de abajo subestima lo gastado y hay que saberlo antes de leerlo.
+  sheet.appendRow(['Actualizado', new Date(), '', '', '', '', '', '', '', '']);
+  sheet.appendRow(['Datos tarjeta', textoFrescura_(reporte.frescura.tc), '', '', '', '', '', '', '', '']);
+  sheet.appendRow(['Datos MercadoPago', textoFrescura_(reporte.frescura.mp), '', '', '', '', '', '', '', '']);
+  sheet.appendRow([reporte.confiable ? '✅ Datos al día: el ritmo de abajo sirve para decidir gastos de hoy'
+    : '⚠️ DATOS VENCIDOS: lo gastado real es MAYOR que lo que figura abajo. No usar para decidir un gasto de hoy.',
+    '', '', '', '', '', '', '', '', '']);
+  sheet.appendRow(['', '', '', '', '', '', '', '', '', '']);
+
   sheet.appendRow(['Categoría', 'Techo mensual', 'Gastado en el ciclo', 'Restante', 'Días restantes', 'Ritmo diario sugerido', 'Ritmo semanal sugerido', 'Estado', 'Ciclo desde', 'Ciclo hasta']);
   reporte.items.forEach(function (it) {
     sheet.appendRow([
       it.categoria, it.techo, Math.round(it.gastado * 100) / 100, Math.round(it.restante * 100) / 100,
-      it.diasRestantes, Math.round(it.ritmoDiario), Math.round(it.ritmoSemanal),
-      it.riesgo === 'agotado' ? '🚫 Techo alcanzado' : it.riesgo === 'riesgo' ? '⚠️ Por encima del ritmo' : '✅ En ritmo',
+      it.diasRestantes,
+      reporte.confiable ? Math.round(it.ritmoDiario) : 'sin dato confiable',
+      reporte.confiable ? Math.round(it.ritmoSemanal) : 'sin dato confiable',
+      !reporte.confiable ? '⚠️ Datos vencidos' :
+        it.riesgo === 'agotado' ? '🚫 Techo alcanzado' : it.riesgo === 'riesgo' ? '⚠️ Por encima del ritmo' : '✅ En ritmo',
       reporte.ciclo.inicio, reporte.ciclo.fin
     ]);
   });
@@ -839,6 +979,34 @@ function actualizarRitmoSemanal() {
 
   var esLunes = new Date().getDay() === 1;
   var enRiesgo = reporte.items.filter(function (it) { return it.riesgo !== 'ok'; });
+
+  // Datos vencidos: NO se manda un ritmo inventado. Se avisa qué falta, y como
+  // mucho una vez por semana (la hoja MercadoPago estuvo 128 días parada; un
+  // mail por día durante 128 días no es un aviso, es ruido que se ignora).
+  if (!reporte.confiable) {
+    var props = PropertiesService.getScriptProperties();
+    var ultimoAviso = props.getProperty('ultimo_aviso_datos_vencidos');
+    var hoyISO = aISO_(new Date());
+    if (ultimoAviso) {
+      var diff = (new Date(hoyISO) - new Date(ultimoAviso)) / 86400000;
+      if (diff < 7) return;
+    }
+    var faltan = [];
+    if (reporte.frescura.tc.vencido) faltan.push('  - Tarjeta: ' + textoFrescura_(reporte.frescura.tc));
+    if (reporte.frescura.mp.vencido) faltan.push('  - MercadoPago: ' + textoFrescura_(reporte.frescura.mp));
+    MailApp.sendEmail(EMAIL_NOTIFICACIONES,
+      'Gazelle: no puedo calcular el ritmo — faltan datos',
+      'No te mando números de ritmo porque estarían mal: el gasto que falta cargar YA se hizo,\n' +
+      'así que lo gastado real es mayor que lo que figura en el Sheet.\n\n' +
+      'Fuentes desactualizadas:\n' + faltan.join('\n') + '\n\n' +
+      'Mientras tanto, el saldo de cada reserva de MercadoPago en tu celular SÍ está al día:\n' +
+      'esa es la fuente confiable para decidir un gasto de hoy.\n\n' +
+      'Para volver a tener ritmo automático hay que cargar los movimientos que faltan.\n' +
+      '(Este aviso se repite como mucho una vez por semana.)');
+    props.setProperty('ultimo_aviso_datos_vencidos', hoyISO);
+    return;
+  }
+  PropertiesService.getScriptProperties().deleteProperty('ultimo_aviso_datos_vencidos');
 
   if (!esLunes && enRiesgo.length === 0) return; // nada urgente y no toca el resumen semanal
 
@@ -1054,9 +1222,20 @@ function encontrarDuplicados_(sheet) {
   var colSigno = header.indexOf('Signo');
   var colFuente = header.indexOf('Fuente');
 
+  // La clave se arma con valores NORMALIZADOS. Si se usan los crudos, una
+  // misma fecha guardada como Date en una fila y como texto "03/09/2026" en
+  // otra —o un monto numérico contra el mismo monto como texto "8.389,41"—
+  // generan claves distintas y el duplicado real nunca se detecta: creerías
+  // que limpiaste y no. La columna Monto tiene 3.073 números y 526 textos.
   var grupos = {};
   for (var i = 1; i < data.length; i++) {
-    var clave = [data[i][colFecha], data[i][colMonto], data[i][colSigno]].join('||');
+    var fNorm = parsearFechaCelda_(data[i][colFecha]);
+    var mNorm = parsearMontoCelda_(data[i][colMonto]);
+    var clave = [
+      fNorm ? aISO_(fNorm) : String(data[i][colFecha]),
+      isNaN(mNorm) ? String(data[i][colMonto]) : mNorm.toFixed(2),
+      String(data[i][colSigno] || '').trim()
+    ].join('||');
     if (!grupos[clave]) grupos[clave] = [];
     grupos[clave].push(i); // índice dentro de "data" (0 = header, i = fila real i+1 en el Sheet)
   }
@@ -1076,6 +1255,10 @@ function encontrarDuplicados_(sheet) {
       var match = null;
       for (var j = 0; j < pdfDisponibles.length; j++) {
         var cand = pdfDisponibles[j];
+        // Guarda contra el comercio vacío: "".indexOf('') es 0, así que sin
+        // este chequeo una fila con Comercio en blanco matchearía con
+        // CUALQUIER otra del mismo día y monto, y se borraría un gasto real.
+        if (!cand.n || !nEmail) { if (cand.n === nEmail) { match = j; break; } continue; }
         if (cand.n === nEmail || nEmail.indexOf(cand.n) !== -1 || cand.n.indexOf(nEmail) !== -1) { match = j; break; }
       }
       if (match !== null) {
@@ -1108,7 +1291,11 @@ function previsualizarDuplicados() {
   Logger.log('=== FILAS DE EMAIL QUE SE BORRARÍAN (' + filasABorrar.length + ') ===');
   filasABorrar.slice().sort(function (a, b) { return a - b; }).forEach(function (idx) {
     var fila = data[idx];
-    var monto = parseFloat(String(fila[colMonto]).replace(/\./g, '').replace(',', '.')) || 0;
+    // OJO: acá antes se hacía String(monto).replace(/\./g,''), que sobre una
+    // celda numérica (8389.41) borra el punto decimal y devuelve 838941 —100x—.
+    // El total del preview salía inflado y era el número con el que se decidía
+    // si borrar 241 filas. Se usa el parser que respeta ambos tipos.
+    var monto = parsearMontoCelda_(fila[colMonto]) || 0;
     total += monto;
     Logger.log('Fila ' + (idx + 1) + ': ' + fila[colFecha] + ' | ' + fila[colComercio] + ' | ' + fila[colMonto]);
   });

@@ -414,6 +414,7 @@ body { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
     <div class="disp-sub" id="disponibleSub">sincronizando...</div>
     <div class="disp-msg" id="judgeMsg">Conectando con Google Sheets...</div>
   </div>
+  <div class="hormigas-card" id="frescuraBanner" style="display:none;border-left:4px solid var(--red)"></div>
   <div class="hormigas-card" id="usdCard" style="display:none">
     <div class="hormiga-label">💵 Gastos en dólares del ciclo (no se mezclan con los pesos)</div>
     <div class="hormiga-total" id="usdTotal">US$0</div>
@@ -473,14 +474,14 @@ body { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
   <div class="deuda-card">
     <div class="deuda-header"><div class="deuda-label">💰 Fondo de Emergencia BS3</div><div class="deuda-pct" style="background:var(--blue-light);color:var(--blue)" id="deudaPct">Construyendo</div></div>
     <div class="deuda-amounts">
-      <div class="deuda-amount-box"><div class="deuda-amount-num" style="color:var(--blue)" id="deudaActual">$5.118.000</div><div class="deuda-amount-lbl">Fondo actual (USD 3.643)</div></div>
+      <div class="deuda-amount-box"><div class="deuda-amount-num" style="color:var(--blue)" id="deudaActual">—</div><div class="deuda-amount-lbl" id="deudaActualLbl">Fondo actual</div></div>
       <div class="deuda-amount-box" style="text-align:center"><div style="font-size:28px">🏦</div><div class="deuda-amount-lbl">Meta</div></div>
-      <div class="deuda-amount-box" style="text-align:right"><div class="deuda-amount-num green" id="deudaPagado">$9.000.000</div><div class="deuda-amount-lbl">Mínimo BS3</div></div>
+      <div class="deuda-amount-box" style="text-align:right"><div class="deuda-amount-num green" id="deudaPagado">—</div><div class="deuda-amount-lbl">Mínimo BS3</div></div>
     </div>
     <div class="deuda-bar-track"><div class="deuda-bar-fill" id="deudaBar" style="width:0%"></div></div>
     <div class="deuda-items">
-      <div class="deuda-item"><div class="deuda-item-name">💳 Visa Galicia</div><div class="deuda-item-amount" style="color:var(--red)" id="deudaVisaAmt">—</div><div class="deuda-item-sub">🔥 Atacar primero</div></div>
-      <div class="deuda-item"><div class="deuda-item-name">💳 Mastercard BNA</div><div class="deuda-item-amount" style="color:var(--red)" id="deudaMasterAmt">—</div><div class="deuda-item-sub">⏳ Mínimo por ahora</div></div>
+      <div class="deuda-item"><div class="deuda-item-name">💳 Datos tarjeta</div><div class="deuda-item-amount" id="frescuraTC">—</div><div class="deuda-item-sub" id="frescuraTCSub">—</div></div>
+      <div class="deuda-item"><div class="deuda-item-name">🔵 Datos MercadoPago</div><div class="deuda-item-amount" id="frescuraMP">—</div><div class="deuda-item-sub" id="frescuraMPSub">—</div></div>
     </div>
   </div>
   <div class="card">
@@ -693,19 +694,16 @@ let cotizaciones = {oficial:null,blue:null,mep:null};
 
 function getParaTarjetas(){ return parseInt(localStorage.getItem('gazelle_para_tarjetas')||'0'); }
 
-// Cálculo automático del saldo pendiente de cada tarjeta: suma de consumos (histórico completo,
-// Núcleo únicamente) MENOS suma de pagos registrados con Categoria='Pago Tarjeta', agrupado por
-// cuenta (Visa/Mastercard). Reemplaza la entrada manual anterior (localStorage gazelle_deuda_visa/master).
-function calcularSaldoTarjeta(keyword){
-  const kw=keyword.toLowerCase();
-  const matchCuenta=g=>(g.cuenta&&g.cuenta.toLowerCase().includes(kw));
-  const consumos=todosLosGastos.filter(g=>matchCuenta(g)).reduce((s,g)=>s+g.monto,0);
-  const pagos=pagosTarjeta.filter(g=>matchCuenta(g)).reduce((s,g)=>s+Math.abs(g.monto),0);
-  return Math.max(Math.round(consumos-pagos),0);
-}
-function getDeudaVisa(){   return calcularSaldoTarjeta('visa'); }
-function getDeudaMaster(){ return calcularSaldoTarjeta('mastercard'); }
-const DEUDA_INICIAL=3592872;
+// NOTA (auditoría 05/09/2026): acá había calcularSaldoTarjeta(), que restaba
+// los pagos registrados al consumo histórico COMPLETO (dos años) para estimar
+// la deuda de cada tarjeta. Eso no es un saldo: si falta un solo pago viejo en
+// el historial, el residuo se acumula para siempre. Daba $10M en Visa y $45M en
+// Mastercard, y como renderDeuda() corría DESPUÉS de renderMiPlan() y escribía
+// en los mismos ids, esos $55M inventados pisaban la tarjeta del fondo BS3.
+// Se eliminó junto con renderDeuda(): la deuda revolving no existe más (BS2
+// cerrado en mayo 2026, la tarjeta se paga FULL cada ciclo). Lo que sí importa
+// —cuánto va a venir en el próximo resumen— ya lo calcula renderPagar() sobre
+// el ciclo en curso.
 
 let presupuesto = {
   "Alimentación":{icon:"🛒",limite:TECHOS_BS3['Alimentación']},
@@ -985,7 +983,63 @@ INSTRUCCIONES:
   }
 }
 
-function renderAll(){renderResumen();renderMiPlan();renderResumenPersonas();renderDeuda();renderPagar();renderCategorias();renderProhibidos();renderTxn();renderPresupuesto();renderRamsey()}
+function renderAll(){renderFrescura();renderResumen();renderMiPlan();renderResumenPersonas();renderPagar();renderCategorias();renderProhibidos();renderTxn();renderPresupuesto();renderRamsey()}
+
+// ---------------------------------------------------------------------------
+// FRESCURA DE DATOS
+// El gasto diario del Núcleo pasa por reservas de MercadoPago, y esos datos
+// entran al Sheet solo cuando se corre el import a mano. En septiembre 2026 la
+// hoja MercadoPago llevaba 128 días sin un movimiento nuevo y la app igual
+// mostraba "Alimentación: $0 gastado, podés gastar $44.667/día". El número era
+// falso y parecía confiable. Regla nueva: todo dato viaja con su edad, y
+// cuando está vencido la app dice que no sabe en vez de adivinar.
+// ---------------------------------------------------------------------------
+const DIAS_DATO_CONFIABLE=7; // más viejo que esto no sirve para guiar el día a día
+
+function ultimaFechaDe(lista){
+  return lista.reduce((max,g)=>(g.fechaDate&&(!max||g.fechaDate>max))?g.fechaDate:max,null);
+}
+function diasDesde(f){ return f?Math.floor((new Date()-f)/864e5):null; }
+
+function frescuraDatos(){
+  const fTC=ultimaFechaDe(todosLosGastos), fMP=ultimaFechaDe(todosLosMP);
+  const dTC=diasDesde(fTC), dMP=diasDesde(fMP);
+  return {
+    tc:{fecha:fTC,dias:dTC,vencido:dTC===null||dTC>DIAS_DATO_CONFIABLE},
+    mp:{fecha:fMP,dias:dMP,vencido:dMP===null||dMP>DIAS_DATO_CONFIABLE}
+  };
+}
+// ¿Se puede guiar el gasto del día con lo que hay cargado? Solo si ambas
+// fuentes están al día: falta cualquiera de las dos y el "cuánto me queda"
+// está incompleto por definición.
+function puedeGuiarDiario(){
+  const f=frescuraDatos();
+  return !f.tc.vencido&&!f.mp.vencido;
+}
+const fFecha=f=>f?f.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'}):'sin datos';
+
+function renderFrescura(){
+  const f=frescuraDatos();
+  const pintar=(idAmt,idSub,d)=>{
+    const a=document.getElementById(idAmt),s=document.getElementById(idSub);
+    if(!a||!s)return;
+    a.textContent=d.dias===null?'sin datos':d.dias===0?'hoy':d.dias===1?'ayer':'hace '+d.dias+' días';
+    a.style.color=d.vencido?'var(--red)':'var(--green)';
+    s.textContent=d.dias===null?'nunca se cargó':'último: '+fFecha(d.fecha);
+  };
+  pintar('frescuraTC','frescuraTCSub',f.tc);
+  pintar('frescuraMP','frescuraMPSub',f.mp);
+
+  const banner=document.getElementById('frescuraBanner');
+  if(!banner)return;
+  const vencidas=[];
+  if(f.tc.vencido)vencidas.push('tarjeta ('+(f.tc.dias===null?'sin datos':f.tc.dias+' días')+')');
+  if(f.mp.vencido)vencidas.push('MercadoPago ('+(f.mp.dias===null?'sin datos':f.mp.dias+' días')+')');
+  if(vencidas.length===0){ banner.style.display='none'; return; }
+  banner.style.display='';
+  banner.innerHTML=`<div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:4px">⚠️ Datos desactualizados: ${vencidas.join(' · ')}</div>`+
+    `<div style="font-size:11px;color:var(--muted)">Los totales de abajo NO incluyen lo que gastaste desde esa fecha. No los uses para decidir un gasto de hoy — el saldo real de cada reserva de MercadoPago sí está al día en tu celular.</div>`;
+}
 
 function gastosReales(lista){return lista.filter(g=>!CATS_EXCLUIDAS.has(g.cat)&&g.monto>0&&g.moneda!=='USD')}
 function gastosUSD(lista){return lista.filter(g=>!CATS_EXCLUIDAS.has(g.cat)&&g.monto>0&&g.moneda==='USD').sort((a,b)=>(b.fechaDate||0)-(a.fechaDate||0))}
@@ -1073,6 +1127,8 @@ function renderMiPlan(){
   if(elPct){elPct.textContent=Math.round(pct)+'% del objetivo';elPct.style.background='var(--blue-light)';elPct.style.color='var(--blue)'}
   const elActual=document.getElementById('deudaActual');
   if(elActual){elActual.textContent=fp(fondoPesos);elActual.style.color='var(--blue)'}
+  const elActualLbl=document.getElementById('deudaActualLbl');
+  if(elActualLbl)elActualLbl.textContent='Fondo actual (USD '+fondoUsd.toLocaleString('es-AR')+')';
   const elPagado=document.getElementById('deudaPagado');
   if(elPagado)elPagado.textContent=fp(metaBS3);
   const elBar=document.getElementById('deudaBar');
@@ -1096,36 +1152,6 @@ function renderMiPlan(){
       <div style="font-size:11px;color:var(--muted);margin-top:4px">${excedente>0?'Agregar ~'+fp(excedente)+'/mes del excedente':'⚠️ Sin excedente este mes'}${meses>0?' · '+meses+' meses para BS3':''}</div>
     </div>`;
   }
-}
-
-function renderDeuda(){
-  const visa=getDeudaVisa();const master=getDeudaMaster();
-  const enBS3=(visa===0&&master===0);
-  if(enBS3){
-    const cot=getCotizacionUsada();
-    const fondoUsd=configSheet.fondo_bs3_usd||3643;
-    const fondoPesos=Math.round(fondoUsd*cot);
-    const metaBS3=configSheet.meta_bs3_minimo||9000000;
-    const pctBS3=Math.min((fondoPesos/metaBS3)*100,100);
-    const elPct=document.getElementById('deudaPct');
-    if(elPct){elPct.textContent=Math.round(pctBS3)+'% del objetivo'}
-    const elActual=document.getElementById('deudaActual');
-    if(elActual){elActual.textContent=fp(fondoPesos);elActual.style.color='var(--blue)'}
-    const elPagado=document.getElementById('deudaPagado');
-    if(elPagado)elPagado.textContent=fp(metaBS3);
-    const elBar=document.getElementById('deudaBar');
-    if(elBar)setTimeout(()=>{elBar.style.width=pctBS3+'%'},50);
-    const elVisa=document.getElementById('deudaVisaAmt');const elMaster=document.getElementById('deudaMasterAmt');
-    if(elVisa)elVisa.textContent='$0';if(elMaster)elMaster.textContent='$0';
-    return;
-  }
-  const total=visa+master;const pagado=Math.max(DEUDA_INICIAL-total,0);const pct=Math.min((pagado/DEUDA_INICIAL)*100,100);
-  const elPct=document.getElementById('deudaPct');if(elPct)elPct.textContent=Math.round(pct)+'% pagado';
-  const elActual=document.getElementById('deudaActual');if(elActual)elActual.textContent=fp(total);
-  const elPagado=document.getElementById('deudaPagado');if(elPagado)elPagado.textContent=fp(pagado);
-  const elBar=document.getElementById('deudaBar');if(elBar)setTimeout(()=>{elBar.style.width=pct+'%'},50);
-  const elVisa=document.getElementById('deudaVisaAmt');const elMaster=document.getElementById('deudaMasterAmt');
-  if(elVisa)elVisa.textContent=fp(visa);if(elMaster)elMaster.textContent=fp(master);
 }
 
 function renderPagar(){
@@ -1179,8 +1205,16 @@ function renderCategorias(){
     const restante=Math.max(cfg.limite-gastado,0);
     const diasRest=diasRestantesCiclo();
     const ritmoDiario=diasRest>0?restante/diasRest:restante;
-    const ritmoSemanal=ritmoDiario*7;
-    const ritmoHtml=cat==='Diezmo'?'':gastado>=cfg.limite
+    // El semanal nunca puede superar lo que queda: con 2 días y $60.000 de
+    // margen, "$210.000/semana" es una autorización de gasto que no existe.
+    const ritmoSemanal=Math.min(ritmoDiario*7,restante);
+    const fD=frescuraDatos();
+    const fuenteVencida=fD.mp.vencido?'MercadoPago':fD.tc.vencido?'la tarjeta':null;
+    const ritmoHtml=cat==='Diezmo'?''
+      // Sin datos frescos no se puede decir cuánto queda: el gasto que falta
+      // cargar ya se hizo. Antes que un número lindo y falso, la verdad.
+      :fuenteVencida?`<div style="font-size:10px;color:var(--red);margin-top:3px">⚠️ Sin datos de ${fuenteVencida} desde el ${fFecha(fuenteVencida==='MercadoPago'?fD.mp.fecha:fD.tc.fecha)} — lo gastado real es mayor que ${fp(gastado)}, no puedo darte un ritmo</div>`
+      :gastado>=cfg.limite
       ?'<div style="font-size:10px;color:var(--red);font-weight:600;margin-top:3px">⚠️ Techo alcanzado — evitar más gastos en lo que queda del ciclo</div>'
       :diasRest>0?`<div style="font-size:10px;color:var(--muted);margin-top:3px">Ritmo para llegar holgado: <b style="color:var(--text)">${fp(ritmoDiario)}/día</b> · ${fp(ritmoSemanal)}/semana</div>`:'';
     div.innerHTML=`<div class="cat-header"><div class="cat-name">${cfg.icon} ${cat}</div><div class="cat-amounts"><div class="cat-spent" style="color:${pct>=80?'var(--red)':pct>=60?'var(--yellow)':'var(--text)'}">${fp(gastado)}</div><div class="cat-limit">de ${fp(cfg.limite)}</div></div></div><div class="cat-bar-track"><div class="cat-bar-fill ${cl}" style="width:0%" data-pct="${pct}"></div></div>${ritmoHtml}<div class="cat-detalle" id="det-${idCat}">${subcatHtml}</div>`;
