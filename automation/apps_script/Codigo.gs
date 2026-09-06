@@ -1133,6 +1133,39 @@ var REGLAS_CATEGORIA_ = [
   { contiene: 'DLO*DiDi', categoria: 'Transporte', subcategoria: 'Taxi/Remis' }
 ];
 
+// Subcategorías válidas de cada categoría (espejo de la taxonomía de CLAUDE.md).
+// La hoja tiene la lista desplegable GRABADA FIJA en cada celda de Subcategoria,
+// con las opciones de la categoría que la fila tenía cuando se creó — no se
+// recalcula sola al cambiar la Categoria. Por eso, al recategorizar una fila hay
+// que reemplazar también la validación de la celda, o el valor nuevo se rechaza.
+var SUBCATEGORIAS_ = {
+  'Alimentación': ['Supermercado', 'Panadería', 'Almacén/Kiosko', 'Carnicería', 'Verdulería'],
+  'Salud': ['Farmacia', 'Medicina Prepaga', 'Médico/Hospital', 'Odontología', 'Óptica', 'Cuidado Personal'],
+  'Servicios': ['Electricidad', 'Gas', 'Agua', 'Internet/Cable', 'Teléfono Móvil', 'Municipalidad', 'ARBA', 'Seguro'],
+  'Educación': ['Colegio', 'Útiles/Material', 'Curso/Capacitación', 'Libros'],
+  'Vehículo': ['Combustible', 'Mantenimiento', 'Seguro Automotor', 'Repuestos'],
+  'Comida Fuera': ['Restaurante', 'Fast Food', 'Cafetería', 'Delivery', 'Heladería'],
+  'Entretenimiento': ['Streaming', 'Videojuegos', 'Cine/Teatro', 'Salidas/Eventos', 'Juguetes'],
+  'Indumentaria': ['Ropa Adultos', 'Ropa Niños', 'Calzado', 'Accesorios'],
+  'Transporte': ['Transporte Público', 'Subte/SUBE', 'Taxi/Remis', 'Estacionamiento', 'Peaje'],
+  'Compras Online': ['MercadoLibre', 'Tecnología', 'Shein/Temu', 'Otros Online'],
+  'Hogar': ['Ferretería', 'Materiales', 'Electrodomésticos', 'Decoración'],
+  'Banco': ['Cargo', 'Comisión', 'Bonificación', 'Devolución', 'Ajuste'],
+  'Pago Tarjeta': ['Pago Tarjeta'],
+  'Otros': ['Pendiente identificar']
+};
+
+// Deja la celda de Subcategoria con la lista desplegable que corresponde a la
+// categoría nueva. Si la categoría no está en la taxonomía, se saca la
+// validación en vez de inventar una lista.
+function ajustarValidacionSubcategoria_(celda, categoria) {
+  var opciones = SUBCATEGORIAS_[categoria];
+  if (!opciones) { celda.clearDataValidations(); return; }
+  celda.setDataValidation(
+    SpreadsheetApp.newDataValidation().requireValueInList(opciones, true).setAllowInvalid(false).build()
+  );
+}
+
 function corregirTodo() {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(TARJETAS_SHEET_NAME);
   var data = sheet.getDataRange().getValues();
@@ -1161,8 +1194,9 @@ function corregirTodo() {
     // try/catch, con lo que ni siquiera queda anotado en qué fila falló.
     try {
       sheet.getRange(i + 1, colCategoria + 1).setValue(regla.categoria);
-      SpreadsheetApp.flush();
-      sheet.getRange(i + 1, colSubcategoria + 1).setValue(regla.subcategoria);
+      var celdaSub = sheet.getRange(i + 1, colSubcategoria + 1);
+      ajustarValidacionSubcategoria_(celdaSub, regla.categoria);
+      celdaSub.setValue(regla.subcategoria);
       SpreadsheetApp.flush();
       corregidas++;
     } catch (e) {
