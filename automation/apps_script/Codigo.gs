@@ -1072,7 +1072,11 @@ function configurarTriggerRitmo() {
 // moneda: comercios que siempre son USD, o "USD" mencionado entre comas
 // en Comercio/DescripcionRaw. El Monto de esas filas NO se toca — ya
 // está en la moneda correcta, solo faltaba decir cuál es.
-var MERCADERES_USD_ = ['GOOGLE *CLAUDE', 'GOOGLE *CHATGPT', 'GOOGLE *GOOGLE O', 'WWW.MAKE.COM'];
+// OJO: acá NO escribir la dirección completa con "WWW." adelante. Cuando el
+// archivo se copia y pega a través de un chat, el texto se convierte solo en un
+// link de markdown y la cadena queda rota. Con el dominio a secas alcanza:
+// indexOf() igual lo encuentra dentro del comercio completo.
+var MERCADERES_USD_ = ['GOOGLE *CLAUDE', 'GOOGLE *CHATGPT', 'GOOGLE *GOOGLE O', 'MAKE.COM'];
 
 /**
  * Utilidad de una sola vez (pero idempotente: se puede correr de nuevo

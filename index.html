@@ -827,7 +827,7 @@ async function fetchSheet(){
       const subcat=String(get('Subcategoria')||'').trim();
       const signo=String(get('Signo')||'S');
       const monedaCol=get('Moneda').trim().toUpperCase();
-      const MERCADERES_USD=['GOOGLE *CLAUDE','GOOGLE *CHATGPT','GOOGLE *GOOGLE O','WWW.MAKE.COM'];
+      const MERCADERES_USD=['GOOGLE *CLAUDE','GOOGLE *CHATGPT','GOOGLE *GOOGLE O','MAKE.COM'];
       const comercioUpper=comercio.toUpperCase();
       const monedaDetectada=/,\s*USD\s*,/i.test(comercio)||/,\s*USD\s*,/i.test(get('DescripcionRaw'))||MERCADERES_USD.some(m=>comercioUpper.includes(m))?'USD':'';
       const moneda=monedaCol||monedaDetectada||'ARS';
