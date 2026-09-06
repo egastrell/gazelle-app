@@ -1153,12 +1153,20 @@ function corregirTodo() {
     if (!regla) continue;
     if (categoriaActual === regla.categoria && subcategoriaActual === regla.subcategoria) continue;
 
+    // El flush() entre las dos escrituras NO es opcional: la columna
+    // Subcategoria tiene una lista desplegable que depende de la Categoria de
+    // la misma fila. Sin forzar el guardado, Apps Script agrupa las escrituras
+    // y la validación evalúa la subcategoría nueva contra la categoría VIEJA,
+    // la rechaza, y el error salta al final de la ejecución — fuera de este
+    // try/catch, con lo que ni siquiera queda anotado en qué fila falló.
     try {
       sheet.getRange(i + 1, colCategoria + 1).setValue(regla.categoria);
+      SpreadsheetApp.flush();
       sheet.getRange(i + 1, colSubcategoria + 1).setValue(regla.subcategoria);
+      SpreadsheetApp.flush();
       corregidas++;
     } catch (e) {
-      fallidas.push('Fila ' + (i + 1) + ' (' + comercio + '): ' + e.message);
+      fallidas.push('Fila ' + (i + 1) + ' | ' + comercio + ' -> ' + regla.categoria + ' / ' + regla.subcategoria + ' | ' + e.message);
     }
   }
 
