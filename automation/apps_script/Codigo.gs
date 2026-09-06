@@ -1192,12 +1192,26 @@ function corregirTodo() {
     // y la validación evalúa la subcategoría nueva contra la categoría VIEJA,
     // la rechaza, y el error salta al final de la ejecución — fuera de este
     // try/catch, con lo que ni siquiera queda anotado en qué fila falló.
+    // Secuencia a prueba del orden interno de Sheets: primero se SACA la lista
+    // vieja y se fuerza el guardado (si no, la escritura se sigue validando
+    // contra la lista anterior), después se escribe el valor sin nada que lo
+    // bloquee, y recién al final se le pone a la celda la lista que
+    // corresponde a la categoría nueva. Cada paso con su flush: las
+    // escrituras de Apps Script son diferidas y ese fue el error de las dos
+    // corridas anteriores.
     try {
       sheet.getRange(i + 1, colCategoria + 1).setValue(regla.categoria);
       var celdaSub = sheet.getRange(i + 1, colSubcategoria + 1);
-      ajustarValidacionSubcategoria_(celdaSub, regla.categoria);
+
+      celdaSub.clearDataValidations();
+      SpreadsheetApp.flush();
+
       celdaSub.setValue(regla.subcategoria);
       SpreadsheetApp.flush();
+
+      ajustarValidacionSubcategoria_(celdaSub, regla.categoria);
+      SpreadsheetApp.flush();
+
       corregidas++;
     } catch (e) {
       fallidas.push('Fila ' + (i + 1) + ' | ' + comercio + ' -> ' + regla.categoria + ' / ' + regla.subcategoria + ' | ' + e.message);
