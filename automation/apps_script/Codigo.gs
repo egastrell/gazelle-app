@@ -1231,26 +1231,27 @@ function corregirTodo() {
  * previsualizarDuplicados_/eliminarDuplicados, no cambia ningún dato,
  * solo el orden de las filas.
  */
+// Se usa el ordenamiento NATIVO de Sheets, no leer-ordenar-reescribir.
+// Motivo: la columna Subcategoria tiene la lista desplegable grabada fija en
+// cada celda. Al reescribir las filas ordenadas con setValues(), cada celda
+// recibe el valor de OTRA fila pero conserva la lista de la que estaba antes,
+// y la escritura se rechaza (corrida del 06/09: falló en J19, que esperaba
+// subcategorías de Alimentación). El sort nativo mueve cada celda con su
+// validación y su formato puestos, así que el problema no existe — y además
+// no reescribe 3.600 filas.
 function ordenarPorFecha() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName(TARJETAS_SHEET_NAME);
-  var range = sheet.getDataRange();
-  var data = range.getValues();
-  var headers = data[0];
-  var idxFecha = headers.indexOf('Fecha');
-  var filas = data.slice(1);
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(TARJETAS_SHEET_NAME);
+  var ultimaCol = sheet.getLastColumn();
+  var headers = sheet.getRange(1, 1, 1, ultimaCol).getValues()[0];
+  var colFecha = headers.indexOf('Fecha');
+  if (colFecha === -1) { Logger.log('No se encontró la columna Fecha.'); return; }
 
-  filas.sort(function (a, b) {
-    var fa = parsearFechaCelda_(a[idxFecha]);
-    var fb = parsearFechaCelda_(b[idxFecha]);
-    if (!fa && !fb) return 0;
-    if (!fa) return 1;
-    if (!fb) return -1;
-    return fa - fb;
-  });
+  var filas = sheet.getLastRow() - 1; // sin el encabezado
+  if (filas < 2) { Logger.log('No hay filas suficientes para ordenar.'); return; }
 
-  if (filas.length > 0) sheet.getRange(2, 1, filas.length, headers.length).setValues(filas);
-  Logger.log('Reordenadas ' + filas.length + ' filas por Fecha ascendente.');
+  sheet.getRange(2, 1, filas, ultimaCol).sort({ column: colFecha + 1, ascending: true });
+  SpreadsheetApp.flush();
+  Logger.log('Reordenadas ' + filas + ' filas por Fecha ascendente. Las filas sin fecha quedan al final.');
 }
 
 // Regla: el PDF es el resumen final de la tarjeta, siempre manda. El
