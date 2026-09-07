@@ -233,6 +233,21 @@ body { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
 .persona-bar-fill { height:100%; border-radius:10px; transition:width .8s; }
 .persona-detalle { margin-top:12px; border-top:1px solid var(--border); padding-top:10px; max-height:160px; overflow-y:auto; display:none; }
 .persona-detalle-item { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid var(--border); font-size:11px; }
+/* ALIMENTACIÓN — RITMO SEMANAL (giro semanal de la reserva de MP) */
+.alim-card { background:var(--white); border-radius:var(--radius); padding:18px; margin-bottom:14px; box-shadow:var(--shadow-sm); border-left:4px solid var(--green); }
+.alim-head { display:flex; justify-content:space-between; align-items:baseline; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+.alim-title { font-size:12px; font-weight:800; color:var(--text); }
+.alim-giro { font-size:10px; color:var(--muted); font-family:'Space Mono',monospace; }
+.alim-dia { font-size:38px; font-weight:800; font-family:'Space Mono',monospace; line-height:1; }
+.alim-dia-lbl { font-size:11px; color:var(--muted); font-weight:600; margin-top:2px; }
+.alim-bar-track { height:6px; background:var(--border); border-radius:6px; margin:12px 0 8px; overflow:hidden; }
+.alim-bar-fill { height:100%; border-radius:6px; width:0%; transition:width .4s; }
+.alim-sub { font-size:11px; color:var(--text); line-height:1.5; }
+.alim-inputs { display:flex; gap:8px; margin-top:10px; }
+.alim-inputs input { flex:1; min-width:0; border:1px solid var(--border); border-radius:10px; padding:10px 12px; font-size:14px; font-family:inherit; color:var(--text); background:var(--bg); }
+.alim-inputs button { border:0; border-radius:10px; padding:10px 14px; font-size:12px; font-weight:700; color:#fff; background:var(--green); cursor:pointer; white-space:nowrap; }
+.alim-inputs button.alt { background:var(--muted); }
+.alim-foot { font-size:10px; color:var(--muted); margin-top:10px; line-height:1.5; }
 .hormigas-card { background:var(--orange-light); border:1px solid rgba(255,140,66,0.2); border-radius:var(--radius); padding:18px; margin-bottom:14px; }
 .hormiga-total { font-size:32px; font-weight:800; color:var(--orange); font-family:'Space Mono',monospace; }
 .hormiga-label { font-size:11px; color:var(--orange); font-weight:600; margin-bottom:6px; }
@@ -415,6 +430,31 @@ body { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
     <div class="disp-msg" id="judgeMsg">Conectando con Google Sheets...</div>
   </div>
   <div class="hormigas-card" id="frescuraBanner" style="display:none;border-left:4px solid var(--red)"></div>
+
+  <!-- ALIMENTACIÓN — RITMO SEMANAL -->
+  <!-- La reserva se gira una vez por semana. El saldo del sobre en MP es el
+       único dato en tiempo real (el Sheet llega tarde), así que el motor
+       arranca de ahí y no del historial. -->
+  <div class="alim-card" id="alimCard">
+    <div class="alim-head">
+      <div class="alim-title">🛒 Alimentación — esta semana</div>
+      <div class="alim-giro" id="alimGiro">—</div>
+    </div>
+    <div class="alim-dia" id="alimDia">—</div>
+    <div class="alim-dia-lbl">podés gastar hoy</div>
+    <div class="alim-bar-track"><div class="alim-bar-fill" id="alimBar"></div></div>
+    <div class="alim-sub" id="alimSub">—</div>
+    <div class="alim-inputs">
+      <input type="text" inputmode="decimal" id="alimSaldoInput" placeholder="Saldo del sobre en MP">
+      <button onclick="guardarSaldoAlim()">Actualizar</button>
+    </div>
+    <div class="alim-inputs">
+      <input type="text" inputmode="decimal" id="alimGastoInput" placeholder="Registrar un gasto">
+      <button class="alt" onclick="restarGastoAlim()">Restar</button>
+    </div>
+    <div class="alim-foot" id="alimFoot"></div>
+  </div>
+
   <div class="hormigas-card" id="usdCard" style="display:none">
     <div class="hormiga-label">💵 Gastos en dólares del ciclo (no se mezclan con los pesos)</div>
     <div class="hormiga-total" id="usdTotal">US$0</div>
@@ -675,8 +715,12 @@ const DOLAR_API_BASE='https://dolarapi.com/v1/dolares';
 // Techos recalibrados 13/07/2026 con promedio real de los últimos 4 ciclos cerrados
 // (Marzo-Junio 2026, datos de tarjeta Núcleo, +5% de margen, redondeado a la decena de mil).
 // PENDIENTE: sumar datos de MercadoPago (hoja MP no accesible vía este método) para el número definitivo.
+// Alimentación (05→07/09/2026): el techo de $670.000 salía de datos de TARJETA
+// solamente, y la comida ya no pasa por la tarjeta: va entera por reservas de
+// MercadoPago. Ahora el techo es lo que efectivamente se gira: $210.000 por
+// semana ($30.000/día) × 52 / 12 = $910.000 por mes.
 const TECHOS_BS3 = {
-  'Alimentación':670000,'Salud':550000,'Servicios':380000,'Educación':420000,
+  'Alimentación':910000,'Salud':550000,'Servicios':380000,'Educación':420000,
   'Vehículo':320000,'Comida Fuera':170000,'Entretenimiento':100000,'Indumentaria':150000,
   'Transporte':80000,'Compras Online':130000,'Hogar':40000,'Otros':140000,
 };
@@ -983,7 +1027,7 @@ INSTRUCCIONES:
   }
 }
 
-function renderAll(){renderFrescura();renderResumen();renderMiPlan();renderResumenPersonas();renderPagar();renderCategorias();renderProhibidos();renderTxn();renderPresupuesto();renderRamsey()}
+function renderAll(){renderFrescura();renderAlimentacion();renderResumen();renderMiPlan();renderResumenPersonas();renderPagar();renderCategorias();renderProhibidos();renderTxn();renderPresupuesto();renderRamsey()}
 
 // ---------------------------------------------------------------------------
 // FRESCURA DE DATOS
@@ -1039,6 +1083,100 @@ function renderFrescura(){
   banner.style.display='';
   banner.innerHTML=`<div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:4px">⚠️ Datos desactualizados: ${vencidas.join(' · ')}</div>`+
     `<div style="font-size:11px;color:var(--muted)">Los totales de abajo NO incluyen lo que gastaste desde esa fecha. No los uses para decidir un gasto de hoy — el saldo real de cada reserva de MercadoPago sí está al día en tu celular.</div>`;
+}
+
+// ---------------------------------------------------------------------------
+// ALIMENTACIÓN — RITMO SEMANAL
+// La reserva de Alimentación se gira una vez por semana ($210.000 los lunes) y
+// no de una vez por mes: si el mes entero está en el sobre, el sobre se gasta.
+// El motor NO usa el Sheet: la hoja MercadoPago llega con días de atraso, y un
+// "te quedan $30.000/día" calculado sobre gasto viejo es peor que no decir nada.
+// El único dato en tiempo real es el saldo del sobre que se ve en el celular,
+// así que ese es el input, y de ahí sale todo: saldo ÷ días hasta el próximo
+// giro. Se guarda con su fecha; si el saldo cargado ya tiene un día, lo avisa.
+// ---------------------------------------------------------------------------
+const ALIM_SEMANAL_DEF=210000, ALIM_DIA_GIRO_DEF=1; // 1 = lunes
+const DIAS_ES=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+
+function alimCfg(){return{
+  semanal:parseFloat(localStorage.getItem('gazelle_alim_semanal'))||ALIM_SEMANAL_DEF,
+  diaGiro:(localStorage.getItem('gazelle_alim_dia_giro')!==null?parseInt(localStorage.getItem('gazelle_alim_dia_giro')):ALIM_DIA_GIRO_DEF)
+}}
+function alimSaldo(){
+  const v=localStorage.getItem('gazelle_alim_saldo');
+  if(v===null)return null;
+  const f=localStorage.getItem('gazelle_alim_saldo_fecha');
+  return{monto:parseFloat(v),fecha:f?new Date(f):null};
+}
+function guardarAlimSaldo_(monto){
+  localStorage.setItem('gazelle_alim_saldo',Math.max(0,monto));
+  localStorage.setItem('gazelle_alim_saldo_fecha',new Date().toISOString());
+  renderAlimentacion();
+}
+// Próximo giro: el siguiente día-de-giro. Si hoy ES el día de giro, la semana
+// que arranca hoy se cierra dentro de 7 días (no dentro de 0).
+function proximoGiroAlim(){
+  const hoy=new Date();hoy.setHours(0,0,0,0);
+  let d=(alimCfg().diaGiro-hoy.getDay()+7)%7; if(d===0)d=7;
+  const p=new Date(hoy);p.setDate(p.getDate()+d);return p;
+}
+function diasHastaGiroAlim(){const hoy=new Date();hoy.setHours(0,0,0,0);return Math.round((proximoGiroAlim()-hoy)/864e5)}
+
+// Formato argentino escrito a mano: "184.500" son ciento ochenta y cuatro mil,
+// no 184,5. Con coma presente el punto es separador de miles; sin coma, un
+// punto seguido de exactamente 3 dígitos también lo es.
+function parseMontoAr(s){
+  if(s===null||s===undefined)return NaN;
+  let t=String(s).replace(/[^0-9.,]/g,'');
+  if(t==='')return NaN;
+  if(t.indexOf(',')>-1)t=t.replace(/\./g,'').replace(',','.');
+  else if(/\.\d{3}(\.\d{3})*$/.test(t))t=t.replace(/\./g,'');
+  return parseFloat(t);
+}
+function guardarSaldoAlim(){
+  const el=document.getElementById('alimSaldoInput'),v=parseMontoAr(el.value);
+  if(isNaN(v)||v<0){mostrarAlert('⚠️','Monto inválido','Escribí el saldo del sobre tal como lo ves en MercadoPago, por ejemplo 184.500');return}
+  el.value='';guardarAlimSaldo_(v);
+}
+function restarGastoAlim(){
+  const el=document.getElementById('alimGastoInput'),v=parseMontoAr(el.value),s=alimSaldo();
+  if(isNaN(v)||v<=0){mostrarAlert('⚠️','Monto inválido','Escribí cuánto gastaste, por ejemplo 12.400');return}
+  if(!s){mostrarAlert('⚠️','Falta el saldo','Primero cargá el saldo del sobre de Alimentación que ves en MercadoPago.');return}
+  el.value='';guardarAlimSaldo_(s.monto-v);
+}
+
+function renderAlimentacion(){
+  const gEl=document.getElementById('alimGiro');if(!gEl)return;
+  const cfg=alimCfg(),s=alimSaldo(),dias=diasHastaGiroAlim(),ref=cfg.semanal/7,p=proximoGiroAlim();
+  gEl.textContent='Giro '+fp(cfg.semanal)+' · próximo '+DIAS_ES[cfg.diaGiro]+' '+p.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'});
+
+  const dEl=document.getElementById('alimDia'),bEl=document.getElementById('alimBar'),
+        subEl=document.getElementById('alimSub'),footEl=document.getElementById('alimFoot');
+
+  if(!s){
+    dEl.textContent=fp(ref);dEl.style.color='var(--muted)';
+    bEl.style.width='0%';bEl.style.background='var(--muted)';
+    subEl.innerHTML='Ese es el ritmo de referencia. Cargá el saldo del sobre que ves en MercadoPago y te digo el número real de hoy.';
+    footEl.innerHTML='Referencia: <b>'+fp(ref)+'/día</b> · '+fp(cfg.semanal)+' por semana · '+fp(cfg.semanal*52/12)+'/mes aproximado';
+    return;
+  }
+  // Lo que se puede gastar hoy nunca supera la referencia diaria: si sobró
+  // plata de la semana pasada eso es ahorro, no permiso para gastar de más.
+  const porDiaReal=dias>0?s.monto/dias:s.monto;
+  const porDia=Math.min(porDiaReal,ref);
+  const excedente=Math.max(0,s.monto-ref*dias);
+  const ratio=ref>0?porDiaReal/ref:0;
+  const color=ratio>=0.95?'var(--green)':ratio>=0.7?'var(--orange)':'var(--red)';
+  dEl.textContent=fp(porDia);dEl.style.color=color;
+  bEl.style.width=Math.min(100,Math.round(ratio*100))+'%';bEl.style.background=color;
+
+  const estado=ratio>=0.95?'Vas holgado.':ratio>=0.7?'Vas justo — bajá el ritmo o el sobre no llega.':'Vas corto: hasta el '+DIAS_ES[cfg.diaGiro]+' no entra plata nueva.';
+  subEl.innerHTML='Quedan <b>'+fp(s.monto)+'</b> en el sobre para <b>'+dias+(dias===1?' día':' días')+'</b>. '+estado;
+
+  const hs=s.fecha?Math.floor((new Date()-s.fecha)/36e5):null;
+  const edad=hs===null?'sin fecha':hs<1?'actualizado recién':hs<24?'actualizado hace '+hs+' h':'⚠️ cargado hace '+Math.floor(hs/24)+' días — abrí MercadoPago y corregilo';
+  footEl.innerHTML='Referencia: '+fp(ref)+'/día · '+edad+
+    (excedente>0?'<br>💚 Llevás <b>'+fp(excedente)+'</b> de más en el sobre. Es ahorro, no permiso: al cerrar el mes va al fondo BS3.':'');
 }
 
 function gastosReales(lista){return lista.filter(g=>!CATS_EXCLUIDAS.has(g.cat)&&g.monto>0&&g.moneda!=='USD')}
@@ -1464,6 +1602,7 @@ function closeMoreSheet(){ document.getElementById('moreSheetOverlay').classList
 async function init(){
   cicloActual=detectarCicloActual();
   actualizarCicloUI();
+  renderAlimentacion(); // no depende del Sheet: sale del saldo guardado, se pinta ya
   await Promise.all([cargarConfigDesdeSheet(),cargarCotizaciones()]);
   presupuesto['Diezmo'].limite=Math.round((configSheet.ingreso_mes_actual||3800000)*0.10);
   renderCotizaciones();

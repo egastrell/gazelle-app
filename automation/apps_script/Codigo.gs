@@ -698,10 +698,17 @@ function configurarTrigger() {
 // ======================================================================
 
 var TECHOS_BS3 = {
-  'Alimentación': 670000, 'Salud': 550000, 'Servicios': 380000, 'Educación': 420000,
+  // Alimentación: lo que efectivamente se gira, $210.000/semana x 52 / 12.
+  'Alimentación': 910000, 'Salud': 550000, 'Servicios': 380000, 'Educación': 420000,
   'Vehículo': 320000, 'Comida Fuera': 170000, 'Entretenimiento': 100000, 'Indumentaria': 150000,
   'Transporte': 80000, 'Compras Online': 130000, 'Hogar': 40000, 'Otros': 140000
 };
+
+// Giro semanal de la reserva de Alimentación. Se gira por semana y no por mes
+// a propósito: con el mes entero en el sobre, el sobre se gasta. Espejo de
+// ALIM_SEMANAL_DEF / ALIM_DIA_GIRO_DEF en index.html — si se cambia acá, cambiar allá.
+var ALIM_GIRO_SEMANAL = 210000;
+var ALIM_GIRO_DIA = 1; // getDay(): 0 = domingo, 1 = lunes
 
 var CATS_EXCLUIDAS_RITMO = ['Pago Tarjeta', 'Banco', 'Transferencia Interna', 'Diezmo'];
 
@@ -977,6 +984,10 @@ function actualizarRitmoSemanal() {
   var reporte = calcularRitmoSemanal_();
   escribirHojaRitmoSemanal_(reporte);
 
+  // Antes del corte por frescura a propósito: el giro es una acción de
+  // calendario con monto fijo, no depende de que el Sheet esté al día.
+  avisoGiroAlimentacion_();
+
   var esLunes = new Date().getDay() === 1;
   var enRiesgo = reporte.items.filter(function (it) { return it.riesgo !== 'ok'; });
 
@@ -1043,6 +1054,41 @@ function actualizarRitmoSemanal() {
     ? 'Gazelle: atención — ritmo de gasto por encima del presupuesto'
     : 'Gazelle: ritmo semanal de reservas MP';
   MailApp.sendEmail(EMAIL_NOTIFICACIONES, asunto, lineas.join('\n'));
+}
+
+/**
+ * Recordatorio del giro semanal de Alimentación. Va aparte del ritmo por
+ * categoría porque no comparte su condición: el ritmo necesita saber cuánto
+ * se gastó (y calla si el dato está viejo), el giro es una fecha y un monto
+ * fijo. Justo cuando el Sheet viene atrasado es cuando más falta hace que el
+ * sobre se recargue igual. La property evita repetirlo si el trigger corre
+ * dos veces el mismo día.
+ */
+function avisoGiroAlimentacion_() {
+  var hoy = new Date();
+  if (hoy.getDay() !== ALIM_GIRO_DIA) return;
+
+  var props = PropertiesService.getScriptProperties();
+  var hoyISO = aISO_(hoy);
+  if (props.getProperty('ultimo_giro_alimentacion') === hoyISO) return;
+
+  MailApp.sendEmail(EMAIL_NOTIFICACIONES,
+    'Gazelle: girá ' + formatearPesos_(ALIM_GIRO_SEMANAL) + ' a la reserva Alimentación',
+    'Hoy toca el giro semanal.\n\n' +
+    '  Girar a la reserva Alimentación: ' + formatearPesos_(ALIM_GIRO_SEMANAL) + '\n' +
+    '  Ritmo para que llegue: ' + formatearPesos_(ALIM_GIRO_SEMANAL / 7) + ' por día\n\n' +
+    'Cuánto se puede gastar hoy, en cualquier momento de la semana:\n' +
+    '  saldo del sobre en MercadoPago / dias que faltan hasta el proximo lunes\n' +
+    'La app lo calcula sola en la tarjeta "Alimentacion - esta semana":\n' +
+    'https://egastrell.github.io/gazelle-app\n\n' +
+    'Dos reglas que hacen que esto funcione:\n' +
+    '  1. No se gira de nuevo antes de tiempo. Si el sobre se vacia el viernes,\n' +
+    '     el fin de semana se come de lo que hay en casa. Ese es todo el punto\n' +
+    '     de girar por semana y no por mes.\n' +
+    '  2. Si sobra, se deja en el sobre. Es ahorro, no saldo para gastar: al\n' +
+    '     cerrar el mes ese excedente va al fondo BS3.');
+
+  props.setProperty('ultimo_giro_alimentacion', hoyISO);
 }
 
 /**
