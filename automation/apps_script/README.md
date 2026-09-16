@@ -99,3 +99,48 @@ independiente de `configurarTrigger`:
      alguna categoría empiece a gastarse más rápido de lo que corresponde
      según cuánto pasó del ciclo (para ajustar la reserva de MP antes de
      que sea tarde, no después).
+
+## Endpoint JSON — para que el Sheet pueda quedar privado
+
+Hasta ahora `index.html` leía el Sheet con una clave de API de Google. Eso
+obliga a dos cosas: que el Sheet esté compartido como "cualquiera con el
+enlace", y que la clave viaje escrita adentro de la página. Como la página
+vive en un repo público, cualquiera que lo abra tiene la clave y el ID del
+Sheet — y con eso, el historial financiero completo.
+
+La función `doGet` de `Codigo.gs` reemplaza ese camino. Es un web app que
+corre **con tu permiso**, así que lee el Sheet sin que el archivo esté
+compartido con nadie. El Sheet queda privado.
+
+El secreto pasa a ser la URL que genera "Implementar": es larga y aleatoria,
+y **no se guarda en el repo** — se pega una sola vez dentro de la app y queda
+en el teléfono. La página publicada deja de tener ninguna clave adentro.
+
+### Publicarlo (una sola vez, ~2 minutos)
+
+1. En el editor de Apps Script: **Implementar → Nueva implementación**.
+2. Engranaje (⚙) al lado de "Seleccionar tipo" → **Aplicación web**.
+3. Completar:
+   - **Ejecutar como:** Yo (efgastrell@gmail.com)
+   - **Quién tiene acceso:** **Cualquier usuario**
+4. **Implementar** → copiar la URL que termina en `/exec`.
+
+> ⚠️ Tiene que decir **"Cualquier usuario"**. Si elegís *"Cualquier usuario
+> con cuenta de Google"* el navegador recibe una pantalla de login en vez de
+> los datos y la app no puede leerla.
+
+### Conectar la app
+
+1. Abrir la app → pestaña **Config** → tarjeta **🔌 Conexión con el Sheet**.
+2. Pegar la URL `/exec` y tocar **Probar**.
+3. Si responde bien, queda guardada y la app recarga sola.
+
+Recién ahí se le puede sacar al Sheet el "cualquiera con el enlace": la app ya
+no lo necesita. El botón **"Volver a la clave de API"** deshace el cambio si
+algo falla.
+
+### Al cambiar `Codigo.gs`
+
+La implementación queda congelada en la versión con la que se publicó. Después
+de editar el archivo hay que hacer **Implementar → Administrar implementaciones
+→ ✏️ editar → Versión: Nueva versión → Implementar**. La URL no cambia.

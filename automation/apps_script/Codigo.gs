@@ -1448,3 +1448,71 @@ function actualizarNotaEdenorMirta() {
   }
   Logger.log('Notas actualizadas: ' + actualizados);
 }
+
+// ======================================================================
+// ENDPOINT JSON PARA LA APP (index.html)
+//
+// Reemplaza la lectura con clave de API de Google Sheets. La diferencia que
+// importa: este web app corre con MI permiso, así que lee el Sheet sin que
+// el archivo esté compartido con nadie. El Sheet puede quedar PRIVADO.
+//
+// Antes: index.html llevaba adentro una clave de API, y el Sheet tenía que
+// estar en "cualquiera con el enlace". Como index.html vive en un repo
+// público, la clave y el ID del Sheet estaban a la vista de cualquiera.
+//
+// Ahora el secreto es la URL que genera "Implementar" — larga y aleatoria —
+// y esa URL NO va al repo: se pega una sola vez dentro de la app y queda
+// guardada en el celular. La página publicada no tiene ninguna clave.
+//
+// CÓMO PUBLICARLO (una sola vez):
+//   Implementar > Nueva implementación > engranaje > Aplicación web
+//   Ejecutar como:        Yo (efgastrell@gmail.com)
+//   Quién tiene acceso:   Cualquier usuario
+//   > Implementar > copiar la URL que termina en /exec
+//
+// OJO: "Cualquier usuario CON CUENTA DE GOOGLE" NO sirve — pide login y el
+// navegador no puede seguir ese redirect. Tiene que decir "Cualquier usuario".
+//
+// Cada vez que se cambie este archivo hay que hacer Implementar > Administrar
+// implementaciones > editar > Versión: Nueva versión, para que el cambio salga
+// en vivo. La URL no cambia al hacer eso.
+// ======================================================================
+
+var SHEET_ID_ = '15TzS_-VQazdA427n8S7H_FnPD5Fj0eDrRMuETIdNLgQ';
+
+// Lista blanca explícita: solo estas hojas se sirven. Log_Automatizacion y
+// Pendientes_Confirmacion quedan afuera a propósito — la app no las usa.
+var HOJAS_PUBLICADAS_ = ['Tarjetas', 'MercadoPago', 'Config'];
+
+function doGet(e) {
+  try {
+    var params = (e && e.parameter) || {};
+    var hoja = String(params.hoja || '').trim();
+
+    if (!hoja) {
+      // Sin parámetro: sirve de ping para verificar que la implementación
+      // quedó bien hecha, sin devolver un solo dato.
+      return jsonRespuesta_({ ok: true, hojas: HOJAS_PUBLICADAS_ });
+    }
+    if (HOJAS_PUBLICADAS_.indexOf(hoja) === -1) {
+      return jsonRespuesta_({ error: 'Hoja no disponible: ' + hoja, hojas: HOJAS_PUBLICADAS_ });
+    }
+
+    var sheet = SpreadsheetApp.openById(SHEET_ID_).getSheetByName(hoja);
+    if (!sheet) return jsonRespuesta_({ error: 'No existe la hoja ' + hoja });
+
+    // getDisplayValues y NO getValues: devuelve el texto tal como se ve en la
+    // celda ("8.389,41"), que es el mismo formato que traía la API de Sheets y
+    // el único que index.html sabe parsear. Con getValues() los montos
+    // volverían como número crudo y el parseo argentino los rompería.
+    return jsonRespuesta_({ values: sheet.getDataRange().getDisplayValues() });
+
+  } catch (err) {
+    return jsonRespuesta_({ error: String(err) });
+  }
+}
+
+function jsonRespuesta_(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}

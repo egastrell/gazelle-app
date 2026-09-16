@@ -687,6 +687,25 @@ body { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
     <div class="cfg-balance-row"><span style="font-weight:700;font-size:15px">EXCEDENTE BS3</span><span style="font-family:'Space Mono',monospace;font-size:20px;font-weight:800" id="cfg_balance">—</span></div>
   </div>
   <button class="btn-guardar" onclick="recargarConfig()">↺ Recargar valores del Sheet</button>
+
+  <!-- CONEXIÓN CON EL SHEET -->
+  <!-- La URL del Apps Script se guarda acá y no en el código: el repo es
+       público, así que todo lo que esté en el archivo lo puede leer cualquiera. -->
+  <div class="card" style="margin-top:14px">
+    <div class="card-title">🔌 Conexión con el Sheet</div>
+    <div id="conexEstado" style="font-size:12px;line-height:1.5;margin-bottom:12px">—</div>
+    <div class="alim-inputs">
+      <input type="text" inputmode="url" id="conexUrlInput" placeholder="Pegá acá la URL /exec">
+      <button onclick="probarYGuardarApi()">Probar</button>
+    </div>
+    <div class="alim-inputs" id="conexBorrarWrap" style="display:none">
+      <button class="alt" style="flex:1" onclick="borrarApiUrl()">Volver a la clave de API</button>
+    </div>
+    <div style="font-size:10px;color:var(--muted);margin-top:10px;line-height:1.5">
+      Con el endpoint configurado el Sheet puede quedar privado y la página deja
+      de llevar una clave adentro. La URL se guarda solo en este teléfono.
+    </div>
+  </div>
   <div class="bottom-pad"></div>
 </div>
 
@@ -707,9 +726,30 @@ const SHEET_NAME='Tarjetas';
 const MP_SHEET_NAME='MercadoPago';
 const CONFIG_SHEET_NAME='Config';
 const SHEETS_API_KEY='AIzaSyD3QpBs7qRD3bpO00zjIPzXOXbU3Z7o7mA';
-const API_URL=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(SHEET_NAME+'!A1:Z50000')}?key=${SHEETS_API_KEY}`;
-const MP_API_URL=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(MP_SHEET_NAME+'!A1:Z50000')}?key=${SHEETS_API_KEY}`;
-const CONFIG_API_URL=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(CONFIG_SHEET_NAME+'!A1:B100')}?key=${SHEETS_API_KEY}`;
+// ---------------------------------------------------------------------------
+// DE DÓNDE SALEN LOS DATOS
+// Hay dos caminos y la app elige solo:
+//
+// 1. Endpoint del Apps Script (el bueno). Corre con el permiso de Eduardo, así
+//    que el Sheet puede quedar PRIVADO. La URL es el secreto — es larga y
+//    aleatoria, y vive solo en el celular (localStorage), NO en este archivo.
+//    Este archivo está en un repo público: todo lo que se escriba acá lo puede
+//    leer cualquiera.
+//
+// 2. API de Google Sheets con clave (el viejo). Solo funciona si el Sheet está
+//    en "cualquiera con el enlace", y la clave está a la vista acá abajo. Queda
+//    como respaldo para no romper nada mientras se migra; una vez configurado
+//    el endpoint, este camino no se usa más.
+// ---------------------------------------------------------------------------
+function apiBase(){ return (localStorage.getItem('gazelle_api_url')||'').trim(); }
+function urlHoja(nombre,rango){
+  const base=apiBase();
+  if(base) return base+(base.indexOf('?')>-1?'&':'?')+'hoja='+encodeURIComponent(nombre);
+  return `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(nombre+'!'+rango)}?key=${SHEETS_API_KEY}`;
+}
+const API_URL=()=>urlHoja(SHEET_NAME,'A1:Z50000');
+const MP_API_URL=()=>urlHoja(MP_SHEET_NAME,'A1:Z50000');
+const CONFIG_API_URL=()=>urlHoja(CONFIG_SHEET_NAME,'A1:B100');
 const DOLAR_API_BASE='https://dolarapi.com/v1/dolares';
 
 // Techos recalibrados 13/07/2026 con promedio real de los últimos 4 ciclos cerrados
@@ -858,7 +898,7 @@ const fpUsd=n=>'US$'+Math.abs(n).toLocaleString('es-AR',{minimumFractionDigits:2
 async function fetchSheet(){
   setSyncState('loading','Sincronizando...');
   try{
-    const res=await fetch(API_URL);
+    const res=await fetch(API_URL());
     if(!res.ok)throw new Error(`HTTP ${res.status}`);
     const json=await res.json();
     const allValues=json.values||[];
@@ -907,7 +947,7 @@ async function fetchSheet(){
 
 async function fetchMP(){
   try{
-    const res=await fetch(MP_API_URL);if(!res.ok)return;
+    const res=await fetch(MP_API_URL());if(!res.ok)return;
     const json=await res.json();const allValues=json.values||[];
     if(allValues.length<2)return;
     const cols=allValues[0];const dataRows=allValues.slice(1);
@@ -1474,7 +1514,7 @@ function obtenerUltimos3Ciclos(){
 
 async function cargarConfigDesdeSheet(){
   try{
-    const res=await fetch(CONFIG_API_URL);if(!res.ok)throw new Error('No Config');
+    const res=await fetch(CONFIG_API_URL());if(!res.ok)throw new Error('No Config');
     const json=await res.json();const rows=json.values||[];
     rows.slice(1).forEach(r=>{
       if(r.length>=2&&r[0]){
@@ -1553,7 +1593,7 @@ function renderConfigBS3(){
 
 async function recargarConfig(){
   try{
-    const res=await fetch(CONFIG_API_URL);if(!res.ok)throw new Error('HTTP '+res.status);
+    const res=await fetch(CONFIG_API_URL());if(!res.ok)throw new Error('HTTP '+res.status);
     const json=await res.json();const rows=json.values||[];
     rows.forEach(r=>{
       if(!r[0]||!r[1])return;
@@ -1569,6 +1609,69 @@ async function recargarConfig(){
     renderPresupuesto();
     mostrarAlert('✅','Config recargado','Valores actualizados desde el Sheet y cotizaciones del día.');
   }catch(e){mostrarAlert('❌','Error al recargar','No se pudo conectar con el Sheet.');console.error('recargarConfig:',e)}
+}
+
+// ---------------------------------------------------------------------------
+// CONEXIÓN CON EL SHEET
+// Se prueba la URL ANTES de guardarla: una URL mal pegada, o una implementación
+// hecha con "Cualquier usuario con cuenta de Google" (que pide login y el
+// navegador no puede seguir), dejarían la app sin datos y sin explicar por qué.
+// ---------------------------------------------------------------------------
+function renderConexion(){
+  const est=document.getElementById('conexEstado'); if(!est)return;
+  const base=apiBase();
+  const wrap=document.getElementById('conexBorrarWrap');
+  if(base){
+    est.innerHTML='<b style="color:var(--green)">✓ Endpoint del Apps Script</b><br>'+
+      '<span style="color:var(--muted);word-break:break-all;font-size:10px">'+base+'</span><br>'+
+      '<span style="color:var(--muted)">El Sheet puede estar privado.</span>';
+    if(wrap)wrap.style.display='';
+  }else{
+    est.innerHTML='<b style="color:var(--orange)">Clave de API (modo viejo)</b><br>'+
+      '<span style="color:var(--muted)">Requiere que el Sheet esté en "cualquiera con el enlace", '+
+      'y la clave viaja dentro de la página. Pegá la URL del Apps Script para dejar de depender de eso.</span>';
+    if(wrap)wrap.style.display='none';
+  }
+}
+
+async function probarYGuardarApi(){
+  const el=document.getElementById('conexUrlInput');
+  const url=(el.value||'').trim().replace(/[?&]hoja=[^&]*/g,'');
+  if(!/^https:\/\/script\.google\.com\/.*\/exec$/.test(url)){
+    mostrarAlert('⚠️','URL inválida','Tiene que ser la URL que termina en /exec, la que te da "Implementar". Empieza con https://script.google.com/');
+    return;
+  }
+  const est=document.getElementById('conexEstado');
+  est.innerHTML='<span style="color:var(--muted)">Probando...</span>';
+  try{
+    const res=await fetch(url+'?hoja=Config');
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const json=await res.json();
+    if(json.error)throw new Error(json.error);
+    if(!Array.isArray(json.values))throw new Error('La respuesta no trae datos');
+
+    localStorage.setItem('gazelle_api_url',url);
+    el.value='';
+    renderConexion();
+    await cargarConfigDesdeSheet();
+    fetchSheet();
+    mostrarAlert('✅','Conectado','Leyó '+json.values.length+' filas de Config. Ya podés sacarle a tu Sheet el "cualquiera con el enlace": la app ya no lo necesita.');
+  }catch(e){
+    renderConexion();
+    // Un TypeError acá casi siempre es CORS, y la causa real es la misma:
+    // la implementación quedó restringida y el navegador no puede leerla.
+    const pista=(e instanceof TypeError)
+      ? 'El navegador no pudo leer la respuesta. Revisá que en "Implementar" el acceso diga "Cualquier usuario" y NO "Cualquier usuario con cuenta de Google".'
+      : String(e.message||e);
+    mostrarAlert('❌','No pudo conectar',pista);
+    console.error('probarYGuardarApi:',e);
+  }
+}
+
+function borrarApiUrl(){
+  localStorage.removeItem('gazelle_api_url');
+  renderConexion();
+  fetchSheet();
 }
 
 function renderPresupuesto(){
@@ -1603,6 +1706,7 @@ async function init(){
   cicloActual=detectarCicloActual();
   actualizarCicloUI();
   renderAlimentacion(); // no depende del Sheet: sale del saldo guardado, se pinta ya
+  renderConexion();
   await Promise.all([cargarConfigDesdeSheet(),cargarCotizaciones()]);
   presupuesto['Diezmo'].limite=Math.round((configSheet.ingreso_mes_actual||3800000)*0.10);
   renderCotizaciones();
