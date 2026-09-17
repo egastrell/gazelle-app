@@ -39,8 +39,10 @@ débitos automáticos de Visa Galicia fueron migrados a MC BNA. Visa Galicia pue
 usarse SOLO como tarjeta de débito respaldada por reservas MP — NUNCA como deuda
 revolving.
 
-BS3 en curso: Meta mínima = 3 meses de gastos esenciales (~$9.390.000). Fondo
-actual: ~US$3.652 en MP dólares. Aporte mensual estimado en mes normal: ~$293.000.
+BS3 en curso. Las cifras NO se escriben acá: la meta vive en `meta_bs3_minimo` y
+el fondo en `fondo_bs3_usd`, ambos en la hoja Config, que es la fuente única. Este
+archivo tuvo durante meses un fondo y una meta que no coincidían con el Sheet, y
+cualquier sesión que los leyera trabajaba con datos contradictorios.
 
 Regla de oro BS3: Todo excedente sin comprometer va al fondo de emergencia. No hay
 gasto discrecional fuera de presupuesto. Santa Anita bloqueada hasta BS6.
@@ -173,10 +175,19 @@ desde reserva Santa Anita).
 ### App Gazelle
 - URL: https://egastrell.github.io/gazelle-app
 - Repo: github.com/egastrell/gazelle-app (index.html)
-- Ranges: Tarjetas!A1:Z50000 | MercadoPago!A1:Z50000 | Config!A1:B100
-- Stack: HTML/CSS/JS plano, sin backend, usa Google Sheets API directo
+- Stack: HTML/CSS/JS plano, sin backend
+- **Lectura del Sheet: endpoint `doGet` del Apps Script, NO la API de Google.**
+  El Sheet está PRIVADO (solo Eduardo) y así tiene que quedarse. El web app
+  corre con su permiso, así que lee sin que el archivo esté compartido.
+  La URL `/exec` es el secreto: NO va al repo, se pega una vez por dispositivo
+  en la app (Config → 🔌 Conexión con el Sheet) y queda en localStorage.
+  La ruta vieja con clave de API sigue en el código como respaldo automático,
+  pero solo funciona si el Sheet vuelve a ser público — no la uses.
+  Al cambiar `Codigo.gs` hay que redesplegar: Implementar → Administrar
+  implementaciones → editar → Nueva versión. La URL no cambia.
 - Cloudflare Worker proxy (gazelle-asesor.efgastrell.workers.dev) en progreso
-  para habilitar el advisor "Dave & Daniel" con la API de Anthropic
+  para habilitar el advisor "Dave & Daniel" con la API de Anthropic. Mientras
+  no exista, la tarjeta del asesor muestra un error — es esperado, no es un bug.
 
 ### Gestión de tareas
 - Todoist: proyecto ID 6gqxvr6mf69CFpX3, sección Alta Prioridad
@@ -511,8 +522,13 @@ en vez de $3.150.000: unos **$458.000/mes de permiso de gasto que nunca existió
 2. **Techos por categoría.** La tabla "Presupuesto base" de este archivo y `TECHOS_BS3`
    en el código difieren hasta en $230.000 por categoría (desviación acumulada $940.000);
    los totales cierran solo por compensación de errores.
-3. **Meta BS3.** Acá dice ~$9.390.000, el Sheet tiene 9.000.000.
-4. **Fondo BS3.** Acá dice US$3.652, el Sheet tiene 3.997,49.
+3. ~~**Meta BS3.**~~ **RESUELTA (16/09/2026):** manda el Sheet, $9.000.000. Las
+   cifras salieron de este archivo.
+4. ~~**Fondo BS3.**~~ **RESUELTA (16/09/2026):** Config quedó en **US$ 2.992,32**,
+   el saldo real. Los US$ 3.997,49 que tenía eran de ANTES de pagar el techo de
+   Santa Anita (~US$ 1.005), así que la app mostraba $1.550.563 de más y un 68%
+   de la meta cuando el real es 51%. La cotización ya no se lee de Config: sale
+   en vivo de dolarapi (MEP).
 
 **Fuente única de verdad acordada: el Sheet (hoja Config para parámetros, Tarjetas
 deduplicada para hechos).** Este archivo debe quedar como metodología sin cifras; el
@@ -526,3 +542,84 @@ El código ya es honesto, pero hoy dice "no sé" porque MercadoPago no tiene dat
 escenario de Make.com (que ya parsea los mails de consumo de la tarjeta cada 15
 minutos) a los mails de MercadoPago.** Misma infraestructura, ya paga, y daría el
 gasto diario en near-real-time sin intervención de Eduardo.
+
+---
+
+## Sesión 15-16/09/2026 — La app dejó de necesitar que el Sheet sea público
+
+### El Sheet ya no se lee con clave de API
+
+La app dejó de sincronizar: Google devolvía **403 PERMISSION_DENIED** porque el
+Sheet ya no estaba compartido como "cualquiera con el enlace". Verificado que la
+clave estaba sana (leía un Sheet público de Google con HTTP 200) y que el Sheet
+tenía datos: faltaba solo el permiso.
+
+Reponerlo arreglaba el síntoma y dejaba el problema de fondo: `index.html` vive en
+un repo **público** con la clave de API y el ID del Sheet escritos adentro.
+Cualquiera que abriera el repo podía leer el historial financiero completo.
+
+**Se cambió el camino de lectura** (ver "App Gazelle" arriba). El Sheet quedó
+privado. Que no vuelva a compartirse: ya no hace falta.
+
+### Alimentación se gira por semana, no por mes
+
+$210.000 cada lunes ($30.000/día). Con el mes entero en el sobre, el sobre se
+gasta y no hay señal hasta que no queda nada.
+
+El número del día **no sale del Sheet**: sale del saldo del sobre en MercadoPago
+que carga Eduardo, dividido por los días hasta el próximo giro. La hoja MP llega
+con meses de atraso, así que un ritmo calculado sobre ella siempre daría de más.
+El número se topea en la referencia diaria: si sobró de la semana anterior eso es
+ahorro, no permiso, y se muestra aparte como excedente que va a BS3.
+
+El recordatorio del giro (mail de los lunes) sale **antes** del corte por frescura
+a propósito: es una fecha y un monto fijo, no depende de que el Sheet esté al día.
+
+### Números hardcodeados que mentían — patrón a vigilar
+
+Tres lugares distintos mostraban cifras que no salían de ningún cálculo. Todos
+empujaban en la misma dirección: hacer parecer que había más plata.
+
+- La tarjeta verde del Resumen felicitaba ("solo usaron el 36%") con MercadoPago
+  139 días atrasado. Ahora se calla y dice qué falta si una fuente venció.
+- El "% del ingreso" de cada persona se medía contra un `INGRESO_BASE` clavado en
+  $3.800.000.
+- **"Tu capacidad de pago" era HTML fijo de una maqueta**: las cuatro líneas eran
+  texto literal. La única que se calculaba lo hacía contra `gazelle_para_tarjetas`,
+  una clave de localStorage que no se setea nunca y vale 0 — daba el total de la
+  tarjeta en rojo como si no hubiera con qué pagarla.
+
+**Al auditar la app, buscar números que se ven pero no se calculan.** Un dato de
+menos se nota; una cifra inventada que además es optimista, no.
+
+### `gws` — el CLI oficial de Google Workspace (pendiente, alto valor)
+
+`npm i -g @googleworkspace/cli` (verificado v0.22.5). Tiene escritura real sobre
+Sheets: `gws sheets spreadsheets values update / batchUpdate / append / clear`,
+con `valueInputOption` (el USER_ENTERED que necesita el formato argentino).
+
+Importa porque **el cuello de botella del proyecto nunca fue conocimiento sino
+acceso de escritura**: cada limpieza termina en "pegá esto en Apps Script y dale
+▶". Con `gws` autenticado eso se hace directo.
+
+Requiere proyecto en GCP + OAuth (~20 min, una vez) y **solo rinde en la PC de
+Eduardo**: las sesiones remotas de Claude corren en contenedores efímeros, así que
+la autenticación no sobrevive de una sesión a la otra, y pasarle credenciales OAuth
+por chat no es aceptable.
+
+El registro de skills de `skills.sh` está bloqueado por el proxy de red; el repo
+`vercel-labs/skills` es solo la CLI, no un catálogo. La skill `google-apps-script`
+de `jezweb/claude-skills` existe pero **no cubre despliegue como web app ni
+`doGet`** — no sirvió para esta sesión.
+
+### Cosas menores detectadas y NO tocadas
+
+- La pestaña "Gastos prohibidos" dice "bloqueados hasta eliminar todas las deudas"
+  (BS2 terminó en mayo 2026) y lista los 7 ítems como "Libre ✓", incluido Delivery
+  — que Eduardo decidió cortar ($82.730/mes en PedidosYa).
+- Visa Galicia sigue en la proyección de pagos aunque la cuenta esté cancelada.
+- El proyecto de Apps Script se llama "Proyecto sin título" y su URL es de
+  `/home/projects/`, lo que sugiere que podría ser standalone y no vinculado al
+  Sheet. `doGet` funciona igual porque usa `openById`, pero las funciones que usan
+  `getActiveSpreadsheet()` fallarían. **Verificar antes de correr las utilidades
+  de limpieza o de confiar en los triggers.**
