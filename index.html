@@ -984,6 +984,16 @@ const FRASES_ASESOR=[
 ];
 
 async function llamarAsesor(){
+  // La frase de Ramsey estaba al FINAL del try, después del fetch al Worker.
+  // Como el Worker todavía no existe, el fetch tira y la tarjeta se quedaba
+  // en "Cargando frase motivacional..." para siempre. La frase sale de un
+  // array local: no tiene por qué depender de que haya red ni Worker.
+  const frase=FRASES_ASESOR[Math.floor(Math.random()*FRASES_ASESOR.length)];
+  const elCita0=document.getElementById('ramseyCitaResumen');
+  const elAutor0=document.getElementById('ramseyCitaAutor');
+  if(elCita0)elCita0.textContent=frase.texto;
+  if(elAutor0)elAutor0.textContent='— '+frase.autor;
+
   const g=gastosReales(gastosMes);
   const total=g.reduce((s,x)=>s+x.monto,0);
   const edu=g.filter(x=>x.quien==='Eduardo').reduce((s,x)=>s+x.monto,0);
@@ -1054,12 +1064,6 @@ INSTRUCCIONES:
     const elAcc=document.getElementById('asesorAccion');
     if(elMsg)elMsg.innerHTML=msg.replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');
     if(elAcc){elAcc.textContent=accion;elAcc.style.display=accion?'':'none'}
-    // Frase aleatoria en Resumen
-    const frase=FRASES_ASESOR[Math.floor(Math.random()*FRASES_ASESOR.length)];
-    const elCita=document.getElementById('ramseyCitaResumen');
-    const elAutor=document.getElementById('ramseyCitaAutor');
-    if(elCita)elCita.textContent=frase.texto;
-    if(elAutor)elAutor.textContent='— '+frase.autor;
   }catch(e){
     const el=document.getElementById('asesorMsg');
     if(el)el.textContent='Error al conectar con el asesor. Tocá Actualizar.';
