@@ -1239,7 +1239,22 @@ function renderResumen(){
   document.getElementById('statTxn').textContent=gastos.length;
   document.getElementById('statHormigas').textContent=hormigas.length;
   document.getElementById('statProhibidos').textContent=prohibidos.length;
-  if(disponible<0){card.className='disponible-card danger';el.textContent='-'+el.textContent;document.getElementById('judgeMsg').textContent=`😤 ¡Alerta! Se pasaron ${fp(Math.abs(disponible))} del presupuesto.`}
+  // El veredicto se calla si falta una fuente. Un "solo usaron el 36%" con
+  // MercadoPago 139 días atrasado no es optimista: es falso, porque el gasto
+  // que falta cargar YA se hizo. Es el mismo error que el ritmo por categoría
+  // ya evita — la tarjeta verde grande, que es lo primero que se mira, lo
+  // seguía cometiendo. Un felicitación equivocada acá cuesta más que un dato
+  // menos: autoriza a gastar.
+  const fD=frescuraDatos();
+  const vencidas=[];
+  if(fD.tc.vencido)vencidas.push('la tarjeta');
+  if(fD.mp.vencido)vencidas.push('MercadoPago');
+  if(vencidas.length>0){
+    card.className='disponible-card warning';
+    document.getElementById('judgeMsg').textContent=
+      `⚠️ Falta cargar ${vencidas.join(' y ')}: lo gastado real es MAYOR que esto. No lo uses para decidir un gasto.`;
+  }
+  else if(disponible<0){card.className='disponible-card danger';el.textContent='-'+el.textContent;document.getElementById('judgeMsg').textContent=`😤 ¡Alerta! Se pasaron ${fp(Math.abs(disponible))} del presupuesto.`}
   else if(pct>80){card.className='disponible-card warning';document.getElementById('judgeMsg').textContent=`⚠️ Van en el ${Math.round(pct)}% del presupuesto.`}
   else{card.className='disponible-card ok';document.getElementById('judgeMsg').textContent=`✅ Solo usaron el ${Math.round(pct)}% del presupuesto. ¡Modo Gazelle funcionando!`}
   const totalH=hormigas.reduce((s,g)=>s+g.monto,0);
@@ -1264,7 +1279,11 @@ function renderResumenPersonas(){
   const gastos=gastosUnificados();
   const edu=gastos.filter(g=>g.quien==='Eduardo').reduce((s,g)=>s+g.monto,0);
   const romi=gastos.filter(g=>g.quien==='Romina').reduce((s,g)=>s+g.monto,0);
-  const INGRESO_BASE=3800000;
+  // Estaba clavado en 3.800.000 — un número que ya no existe en ningún lado.
+  // Por eso los porcentajes "del ingreso" de Eduardo y Romina se calculaban
+  // contra un sueldo inventado. Ahora sale de Config, que es la fuente única
+  // acordada, y cae al viejo default solo si Config todavía no cargó.
+  const INGRESO_BASE=configSheet.ingreso_mes_actual||3800000;
   document.getElementById('totalEdu').textContent=fp(edu);
   document.getElementById('totalRomi').textContent=fp(romi);
   document.getElementById('pctEdu').textContent=Math.round(edu/INGRESO_BASE*100)+'% del ingreso';
