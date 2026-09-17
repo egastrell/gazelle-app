@@ -569,11 +569,12 @@ body { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
   </div>
   <div class="card">
     <div class="card-title">💰 Tu capacidad de pago</div>
-    <div class="capacidad-row"><div class="cap-lbl">Ingreso neto</div><div class="cap-val green">$3.800.000</div></div>
-    <div class="capacidad-row"><div class="cap-lbl">(-) Diezmo 10%</div><div class="cap-val">$380.000</div></div>
-    <div class="capacidad-row"><div class="cap-lbl">(-) Fijos + Variables</div><div class="cap-val">$1.875.784</div></div>
-    <div class="capacidad-row"><div class="cap-lbl" style="font-weight:700">Disponible para tarjetas</div><div class="cap-val" style="font-size:18px;color:var(--blue)" id="capacidadPago">$1.544.216</div></div>
+    <div class="capacidad-row"><div class="cap-lbl">Ingreso neto</div><div class="cap-val green" id="capIngreso">—</div></div>
+    <div class="capacidad-row"><div class="cap-lbl">(-) Diezmo 10%</div><div class="cap-val" id="capDiezmo">—</div></div>
+    <div class="capacidad-row"><div class="cap-lbl" style="font-weight:700">Queda para el mes</div><div class="cap-val" style="font-size:18px;color:var(--blue)" id="capacidadPago">—</div></div>
+    <div class="capacidad-row"><div class="cap-lbl">(-) Resumen de la tarjeta</div><div class="cap-val" id="capTarjeta">—</div></div>
     <div class="diferencia-box ok" id="diferenciaBox"><div style="font-size:13px;font-weight:700">Diferencia</div><div style="font-size:20px;font-weight:800;font-family:'Space Mono',monospace" id="diferenciaPago">—</div></div>
+    <div style="font-size:10px;color:var(--muted);margin-top:10px;line-height:1.5" id="capNota"></div>
   </div>
 </div>
 
@@ -1356,21 +1357,50 @@ function renderMiPlan(){
 }
 
 function renderPagar(){
-  const PARA_TARJETAS=getParaTarjetas();
   const estimadoMaster=gastosReales(gastosMes).filter(g=>g.cuenta&&g.cuenta.toLowerCase().includes('mastercard')).reduce((s,g)=>s+g.monto,0);
   const estimadoVisa=gastosReales(gastosMes).filter(g=>g.cuenta&&g.cuenta.toLowerCase().includes('visa')).reduce((s,g)=>s+g.monto,0);
   const total=estimadoMaster+estimadoVisa;
+  // Lo que queda del sueldo después del diezmo es la vara contra la que se
+  // mide si el resumen se puede pagar. Antes se comparaba contra
+  // gazelle_para_tarjetas, que no se setea nunca y vale 0: cualquier monto
+  // mayor a cero pintaba en rojo, aunque sobrara plata de sobra para pagarlo.
+  const ingreso=configSheet.ingreso_mes_actual||0;
+  const diezmo=Math.round(ingreso*0.10);
+  const queda=ingreso-diezmo;
+
   const pagarVisa=document.getElementById('pagarVisa');const pagarMaster=document.getElementById('pagarMaster');
   pagarVisa.textContent=estimadoVisa>0?fp(estimadoVisa):'Sin movimientos';
-  pagarVisa.className=estimadoVisa>PARA_TARJETAS?'pagar-monto danger':'pagar-monto ok';
+  pagarVisa.className=estimadoVisa>queda?'pagar-monto danger':'pagar-monto ok';
   pagarMaster.textContent=fp(estimadoMaster);
-  pagarMaster.className=estimadoMaster>PARA_TARJETAS?'pagar-monto danger':'pagar-monto ok';
+  pagarMaster.className=estimadoMaster>queda?'pagar-monto danger':'pagar-monto ok';
   document.getElementById('pagarTotal').textContent=fp(total);
-  const diferencia=PARA_TARJETAS-total;
+
+  // "Tu capacidad de pago" era HTML fijo de una maqueta vieja: ingreso
+  // $3.800.000, diezmo $380.000 y un "Fijos + Variables $1.875.784" que no
+  // salía de ningún cálculo. Solo la Diferencia se computaba, y contra
+  // gazelle_para_tarjetas, que nunca se setea y vale 0 — por eso daba el total
+  // de la tarjeta en rojo como si no hubiera con qué pagarla. Ahora las cuatro
+  // líneas salen de Config y de los gastos del ciclo.
+  document.getElementById('capIngreso').textContent=fp(ingreso);
+  document.getElementById('capDiezmo').textContent='-'+fp(diezmo);
+  document.getElementById('capacidadPago').textContent=fp(queda);
+  document.getElementById('capTarjeta').textContent='-'+fp(total);
+
+  const diferencia=queda-total;
   const difEl=document.getElementById('diferenciaPago');const difBox=document.getElementById('diferenciaBox');
   difEl.textContent=(diferencia>=0?'+':'-')+fp(diferencia);
   difEl.style.color=diferencia>=0?'var(--green)':'var(--red)';
   difBox.className='diferencia-box '+(diferencia>=0?'ok':'danger');
+
+  // Dos razones por las que esta diferencia es optimista, dichas acá y no
+  // escondidas: no descuenta las reservas de MercadoPago (el gasto diario sale
+  // del mismo saldo), y el total de la tarjeta es lo que hay CARGADO — los
+  // débitos automáticos que todavía no entraron al Sheet no están contados.
+  const fP=frescuraDatos();
+  document.getElementById('capNota').innerHTML=
+    'No descuenta las reservas de MercadoPago: el gasto diario sale de este mismo saldo.'+
+    (fP.tc.vencido?'<br>⚠️ La tarjeta no tiene datos nuevos hace '+(fP.tc.dias===null?'—':fP.tc.dias)+' días: el resumen real es mayor.'
+                  :'<br>El resumen es lo cargado hasta hoy; los débitos automáticos que falten entrar lo suben.');
 }
 
 function renderCategorias(){
