@@ -72,6 +72,7 @@ function actualizarMontosReferencia() {
 
   var hallazgosFacturas = [];
   var reporteTransferencias = [];
+  var reporteMP = [];
 
   for (var i = 0; i < archivos.length; i++) {
     var file = archivos[i];
@@ -80,6 +81,15 @@ function actualizarMontosReferencia() {
       texto = extraerTextoArchivo_(file);
     } catch (e) {
       Logger.log('No se pudo leer ' + file.getName() + ': ' + e);
+      continue;
+    }
+
+    // Antes que nada el resumen de MercadoPago: menciona proveedores y
+    // comercios en cada renglón, así que si se evalúa después lo matchea
+    // identificarProveedor_ y se procesa como si fuera una factura.
+    if (esResumenMercadoPago_(texto)) {
+      var rMP = procesarResumenMP_(texto, file, logSheet, procesadasFolder);
+      if (rMP && rMP.nuevos > 0) reporteMP.push(rMP);
       continue;
     }
 
@@ -113,8 +123,8 @@ function actualizarMontosReferencia() {
 
   var reporteConfig = procesarFacturas_(hallazgosFacturas, configSheet, logSheet, pendientesSheet, procesadasFolder);
 
-  if (reporteConfig.length > 0 || reporteTransferencias.length > 0) {
-    enviarResumen_(reporteConfig, reporteTransferencias);
+  if (reporteConfig.length > 0 || reporteTransferencias.length > 0 || reporteMP.length > 0) {
+    enviarResumen_(reporteConfig, reporteTransferencias, reporteMP);
   }
 }
 
@@ -533,7 +543,7 @@ function registrarLog_(logSheet, proveedor, titular, estado, anterior, nuevo, fe
   logSheet.appendRow([new Date(), proveedor, titular || '', estado, anterior || '', nuevo || '', '', fechaOVencimiento || '', archivo]);
 }
 
-function enviarResumen_(reporteConfig, reporteTransferencias) {
+function enviarResumen_(reporteConfig, reporteTransferencias, reporteMP) {
   var lineas = [];
 
   if (reporteConfig.length > 0) {
@@ -550,6 +560,18 @@ function enviarResumen_(reporteConfig, reporteTransferencias) {
     lineas.push('Transferencias registradas como gasto en Tarjetas:');
     reporteTransferencias.forEach(function (r) {
       lineas.push('- ' + r.categoria + ': $' + r.monto.toLocaleString('es-AR') + ' | ' + (r.fecha || 'sin fecha') + ' | ' + r.archivo);
+    });
+  }
+
+  if (reporteMP && reporteMP.length > 0) {
+    if (lineas.length > 0) lineas.push('');
+    lineas.push('Resumen de MercadoPago importado:');
+    reporteMP.forEach(function (r) {
+      lineas.push('- ' + r.nuevos + ' movimientos nuevos de ' + r.total + ' | ' + r.archivo);
+      if (r.sinIdentificar > 0) {
+        lineas.push('  ' + r.sinIdentificar + ' quedaron en Otros/Pendiente identificar: son transferencias a personas.');
+        lineas.push('  Revisalos en la hoja MercadoPago y decime cuáles son para agregar la regla.');
+      }
     });
   }
 
@@ -1515,4 +1537,217 @@ function doGet(e) {
 function jsonRespuesta_(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+
+// ======================================================================
+// IMPORTADOR DEL RESUMEN DE CUENTA DE MERCADOPAGO
+//
+// Por qué no es por mail (verificado 17/09/2026): MercadoPago NUNCA le mandó
+// un mail a efgastrell@gmail.com — cero resultados buscando todos sus dominios
+// con in:anywhere, spam y papelera incluidos. Extender el escenario de Make.com
+// a "los mails de MP" no tenía de dónde agarrarse.
+//
+// Por qué no es el CSV de liquidaciones: ese reporte (settlement_*.csv) trae
+// SOURCE_ID, montos y fechas, pero NINGÚN nombre de comercio — solo un ID
+// numérico. Sin descripción no hay forma de categorizar.
+//
+// El "Resumen de cuenta en pesos" (PDF) sí tiene Fecha + Descripción + ID de
+// operación + Valor. Es el único de los tres que sirve. Se descarga desde la
+// app de MercadoPago (Actividad > Resumen de cuenta) y se deja caer en la misma
+// carpeta de Drive que las facturas: el resto lo hace este script.
+//
+// Probado contra el resumen real del 30/04 al 05/09/2026: 1.002 movimientos,
+// todos con ID de operación, $2.510.285/mes de gasto presupuestable.
+// ======================================================================
+
+var MP_SHEET_IMPORT_ = 'MercadoPago';
+var MP_COL_ID_ = 'IdOperacion'; // se crea sola si no existe; es la clave de deduplicación
+
+var MP_TITULAR_ = /gastrell\s*,?\s*eduardo\s*franco|eduardo\s*franco\s*gastrell/i;
+
+// Reglas de clasificación del resumen de MercadoPago. Orden importa: la
+// primera que matchea gana, así que lo específico va antes que lo genérico.
+var MP_REGLAS_ = [
+  // --- Movimientos internos: NO son gasto, mueven plata entre sobres o al banco ---
+  { re: /dinero (reservado|retirado)/i,            cat: 'Transferencia Interna', sub: '' },
+  { re: /compra de d[oó]lar|venta de d[oó]lar/i,   cat: 'Transferencia Interna', sub: 'Dólar MEP' },
+
+  // --- Ingresos ---
+  { re: /rendimientos/i,                           cat: 'Banco', sub: 'Rendimiento' },
+  { re: /transferencia recibida/i,                 cat: 'Banco', sub: 'Ajuste' },
+
+  // --- Diezmo ---
+  { re: /cristo es vida|centro familia y vida/i,   cat: 'Diezmo', sub: 'Iglesia' },
+
+  // --- Familia núcleo: personas, no comercios ---
+  // El giro a Romina era el "sangrado" que se eliminó en septiembre 2026. Se
+  // deja la regla igual para que el histórico quede bien clasificado.
+  { re: /romina\s*emilia\s*,?\s*ziegler/i,         cat: 'Otros', sub: 'Eduardo→Romina' },
+  { re: /felipe\s*nahum/i,                         cat: 'Educación', sub: 'Colegio' },
+  { re: /parodi/i,                                 cat: 'Educación', sub: 'Curso/Capacitación' },
+
+  // --- Santa Anita ---
+  { re: /walter\s*(fabian\s*)?sim[oó]n/i,          cat: 'Servicios', sub: 'Jardinería Santa Anita' },
+  { re: /charadia|ropelato/i,                      cat: 'Hogar', sub: 'Materiales' },
+  { re: /urunet/i,                                 cat: 'Servicios', sub: 'Internet/Cable' },
+
+  // --- Alimentación ---
+  { re: /supermercados dia|carrefour|\bvea\b|coto|jumbo|changomas/i, cat: 'Alimentación', sub: 'Supermercado' },
+  { re: /hua yun zheng/i,                          cat: 'Alimentación', sub: 'Supermercado' },
+  { re: /panader[ií]a|fan de pan/i,                cat: 'Alimentación', sub: 'Panadería' },
+  { re: /matias alejandro gomez/i,                 cat: 'Alimentación', sub: 'Almacén/Kiosko' },
+  { re: /sabores de campo|agua y sodas/i,          cat: 'Alimentación', sub: 'Almacén/Kiosko' },
+  { re: /carnicer[ií]a/i,                          cat: 'Alimentación', sub: 'Carnicería' },
+  { re: /verduler[ií]a|fruter[ií]a/i,              cat: 'Alimentación', sub: 'Verdulería' },
+
+  // --- Salud ---
+  { re: /farmacia/i,                               cat: 'Salud', sub: 'Farmacia' },
+  { re: /kinesiolog/i,                             cat: 'Salud', sub: 'Médico/Hospital' },
+  { re: /swiss medical/i,                          cat: 'Salud', sub: 'Medicina Prepaga' },
+
+  // --- Transporte ---
+  { re: /\bsube\b|emova|subte/i,                   cat: 'Transporte', sub: 'Subte/SUBE' },
+
+  // --- Vehículo ---
+  { re: /axion|ypf|shell|puma|gnc|codigas|feyme/i, cat: 'Vehículo', sub: 'Combustible' },
+  { re: /neumaticos|gomer[ií]a|suspension/i,       cat: 'Vehículo', sub: 'Mantenimiento' },
+
+  // --- Hogar ---
+  { re: /debora daniela cortez|ferreter[ií]a/i,    cat: 'Hogar', sub: 'Ferretería' },
+
+  // --- Compras online ---
+  { re: /mercado libre|mercadolibre/i,             cat: 'Compras Online', sub: 'MercadoLibre' },
+
+  // --- Educación ---
+  { re: /colegio|parodi/i,                         cat: 'Educación', sub: 'Colegio' }
+];
+
+// Un movimiento cuyo destinatario es el propio Eduardo es plata que vuelve al
+// banco, no un gasto. Sin esta regla el resumen da $39M de "gasto" en 4 meses
+// contra un ingreso de ~$20M: $27,9M eran transferencias a sí mismo.
+function clasificarMovimientoMP_(desc, monto) {
+  if (MP_TITULAR_.test(desc)) return { cat: 'Transferencia Interna', sub: 'A cuenta propia' };
+  for (var i = 0; i < MP_REGLAS_.length; i++) {
+    if (MP_REGLAS_[i].re.test(desc)) return { cat: MP_REGLAS_[i].cat, sub: MP_REGLAS_[i].sub };
+  }
+  return { cat: 'Otros', sub: 'Pendiente identificar' };
+}
+
+// Cada movimiento arranca con una fecha dd-mm-aaaa. Se corta por fecha en vez
+// de por línea porque el salto de línea depende de cómo convierta el PDF (la
+// descripción larga se parte en dos o tres renglones, y no siempre igual).
+function parsearMovimientosMP_(texto) {
+  var re = /(\d{2})-(\d{2})-(\d{4})/g, cortes = [], m;
+  while ((m = re.exec(texto)) !== null) cortes.push({ i: m.index, f: m[1] + '/' + m[2] + '/' + m[3] });
+
+  var movs = [];
+  for (var k = 0; k < cortes.length; k++) {
+    var bloque = texto.substring(cortes[k].i, k + 1 < cortes.length ? cortes[k + 1].i : texto.length);
+    var montos = bloque.match(/\$\s*-?[\d.]+,\d{2}/g);
+    if (!montos || montos.length < 2) continue; // un bloque real trae Valor y Saldo
+
+    var idop = bloque.match(/\b(\d{10,})\b/);
+    var desc = bloque.substring(10);
+    if (idop) desc = desc.substring(0, desc.indexOf(idop[1]));
+    desc = desc.replace(/\$\s*-?[\d.]+,\d{2}/g, '').replace(/\s+/g, ' ').trim();
+    if (!desc) continue;
+
+    var valor = parseFloat(montos[0].replace(/[$\s.]/g, '').replace(',', '.'));
+    if (isNaN(valor)) continue;
+
+    movs.push({ fecha: cortes[k].f, desc: desc, idop: idop ? idop[1] : '', monto: valor });
+  }
+  return movs;
+}
+
+function esResumenMercadoPago_(texto) {
+  return /RESUMEN\s+DE\s+CUENTA\s+EN\s+PESOS/i.test(texto);
+}
+
+/**
+ * Carga en la hoja MercadoPago los movimientos del resumen que todavía no
+ * estén. Deduplica por ID de operación, así que se puede subir el mismo
+ * resumen dos veces, o resúmenes con períodos superpuestos, sin duplicar nada.
+ */
+function procesarResumenMP_(texto, file, logSheet, procesadasFolder) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(MP_SHEET_IMPORT_);
+  if (!sheet) {
+    registrarLog_(logSheet, 'resumen_mercadopago', '', 'falta_hoja_MercadoPago', null, null, null, file.getName());
+    return null;
+  }
+
+  var ultimaCol = sheet.getLastColumn();
+  var headers = sheet.getRange(1, 1, 1, ultimaCol).getValues()[0];
+  var colId = headers.indexOf(MP_COL_ID_);
+  if (colId === -1) {
+    colId = ultimaCol;
+    sheet.getRange(1, colId + 1).setValue(MP_COL_ID_);
+    headers.push(MP_COL_ID_);
+    ultimaCol++;
+  }
+
+  var existentes = {};
+  if (sheet.getLastRow() > 1) {
+    sheet.getRange(2, colId + 1, sheet.getLastRow() - 1, 1).getValues()
+      .forEach(function (r) { if (r[0]) existentes[String(r[0]).trim()] = true; });
+  }
+
+  var idx = {}; headers.forEach(function (h, i) { idx[String(h).trim()] = i; });
+  var movs = parsearMovimientosMP_(texto);
+  var filas = [], nuevos = 0, sinIdentificar = 0;
+
+  movs.forEach(function (mv) {
+    if (!mv.idop || existentes[mv.idop]) return;
+    existentes[mv.idop] = true;
+
+    var k = clasificarMovimientoMP_(mv.desc, mv.monto);
+    if (k.cat === 'Otros' && k.sub === 'Pendiente identificar') sinIdentificar++;
+
+    var fila = new Array(ultimaCol).fill('');
+    var poner = function (nombre, valor) { if (idx[nombre] !== undefined) fila[idx[nombre]] = valor; };
+    poner('Fecha', mv.fecha);
+    poner('TipoMovimiento', mv.desc);
+    poner('Descripcion', mv.desc);
+    poner('Monto', mv.monto);
+    poner('Categoria', k.cat);
+    poner('Subcategoria', k.sub);
+    poner('Familia', 'Núcleo');
+    poner('Fuente', 'Resumen MP');
+    fila[colId] = mv.idop;
+    filas.push(fila);
+    nuevos++;
+  });
+
+  if (filas.length > 0) {
+    sheet.getRange(sheet.getLastRow() + 1, 1, filas.length, ultimaCol).setValues(filas);
+    SpreadsheetApp.flush();
+  }
+
+  registrarLog_(logSheet, 'resumen_mercadopago', '', 'importado', null, nuevos, null, file.getName());
+  moverAProcesadas_(file, procesadasFolder);
+  return { total: movs.length, nuevos: nuevos, sinIdentificar: sinIdentificar, archivo: file.getName() };
+}
+
+/**
+ * Se puede correr a mano desde el editor para procesar los resúmenes que ya
+ * estén en la carpeta, sin esperar al trigger de 6 horas.
+ */
+function importarResumenesMP() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var logSheet = obtenerOCrearHoja_(ss, LOG_SHEET_NAME,
+    ['Fecha', 'Proveedor/Categoría', 'Titular', 'Estado', 'Monto anterior', 'Monto nuevo', 'Variación', 'Fecha/Vencimiento', 'Archivo']);
+  var folder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
+  var procesadas = obtenerOCrearSubcarpeta_(folder, PROCESADAS_SUBFOLDER);
+
+  var hechos = 0;
+  listarArchivosPendientes_(folder).forEach(function (file) {
+    var texto;
+    try { texto = extraerTextoArchivo_(file); } catch (e) { return; }
+    if (!esResumenMercadoPago_(texto)) return;
+    var r = procesarResumenMP_(texto, file, logSheet, procesadas);
+    if (r) { hechos++; Logger.log(r.archivo + ': ' + r.nuevos + ' movimientos nuevos de ' + r.total + ' (' + r.sinIdentificar + ' sin identificar)'); }
+  });
+  if (hechos === 0) Logger.log('No había ningún resumen de cuenta de MercadoPago en la carpeta.');
 }
