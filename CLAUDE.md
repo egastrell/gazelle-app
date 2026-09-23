@@ -242,8 +242,9 @@ desde reserva Santa Anita).
 3. Una vez por mes importa el PDF de MercadoPago y el resumen de la tarjeta.
 
 **Filtro para cualquier tarea técnica nueva — una sola pregunta:**
-*¿esto agrega plata a BS3 este mes?* Si la respuesta es no, va a Todoist
-etiquetada **`post-BS3`** y no se discute más en la sesión.
+*¿esto agrega plata a BS3 este mes?* Si la respuesta es no, se anota en la
+sección "Congelado hasta post-BS3" al final de este archivo y no se discute
+más en la sesión.
 
 Explícitamente congelados: corregir Make.com, montar `gws`, el Worker del asesor
 Dave & Daniel, y cualquier función nueva. Los bugs que hagan **mentir** un número
@@ -266,14 +267,30 @@ de ahorrar.
   para habilitar el advisor "Dave & Daniel" con la API de Anthropic. Mientras
   no exista, la tarjeta del asesor muestra un error — es esperado, no es un bug.
 
-### Gestión de tareas
-- Todoist: proyecto ID 6gqxvr6mf69CFpX3, sección Alta Prioridad
-  6gqxvrJgM9PmX8h3
-- Asana: proyecto ID 1216149831794461
-- Ambos son espejo — toda tarea nueva va en los dos simultáneamente, sin
-  excepción.
-- Todoist usa dueString en lenguaje natural o ISO; Asana usa due_on:
-  'YYYY-MM-DD'.
+### Gestión de tareas — SOLO Google Calendar
+
+> Cambiado el 23/09/2026. Antes decía que toda tarea iba simultáneamente a
+> Todoist y Asana. **Eduardo no usa ninguna de las dos.** Durante meses se
+> cargaron tareas en dos sistemas que nadie abría — trabajo que se sentía
+> productivo y que nadie iba a ver.
+
+**Todo recordatorio va a Google Calendar, y solo ahí.** No proponer Todoist,
+Asana ni ninguna app de tareas nueva: cambiar de herramienta no es un avance.
+
+Cómo se cargan las cosas acá:
+- Van al calendario **solo acciones con fecha y hora** que mueven plata o
+  desbloquean algo. Lo demás no va a ningún lado.
+- La descripción del evento lleva **todo lo necesario para ejecutar sin
+  buscar nada**: montos, pasos, y por qué importa. Eduardo lo abre desde el
+  celular en el momento, no antes.
+- Zona horaria `America/Argentina/Buenos_Aires`.
+
+Eventos permanentes ya creados:
+
+| Cuándo | Qué |
+|---|---|
+| Día 26, mensual | 💰 **APORTE BS3** — la transferencia, antes que nada |
+| Lunes, semanal | 🛒 Girar $210.000 a Alimentación + bajar resumen MP a Drive |
 
 ---
 
@@ -388,8 +405,8 @@ NO migrar nunca: servicios/tarjetas de los Padres (Mirta y Alfredo).
 
 ## Preferencias de trabajo
 
-- Acción autónoma: completar tareas (incluyendo marcar Todoist/Asana) sin pedir
-  confirmación previa para operaciones de bajo riesgo. Para acciones que muevan
+- Acción autónoma: completar tareas sin pedir confirmación previa para
+  operaciones de bajo riesgo. Para acciones que muevan
   dinero real o modifiquen trámites impositivos, confirmar antes de ejecutar.
 - Sin halagos: directo, claro, conciso. Sin ser condescendiente.
 - Ediciones quirúrgicas en código (index.html): inyectar cambios, no reescribir
@@ -400,8 +417,7 @@ NO migrar nunca: servicios/tarjetas de los Padres (Mirta y Alfredo).
 - Foco en el objetivo: Santa Anita y libertad financiera.
 - Locale Argentina: fórmulas Google Sheets con punto y coma (;). Montos con
   punto como separador de miles y coma para decimales.
-- Toda tarea nueva creada va simultáneamente en Todoist y Asana, nunca en una
-  sola.
+- Los recordatorios van a Google Calendar y solo ahí (ver "Gestión de tareas").
 
 ---
 
@@ -700,3 +716,29 @@ de `jezweb/claude-skills` existe pero **no cubre despliegue como web app ni
   Sheet. `doGet` funciona igual porque usa `openById`, pero las funciones que usan
   `getActiveSpreadsheet()` fallarían. **Verificar antes de correr las utilidades
   de limpieza o de confiar en los triggers.**
+
+---
+
+## Congelado hasta post-BS3
+
+Trabajo técnico real, que vale la pena, y que **no suma un peso a BS3 este mes**.
+No retomarlo ni proponerlo hasta que el fondo esté completo. Está acá para que no
+se pierda, no para hacerlo.
+
+- Extender Make.com / arreglar su prompt de Gemini.
+- Montar `gws` (escritura directa al Sheet desde la terminal).
+- Cloudflare Worker del asesor Dave & Daniel.
+- Recalibrar los 12 techos por categoría con el histórico limpio.
+- Las 13 filas duplicadas que quedaron sin emparejar en Tarjetas.
+- Los 120 registros con Ultimos4="1234" (parece un placeholder, sin investigar).
+- Municipalidad Morón: migrar el débito.
+- "Gastos prohibidos" en la app: el texto habla de deudas que ya no existen y
+  lista Delivery como "Libre ✓".
+- Visa Galicia sigue apareciendo en la proyección de pagos aunque esté cancelada.
+
+**Excepción que sí se toca:** los bugs que hagan **mentir** un número. Una cifra
+falsa y optimista autoriza gasto, que es lo contrario de ahorrar.
+
+**Fuera de esta lista (no es técnico, y sí importa):** el fraude sin resolver de
+US$ 10,88 + US$ 92,57. Eso es plata a recuperar — va al calendario cuando Eduardo
+decida llamar.
