@@ -508,11 +508,29 @@ No se tocó, falta investigar la causa.
 
 Ya reportado al banco por Eduardo. Auditoría completa cruzando los PDFs reales de
 julio y agosto 2026 (no solo el Sheet):
-- 15 cargos ($346) confirmados revertidos a favor.
-- **$10,88 (TGH GRILLHOUSE BORACAY, cupón 00796, 26/06)**: investigación cerrada el
-  23/07 SIN crédito — quedó a cargo de Eduardo. Necesita apelar.
-- **4 cargos ($92,57 total, todos del 25/06)**: segunda instancia de investigación
-  abierta el 29/06, sigue sin resolución en el resumen del 20/08 (2+ meses).
+> **CORREGIDO el 23/09/2026** contra los PDF reales de julio, agosto y septiembre.
+> La versión anterior decía que 4 cargos de US$ 92,57 seguían sin resolverse. **Ya
+> estaban acreditados.** El error: se leyó `FIN INVESTIGACION` del 29/06 como
+> apertura de una segunda instancia, cuando es el CIERRE — y cada línea tenía su
+> `CR OPERAC INTERNAC` al lado. Al leer un resumen, un cargo está devuelto solo si
+> tiene su línea de crédito; `FIN INVESTIGACION` sola significa cerrada EN CONTRA.
+
+Conteo real, verificado línea por línea:
+
+| Resumen | Investigaciones cerradas | Créditos | Neto |
+|---|---:|---:|---:|
+| Agosto (vto 05/08) | 18 — US$ 369,54 | 18 — US$ 373,33 | −US$ 3,79 **a favor** |
+| Septiembre (vto 02/09) | 2 — US$ 14,10 | 1 — US$ 3,22 | +US$ 10,88 a cargo |
+
+Los 18 de agosto se acreditaron todos el 29/06, incluidos los 4 del 25/06 que
+sumaban US$ 92,57 (cupones 00355 TGH GRILLHOUSE 20,47 · 00356 EPIC RESTAURANT
+37,33 · 00357 STARBUCKS 3,87 · 00358 TGH GRILLHOUSE 30,90). Se devolvió US$ 3,79
+de más que lo cobrado porque el tipo de cambio se movió entre cargo y crédito.
+
+**LO ÚNICO PENDIENTE: US$ 10,88** — TGH GRILLHOUSE BORACAY, cupón **00796**, del
+26/06. Investigación cerrada el 23/07 **sin crédito**; figura en el resumen de
+septiembre como `TOTAL COMISIONES Y AJUSTES 10,88`. Es el único de los 20 cargos
+que quedó a cargo de Eduardo. Son ~$16.800 al MEP: decidir si vale el reclamo.
 Se le dio a Eduardo un guión de llamada con los datos exactos (cupones, montos,
 fechas) para reclamar ambos casos. Estado de la llamada: no confirmado en este chat.
 
@@ -739,6 +757,6 @@ se pierda, no para hacerlo.
 **Excepción que sí se toca:** los bugs que hagan **mentir** un número. Una cifra
 falsa y optimista autoriza gasto, que es lo contrario de ahorrar.
 
-**Fuera de esta lista (no es técnico, y sí importa):** el fraude sin resolver de
-US$ 10,88 + US$ 92,57. Eso es plata a recuperar — va al calendario cuando Eduardo
-decida llamar.
+**Fuera de esta lista (no es técnico):** del fraude solo queda **US$ 10,88**
+sin devolver — los US$ 92,57 ya estaban acreditados. Son ~$16.800: decidir si
+vale el reclamo, no darlo por hecho.
