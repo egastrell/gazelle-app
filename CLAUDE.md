@@ -44,8 +44,56 @@ el fondo en `fondo_bs3_usd`, ambos en la hoja Config, que es la fuente única. E
 archivo tuvo durante meses un fondo y una meta que no coincidían con el Sheet, y
 cualquier sesión que los leyera trabajaba con datos contradictorios.
 
-Regla de oro BS3: Todo excedente sin comprometer va al fondo de emergencia. No hay
-gasto discrecional fuera de presupuesto. Santa Anita bloqueada hasta BS6.
+Santa Anita bloqueada hasta BS6.
+
+---
+
+## REGLA MAESTRA — primero BS3, después lo demás
+
+> Adoptada el 23/09/2026. Reemplaza la vieja "regla de oro" de que *todo excedente
+> sin comprometer va al fondo*. Esa regla no funcionó nunca, y ahora se entiende por
+> qué: **un excedente que se calcula a fin de mes no existe.** Siempre aparecen
+> gastos en el medio. Medido con datos reales, el excedente verdadero es ~$0.
+
+**El día de cobro, en este orden, sin excepción:**
+
+1. **Diezmo.**
+2. **Transferencia fija a MP dólares (BS3).** Ese mismo día, no a fin de mes.
+3. Recién después se arma todo lo demás con lo que queda.
+
+El ahorro no ocurre porque sobre: ocurre porque la plata **no está disponible**.
+
+### El monto crece por etapas, no de golpe
+
+| Etapa | Monto | Condición |
+|---|---:|---|
+| Hoy | **$80.000** | La baja de los débitos de Mirta — estructural |
+| Después | **$160.000** | Llamadas hechas **y** dos ciclos sin delivery |
+| Si se confirma | **$420.000** | Techo de Alimentación recalibrado con datos reales |
+
+**Por qué no arranca en $160.000:** la baja de Mirta ($78.757) es estructural —dos
+llamadas y desaparece—, pero el corte de delivery ($82.730) es conductual y depende
+de cuatro personas todos los meses. Si el aporte fijo se programa antes de que la
+plata exista, el faltante aterriza en la tarjeta: financiar el ahorro con deuda es
+retroceder a BS2, el peor final posible. El aporte fijo tiene que ser **imposible de
+fallar**; lo que se ahorre de más se transfiere a mano el mismo día.
+
+### Reglas que sostienen esto
+
+- Si el delivery reaparece, sale del **sobre de Comida**, nunca del aporte a BS3.
+- El aporte no se suspende ni se reduce. Un mes salteado rompe el hábito, que es lo
+  único que se está construyendo.
+- La meta de $9.000.000 son "3 meses de gastos", no una cifra fija: **se recalcula
+  una vez por año.** Que el fondo esté en dólares cubre casi todo el riesgo de
+  inflación — eso ya estaba bien diseñado, no cambiarlo.
+
+### Ritual mensual — 30 minutos el día de cobro
+
+1. ¿Se hizo el aporte a BS3?
+2. ¿Qué sobre se pasó? Se ajusta **ese solo**.
+3. Se actualiza **un único número**: `fondo_bs3_usd` en la hoja Config.
+
+No hace falta auditar categorías todas las semanas. Medir más no ahorra más.
 
 ---
 
@@ -73,15 +121,15 @@ Circuito del diezmo (mensual):
 
 ---
 
-## Ciclo financiero mensual (orden de prioridad permanente desde julio 2026)
+## Ciclo financiero mensual (desde el 23/09/2026)
 
-1. Diezmo primero.
-2. Ahorro forzado BS3 segundo (acordado con Romina; intocable, debe rendir por
-   encima de la inflación, no debe figurar como "disponible").
+1. **Diezmo.**
+2. **Aporte fijo a BS3** — ver REGLA MAESTRA arriba. Intocable, no figura nunca
+   como "disponible".
 3. Pagos fijos a terceros: Walter Simón, AySA, Candela Parodi, Cooperativa Santa
    Anita, Urunet (desde reservas).
-4. Pago de tarjeta de crédito (5-10 días después del cobro de sueldo).
-5. Resto del mes funciona con tarjeta de crédito respaldada por reservas MP.
+4. Pago de tarjeta de crédito (5-10 días después del cobro), desde Pellegrini.
+5. Resto del mes con los 5 sobres de MercadoPago.
 
 ---
 
@@ -115,17 +163,26 @@ todas canceladas para eliminar el cargo por servicio Eminent (~$83.000/mes).
 
 ---
 
-## Sistema de reservas MercadoPago
+## Sistema de reservas MercadoPago — 5 sobres (simplificado 23/09/2026)
 
-Límite: 15 reservas totales.
+Antes había 14 sobres, siete de ellos para desglosar débitos de la tarjeta
+(Educación, Swiss Medical, Seguros, Servicios BsAs, Santa Anita, Suscripciones,
+Cuotas). **Ese desglose no daba ninguna información: el resumen de la tarjeta ya
+viene detallado.** Solo agregaba trabajo de mantenimiento.
 
-Reserva TARJETA DE CREDITO: transitoria — se crea cada ciclo para cubrir el
-resumen vencido, se elimina una vez pagada la tarjeta.
+| # | Sobre | Nota |
+|---|---|---|
+| 1 | **Alimentación** | Giro semanal, los lunes |
+| 2 | **Vehículo + Transporte** | |
+| 3 | **Salud + Hogar** | |
+| 4 | **Comida y Entretenimiento** | De acá sale el delivery si reaparece |
+| 5 | **Indumentaria** | |
 
-Reservas permanentes incluyen débitos TC (Educación, Swiss Medical, Seguros,
-Servicios BsAs, Santa Anita, Suscripciones, Cuotas) y reservas variables
-(Alimentación, Vehículo, Salud, Comida y Entretenimiento, Indumentaria,
-Transporte, Hogar + Online).
+**La tarjeta NO lleva sobre en MercadoPago.** El resumen se debita solo de la
+cuenta sueldo — lo dice el propio resumen: *"Debitaremos de su c.ahorro
+0002874447"*. Esa plata va en **Pellegrini** hasta el vencimiento: MP paga 17,5%
+y Pellegrini 20,3%, así que sobre ~$2,9M durante 25 días la diferencia es
+~$5.600/mes. Un sobre de TC en MP es plata quieta que además no paga nada.
 
 Reserva Santa Anita (creada 28/07/2026): usada para retener el pago de Walter
 Simón (~$130.000/mes) y de Urunet (~$35-43k/mes) hasta la transferencia manual
@@ -172,7 +229,27 @@ desde reserva Santa Anita).
   normalizar_acentos.py
 - Credenciales: credenciales_google.json
 
-### App Gazelle
+### App Gazelle — DESARROLLO CONGELADO hasta terminar BS3
+
+> Congelada el 23/09/2026. La app mide muy bien y no ahorra nada: el ahorro lo
+> produce la transferencia del día de cobro, no el tablero. Seguir agregándole
+> funciones es trabajo que se siente productivo y no mueve un peso a BS3.
+
+**Hasta que BS3 esté completo, Gazelle hace solo tres cosas:**
+
+1. Muestra el **% de BS3** y la fecha estimada de llegada.
+2. Muestra el **saldo diario de Alimentación**.
+3. Una vez por mes importa el PDF de MercadoPago y el resumen de la tarjeta.
+
+**Filtro para cualquier tarea técnica nueva — una sola pregunta:**
+*¿esto agrega plata a BS3 este mes?* Si la respuesta es no, va a Todoist
+etiquetada **`post-BS3`** y no se discute más en la sesión.
+
+Explícitamente congelados: corregir Make.com, montar `gws`, el Worker del asesor
+Dave & Daniel, y cualquier función nueva. Los bugs que hagan **mentir** un número
+sí se arreglan — una cifra falsa y optimista autoriza gasto, que es lo contrario
+de ahorrar.
+
 - URL: https://egastrell.github.io/gazelle-app
 - Repo: github.com/egastrell/gazelle-app (index.html)
 - Stack: HTML/CSS/JS plano, sin backend
