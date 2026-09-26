@@ -248,6 +248,17 @@ body { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
 .alim-inputs button { border:0; border-radius:10px; padding:10px 14px; font-size:12px; font-weight:700; color:#fff; background:var(--green); cursor:pointer; white-space:nowrap; }
 .alim-inputs button.alt { background:var(--muted); }
 .alim-foot { font-size:10px; color:var(--muted); margin-top:10px; line-height:1.5; }
+/* BS3 + APORTE — lo primero y lo único grande de la pantalla */
+.bs3-card { background:linear-gradient(135deg,#1A1D23,#2D3748); border-radius:var(--radius); padding:20px; margin-bottom:12px; box-shadow:var(--shadow-md); }
+.bs3-label { font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.55); margin-bottom:8px; }
+.bs3-pct { font-size:52px; font-weight:800; font-family:'Space Mono',monospace; line-height:1; color:#fff; }
+.bs3-bar-track { height:8px; background:rgba(255,255,255,0.15); border-radius:8px; margin:14px 0 10px; overflow:hidden; }
+.bs3-bar-fill { height:100%; background:var(--green); border-radius:8px; width:0%; transition:width .6s; }
+.bs3-sub { font-size:13px; color:rgba(255,255,255,0.9); line-height:1.5; }
+.bs3-eta { font-size:11px; color:rgba(255,255,255,0.55); margin-top:6px; line-height:1.5; }
+.aporte-card { background:var(--green-light); border:1px solid rgba(0,196,140,0.3); border-radius:var(--radius); padding:16px; margin-bottom:14px; }
+.aporte-txt { font-size:13px; line-height:1.5; color:var(--text); }
+.aporte-card button { border:0; border-radius:10px; padding:10px 14px; font-size:12px; font-weight:700; color:#fff; background:var(--green); cursor:pointer; white-space:nowrap; }
 .hormigas-card { background:var(--orange-light); border:1px solid rgba(255,140,66,0.2); border-radius:var(--radius); padding:18px; margin-bottom:14px; }
 .hormiga-total { font-size:32px; font-weight:800; color:var(--orange); font-family:'Space Mono',monospace; }
 .hormiga-label { font-size:11px; color:var(--orange); font-weight:600; margin-bottom:6px; }
@@ -398,9 +409,6 @@ body { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
 <div class="more-sheet-overlay" id="moreSheetOverlay" onclick="if(event.target===this)closeMoreSheet()">
   <div class="more-sheet">
     <div class="more-sheet-handle"></div>
-    <div class="more-sheet-item" onclick="showTabFromSheet('pagar')">💳 A Pagar</div>
-    <div class="more-sheet-item" onclick="showTabFromSheet('categorias')">📂 Categorías</div>
-    <div class="more-sheet-item" onclick="showTabFromSheet('prohibidos')">🚫 Prohibidos</div>
     <div class="more-sheet-item" onclick="showTabFromSheet('mercadopago')">📱 MercadoPago</div>
   </div>
 </div>
@@ -408,27 +416,32 @@ body { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
 <!-- TAB RESUMEN -->
 <div id="tab-resumen" class="content">
 
-  <!-- ASESOR DAVE & DANIEL -->
-  <div class="asesor-card">
-    <div class="asesor-header">
-      <div class="asesor-avatar">🎯</div>
-      <div>
-        <div class="asesor-name">Dave & Daniel</div>
-        <div class="asesor-role">Tu asesor financiero personal</div>
-      </div>
-    </div>
-    <div class="asesor-body" id="asesorMsg">
-      <div class="asesor-loading"><span></span><span></span><span></span></div>
-    </div>
-    <div class="asesor-action" id="asesorAccion" style="display:none"></div>
+  <!-- BS3 — lo único que importa, primero y más grande.
+       Antes acá arrancaba la tarjeta del asesor (que imprime un error porque
+       el Worker no existe) y abajo "Disponible este ciclo" en 46px: un permiso
+       de gasto calculado contra techos inflados. El % de BS3 no aparecía en
+       esta pantalla: estaba a un tab de distancia. -->
+  <div class="bs3-card" id="bs3Card">
+    <div class="bs3-label">🎯 Fondo de emergencia — Baby Step 3</div>
+    <div class="bs3-pct" id="bs3Pct">—</div>
+    <div class="bs3-bar-track"><div class="bs3-bar-fill" id="bs3Bar"></div></div>
+    <div class="bs3-sub" id="bs3Sub">sincronizando...</div>
+    <div class="bs3-eta" id="bs3Eta"></div>
   </div>
 
-  <div class="disponible-card ok" id="disponibleCard">
-    <div class="disp-label">Disponible este ciclo — TC + MP</div>
-    <div class="disp-amount" id="disponibleAmt">—</div>
-    <div class="disp-sub" id="disponibleSub">sincronizando...</div>
-    <div class="disp-msg" id="judgeMsg">Conectando con Google Sheets...</div>
+  <!-- APORTE — el único acto del sistema que mueve plata a BS3.
+       La palabra "aporte" no existía en ninguna de las 1.774 líneas. -->
+  <div class="aporte-card" id="aporteCard">
+    <div class="aporte-txt" id="aporteTxt">—</div>
+    <div class="alim-inputs" style="margin-top:10px">
+      <input type="text" inputmode="decimal" id="aporteInput" placeholder="Aporte mensual a BS3">
+      <button onclick="guardarAporte()">Fijar</button>
+    </div>
+    <div class="alim-inputs" id="aporteHechoWrap" style="display:none">
+      <button style="flex:1" onclick="marcarAporteHecho()">✓ Ya lo transferí este mes</button>
+    </div>
   </div>
+
   <div class="hormigas-card" id="frescuraBanner" style="display:none;border-left:4px solid var(--red)"></div>
 
   <!-- ALIMENTACIÓN — RITMO SEMANAL -->
@@ -460,36 +473,10 @@ body { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
     <div class="hormiga-total" id="usdTotal">US$0</div>
     <div class="hormiga-items" id="usdItems"></div>
   </div>
-  <div class="stats-row">
-    <div class="stat-card"><div class="stat-val" id="statTxn" style="color:var(--blue)">—</div><div class="stat-lbl">Gastos</div></div>
-    <div class="stat-card"><div class="stat-val" id="statHormigas" style="color:var(--orange)">—</div><div class="stat-lbl">Hormigas</div></div>
-    <div class="stat-card"><div class="stat-val" id="statProhibidos" style="color:var(--red)">—</div><div class="stat-lbl">Prohibidos</div></div>
-  </div>
-  <div class="personas-grid">
-    <div class="persona-card" onclick="toggleDetalle('edu')" id="cardEdu">
-      <div class="persona-badge" style="color:var(--blue)">🧔 Eduardo <span id="arrowEdu" style="color:var(--muted)">▼</span></div>
-      <div class="persona-amount" id="totalEdu" style="color:var(--blue)">—</div>
-      <div class="persona-pct" id="pctEdu">— del ingreso</div>
-      <div class="persona-bar-track"><div class="persona-bar-fill" id="barEdu" style="background:var(--blue);width:0%"></div></div>
-      <div class="persona-detalle" id="detalleEdu"></div>
-    </div>
-    <div class="persona-card" onclick="toggleDetalle('romi')" id="cardRomi">
-      <div class="persona-badge" style="color:var(--purple)">👩 Romina <span id="arrowRomi" style="color:var(--muted)">▼</span></div>
-      <div class="persona-amount" id="totalRomi" style="color:var(--purple)">—</div>
-      <div class="persona-pct" id="pctRomi">— del ingreso</div>
-      <div class="persona-bar-track"><div class="persona-bar-fill" id="barRomi" style="background:var(--purple);width:0%"></div></div>
-      <div class="persona-detalle" id="detalleRomi"></div>
-    </div>
-  </div>
   <div class="hormigas-card">
     <div class="hormiga-label">☕ Gastos Hormiga del ciclo</div>
     <div class="hormiga-total" id="hormigaTotal">$0</div>
     <div class="hormiga-items" id="hormigaItems"></div>
-  </div>
-  <div class="quote-card">
-    <div class="quote-mark">"</div>
-    <div class="quote-text" id="ramseyCitaResumen">Cargando frase motivacional...</div>
-    <div class="quote-author" id="ramseyCitaAutor">— Dave Ramsey</div>
   </div>
 </div>
 
@@ -555,41 +542,6 @@ body { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
     <div class="card-title">💬 El método en palabras de Ramsey</div>
     <div style="display:grid;gap:10px" id="ramseyFrases"></div>
   </div>
-</div>
-
-<!-- TAB A PAGAR -->
-<div id="tab-pagar" class="content" style="display:none">
-  <div class="card">
-    <div class="card-title">💳 Proyección de pagos del ciclo</div>
-    <div class="pagar-seccion">
-      <div class="pagar-row"><div><div class="pagar-nombre">Visa Galicia</div><div class="pagar-vence" id="pagarVencVisa">—</div></div><div class="pagar-monto" id="pagarVisa">—</div></div>
-      <div class="pagar-row"><div><div class="pagar-nombre">Mastercard BNA</div><div class="pagar-vence" id="pagarVencMaster">—</div></div><div class="pagar-monto" id="pagarMaster">—</div></div>
-    </div>
-    <div class="pagar-total-row"><div class="pagar-total-lbl">Total a pagar</div><div class="pagar-total-num" id="pagarTotal">—</div></div>
-  </div>
-  <div class="card">
-    <div class="card-title">💰 Tu capacidad de pago</div>
-    <div class="capacidad-row"><div class="cap-lbl">Ingreso neto</div><div class="cap-val green" id="capIngreso">—</div></div>
-    <div class="capacidad-row"><div class="cap-lbl">(-) Diezmo 10%</div><div class="cap-val" id="capDiezmo">—</div></div>
-    <div class="capacidad-row"><div class="cap-lbl" style="font-weight:700">Queda para el mes</div><div class="cap-val" style="font-size:18px;color:var(--blue)" id="capacidadPago">—</div></div>
-    <div class="capacidad-row"><div class="cap-lbl">(-) Resumen de la tarjeta</div><div class="cap-val" id="capTarjeta">—</div></div>
-    <div class="diferencia-box ok" id="diferenciaBox"><div style="font-size:13px;font-weight:700">Diferencia</div><div style="font-size:20px;font-weight:800;font-family:'Space Mono',monospace" id="diferenciaPago">—</div></div>
-    <div style="font-size:10px;color:var(--muted);margin-top:10px;line-height:1.5" id="capNota"></div>
-  </div>
-</div>
-
-<!-- TAB CATEGORIAS -->
-<div id="tab-categorias" class="content" style="display:none">
-  <div class="cat-list" id="barsContainer"><div class="empty-state">Cargando...</div></div>
-</div>
-
-<!-- TAB PROHIBIDOS -->
-<div id="tab-prohibidos" class="content" style="display:none">
-  <div style="background:var(--red-light);border-radius:var(--radius);padding:16px;margin-bottom:14px;border-left:4px solid var(--red)">
-    <div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:4px">🚫 Modo Gazelle — Gastos prohibidos</div>
-    <div style="font-size:12px;color:var(--muted);line-height:1.5">Estos gastos están bloqueados hasta eliminar todas las deudas. Cada peso aquí es un peso menos para la libertad financiera.</div>
-  </div>
-  <div id="prohibidoList"></div>
 </div>
 
 <!-- TAB MOVIMIENTOS -->
@@ -771,10 +723,11 @@ const ICONOS_CAT = {
   'Compras Online':'📦','Hogar':'🏠','Otros':'❓','Diezmo':'🙏'
 };
 
-let configSheet = {
-  ingreso_mes_actual:3800000,fondo_bs3_usd:3643,cotizacion_dolar:1430,
-  meta_bs3_minimo:9000000,
-};
+// Sin defaults inventados: si Config no carga, la app dice que no sabe.
+// El viejo fondo_bs3_usd:3643 pintaba 59% donde el real es 51% — y el "~57%"
+// que el CLAUDE.md arrastró durante meses era exactamente este número
+// (3643 x 1430 / 9.000.000 = 57,9%), no un dato del Sheet.
+let configSheet = {};
 let cotizaciones = {oficial:null,blue:null,mep:null};
 
 function getParaTarjetas(){ return parseInt(localStorage.getItem('gazelle_para_tarjetas')||'0'); }
@@ -787,7 +740,7 @@ function getParaTarjetas(){ return parseInt(localStorage.getItem('gazelle_para_t
 // en los mismos ids, esos $55M inventados pisaban la tarjeta del fondo BS3.
 // Se eliminó junto con renderDeuda(): la deuda revolving no existe más (BS2
 // cerrado en mayo 2026, la tarjeta se paga FULL cada ciclo). Lo que sí importa
-// —cuánto va a venir en el próximo resumen— ya lo calcula renderPagar() sobre
+// —cuánto va a venir en el próximo resumen— se calcula sobre
 // el ciclo en curso.
 
 let presupuesto = {
@@ -942,7 +895,6 @@ async function fetchSheet(){
     setSyncState('ok',`Ciclo: ${gastosMes.filter(g=>!CATS_EXCLUIDAS.has(g.cat)).length} transacciones`);
     try{renderAll()}catch(e){console.error('renderAll:',e)}
     fetchMP();
-    llamarAsesor();
   }catch(e){setSyncState('error','Error al sincronizar. Tocá Actualizar.');console.error(e)}
 }
 
@@ -984,95 +936,8 @@ const FRASES_ASESOR=[
   {texto:"Modo Gazelle: velocidad, intensidad, enfoque. No hay deuda que resista a alguien que corre.",autor:"Dave Ramsey"},
 ];
 
-async function llamarAsesor(){
-  // La frase de Ramsey estaba al FINAL del try, después del fetch al Worker.
-  // Como el Worker todavía no existe, el fetch tira y la tarjeta se quedaba
-  // en "Cargando frase motivacional..." para siempre. La frase sale de un
-  // array local: no tiene por qué depender de que haya red ni Worker.
-  const frase=FRASES_ASESOR[Math.floor(Math.random()*FRASES_ASESOR.length)];
-  const elCita0=document.getElementById('ramseyCitaResumen');
-  const elAutor0=document.getElementById('ramseyCitaAutor');
-  if(elCita0)elCita0.textContent=frase.texto;
-  if(elAutor0)elAutor0.textContent='— '+frase.autor;
 
-  const g=gastosReales(gastosMes);
-  const total=g.reduce((s,x)=>s+x.monto,0);
-  const edu=g.filter(x=>x.quien==='Eduardo').reduce((s,x)=>s+x.monto,0);
-  const romi=g.filter(x=>x.quien==='Romina').reduce((s,x)=>s+x.monto,0);
-  const hormigas=g.filter(x=>x.hormiga).reduce((s,x)=>s+x.monto,0);
-  const prohibidos=g.filter(x=>x.esProhibido);
-  const limite=Object.values(presupuesto).reduce((s,c)=>s+c.limite,0);
-  const pct=Math.round(total/limite*100);
-  const cot=getCotizacionUsada();
-  const fondoUsd=configSheet.fondo_bs3_usd||3643;
-  const fondoPesos=Math.round(fondoUsd*cot);
-  const metaBS3=configSheet.meta_bs3_minimo||9000000;
-  const pctBS3=Math.round(fondoPesos/metaBS3*100);
-  const ingreso=configSheet.ingreso_mes_actual||3800000;
-  const porCat={};g.forEach(x=>{porCat[x.cat]=(porCat[x.cat]||0)+x.monto});
-  const dr=Math.max(Math.ceil((parseFechaISO(cicloActual.fin)-new Date())/864e5)+1,0);
-
-  // Sangrado MP del ciclo
-  const sangradoCiclo=gastosMPCiclo.filter(x=>x.esSangrado).reduce((s,x)=>s+Math.abs(x.monto),0);
-
-  const prompt=`Sos un asesor financiero personal que combina dos voces complementarias:
-
-DAVE RAMSEY: Directo, intenso, sin anestesia. Usa los números reales. Habla de Modo Gazelle, bola de nieve, la deuda como esclavitud. No acepta excusas. Los números son los números.
-
-DANIEL GONZÁLEZ (pastor y conferencista cristiano latinoamericano de finanzas personales): Habla de mayordomía — el dinero no nos pertenece, lo administramos para Dios. Unidad matrimonial en las finanzas (una sola billetera, un solo plan). Propósito antes que presupuesto. La generosidad como principio (el diezmo es el primer fruto). Santa Anita como el sueño que Dios puso en el corazón de esta familia. Cita Proverbios cuando corresponda.
-
-FAMILIA: Eduardo Franco Gastrell y Romina Ziegler. Dos hijos: Felipe y Federico. Sueño: casa propia en Santa Anita, Entre Ríos (bloqueado hasta BS6).
-
-CONTEXTO: Ya completaron Baby Step 2 el 5 de mayo de 2026. ¡Eliminaron todas las deudas! Ahora están en Baby Step 3: construir fondo de emergencia de 3-6 meses.
-
-DATOS REALES — Ciclo ${cicloActual.nombre}:
-- Días restantes: ${dr}
-- Gasto total TC: ${fp(total)} de ${fp(limite)} presupuestado (${pct}%)
-- Eduardo gastó (TC): ${fp(edu)}
-- Romina gastó (TC): ${fp(romi)}
-- Sangrado a Romina vía MP: ${fp(sangradoCiclo)}
-- Gastos hormiga: ${fp(hormigas)}
-- Gastos prohibidos: ${prohibidos.length}${prohibidos.length>0?' — '+prohibidos.slice(0,3).map(x=>x.comercio+': '+fp(x.monto)).join(', '):''}
-- Por categoría: ${Object.entries(porCat).map(([c,v])=>c+': '+fp(v)).join(', ')}
-- Fondo BS3: USD ${fondoUsd} (~${fp(fondoPesos)} al MEP) — ${pctBS3}% de la meta mínima (${fp(metaBS3)})
-- Ingreso mensual: ${fp(ingreso)}
-- Santa Anita: sueño bloqueado hasta BS6
-
-INSTRUCCIONES:
-- Analizá la situación real del ciclo sin suavizar
-- Nombrá a Eduardo y Romina individualmente cuando corresponda a sus gastos
-- Si hay gastos prohibidos o categorías fuera de control, señalalo con consecuencias concretas
-- Si van bien, celebralo genuinamente con los números que lo demuestran
-- Combiná la voz de Dave (intensidad, números, consecuencias) con la de Daniel (propósito divino, mayordomía, unidad familiar, fe)
-- Recordá que ya eliminaron la deuda — eso merece reconocimiento si corresponde
-- Hablá del fondo BS3 y el progreso hacia Santa Anita
-- Máximo 4 párrafos concisos
-- Terminá siempre con UNA acción concreta precedida exactamente por: → ACCIÓN DE HOY:
-- Sin markdown con asteriscos ni hashtags. Texto limpio.`;
-
-  try{
-    const res=await fetch('https://gazelle-asesor.efgastrell.workers.dev',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-5',max_tokens:800,messages:[{role:'user',content:prompt}]})
-    });
-    const data=await res.json();
-    const texto=data.content?.[0]?.text||'';
-    const partes=texto.split('→ ACCIÓN DE HOY:');
-    const msg=partes[0].trim();
-    const accion=partes[1]?.trim()||'';
-    const elMsg=document.getElementById('asesorMsg');
-    const elAcc=document.getElementById('asesorAccion');
-    if(elMsg)elMsg.innerHTML=msg.replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');
-    if(elAcc){elAcc.textContent=accion;elAcc.style.display=accion?'':'none'}
-  }catch(e){
-    const el=document.getElementById('asesorMsg');
-    if(el)el.textContent='Error al conectar con el asesor. Tocá Actualizar.';
-    console.error(e);
-  }
-}
-
-function renderAll(){renderFrescura();renderAlimentacion();renderResumen();renderMiPlan();renderResumenPersonas();renderPagar();renderCategorias();renderProhibidos();renderTxn();renderPresupuesto();renderRamsey()}
+function renderAll(){renderFrescura();renderAlimentacion();renderBS3();renderResumen();renderMiPlan();renderTxn();renderPresupuesto();renderRamsey()}
 
 // ---------------------------------------------------------------------------
 // FRESCURA DE DATOS
@@ -1280,49 +1145,83 @@ function renderResumen(){
   }
 }
 
-function renderResumenPersonas(){
-  const gastos=gastosUnificados();
-  const edu=gastos.filter(g=>g.quien==='Eduardo').reduce((s,g)=>s+g.monto,0);
-  const romi=gastos.filter(g=>g.quien==='Romina').reduce((s,g)=>s+g.monto,0);
-  // Estaba clavado en 3.800.000 — un número que ya no existe en ningún lado.
-  // Por eso los porcentajes "del ingreso" de Eduardo y Romina se calculaban
-  // contra un sueldo inventado. Ahora sale de Config, que es la fuente única
-  // acordada, y cae al viejo default solo si Config todavía no cargó.
-  const INGRESO_BASE=configSheet.ingreso_mes_actual||3800000;
-  document.getElementById('totalEdu').textContent=fp(edu);
-  document.getElementById('totalRomi').textContent=fp(romi);
-  document.getElementById('pctEdu').textContent=Math.round(edu/INGRESO_BASE*100)+'% del ingreso';
-  document.getElementById('pctRomi').textContent=Math.round(romi/INGRESO_BASE*100)+'% del ingreso';
-  setTimeout(()=>{document.getElementById('barEdu').style.width=Math.min(edu/INGRESO_BASE*100,100)+'%';document.getElementById('barRomi').style.width=Math.min(romi/INGRESO_BASE*100,100)+'%'},50);
-  const llenarDetalle=(elId,quien,color)=>{
-    const el=document.getElementById(elId);
-    const gs=gastosUnificados().filter(g=>g.quien===quien).sort((a,b)=>b.monto-a.monto);
-    el.innerHTML=gs.map(g=>`<div class="persona-detalle-item"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%">${g.esProhibido?'🚫 ':''}${g.comercio}</span><span style="font-family:'Space Mono',monospace;color:${color};white-space:nowrap">${fp(g.monto)}</span></div>`).join('');
-  };
-  llenarDetalle('detalleEdu','Eduardo','var(--blue)');
-  llenarDetalle('detalleRomi','Romina','var(--purple)');
+
+
+// ---------------------------------------------------------------------------
+// BS3 — el fondo, el aporte y la fecha REAL de llegada
+// La app decía "5 meses" porque calculaba excedente = ingreso − diezmo − techos
+// = $1.036.054/mes. Ese número no existe: el excedente medido es ~$0 y el
+// ahorro sale del aporte fijo del día de cobro, no de lo que sobra. A $80.000
+// son 55 meses, no 5. Un error de 11x, y en la dirección que autoriza gasto.
+// ---------------------------------------------------------------------------
+function aporteBS3(){ const v=localStorage.getItem('gazelle_aporte_bs3'); return v===null?null:parseFloat(v); }
+function aporteHecho(){ return localStorage.getItem('gazelle_aporte_hecho')||''; }
+function mesActualISO(){ const d=new Date(); return d.getFullYear()+'-'+pad2(d.getMonth()+1); }
+function pad2(n){ return String(n).length<2?'0'+n:String(n); }
+
+function guardarAporte(){
+  const el=document.getElementById('aporteInput'), v=parseMontoAr(el.value);
+  if(isNaN(v)||v<0){mostrarAlert('⚠️','Monto inválido','Escribí cuánto vas a transferir por mes, por ejemplo 80.000');return}
+  localStorage.setItem('gazelle_aporte_bs3',v); el.value=''; renderBS3();
+}
+function marcarAporteHecho(){
+  localStorage.setItem('gazelle_aporte_hecho',mesActualISO()); renderBS3();
+  mostrarAlert('✅','Anotado','El aporte de este mes está hecho. Ahora actualizá fondo_bs3_usd en la hoja Config.');
 }
 
-function toggleDetalle(quien){
-  const id=quien==='edu'?'detalleEdu':'detalleRomi';
-  const arrow=quien==='edu'?'arrowEdu':'arrowRomi';
-  const el=document.getElementById(id);const isOpen=el.style.display!=='none';
-  el.style.display=isOpen?'none':'block';
-  document.getElementById(arrow).textContent=isOpen?'▼':'▲';
+function renderBS3(){
+  const elPct=document.getElementById('bs3Pct'); if(!elPct)return;
+  const elBar=document.getElementById('bs3Bar'), elSub=document.getElementById('bs3Sub'),
+        elEta=document.getElementById('bs3Eta'), elTxt=document.getElementById('aporteTxt'),
+        elWrap=document.getElementById('aporteHechoWrap');
+
+  const fondoUsd=configSheet.fondo_bs3_usd, meta=configSheet.meta_bs3_minimo;
+  // Sin Config no se inventa un fondo: se dice que no se sabe. El default viejo
+  // (3.643) pintaba 59% donde el real es 51% — casi $1.000.000 inexistente.
+  if(!fondoUsd||!meta){
+    elPct.textContent='—'; elBar.style.width='0%';
+    elSub.textContent='No pude leer el fondo del Sheet. Config → 🔌 Conexión con el Sheet.';
+    elEta.textContent=''; return;
+  }
+  const cot=getCotizacionUsada(), fondoPesos=Math.round(fondoUsd*cot);
+  const pct=Math.min(fondoPesos/meta*100,100), falta=Math.max(meta-fondoPesos,0);
+  elPct.textContent=Math.round(pct)+'%';
+  setTimeout(()=>{elBar.style.width=pct+'%'},50);
+  elSub.innerHTML=falta>0
+    ? 'Faltan <b>'+fp(falta)+'</b> · tenés '+fpUsd(fondoUsd)+' ('+fp(fondoPesos)+')'
+    : '✅ Fondo completo. Pasás a Baby Step 4: invertir el 15% para el retiro.';
+
+  const ap=aporteBS3();
+  if(falta<=0){ elEta.textContent=''; elTxt.textContent='BS3 cumplido.'; elWrap.style.display='none'; return; }
+  if(ap===null||ap<=0){
+    elEta.textContent='Fijá tu aporte mensual acá abajo para ver la fecha de llegada.';
+    elTxt.innerHTML='<b>Todavía no fijaste el aporte.</b> Es la transferencia del día de cobro: sale antes que todo lo demás, apenas después del diezmo.';
+    elWrap.style.display='none'; return;
+  }
+  const meses=Math.ceil(falta/ap);
+  const llegada=new Date(); llegada.setMonth(llegada.getMonth()+meses);
+  const MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  elEta.innerHTML='A '+fp(ap)+'/mes: <b>'+meses+' meses</b> — '+MESES[llegada.getMonth()]+' '+llegada.getFullYear()+
+    '. El aguinaldo de junio y diciembre lo acorta si va entero.';
+
+  const hecho=aporteHecho()===mesActualISO();
+  elWrap.style.display=hecho?'none':'';
+  elTxt.innerHTML=hecho
+    ? '✅ <b>Aporte de este mes hecho.</b> Acordate de actualizar <code>fondo_bs3_usd</code> en Config.'
+    : '💰 <b>Transferir '+fp(ap)+' a MP dólares.</b> El día de cobro, antes de armar nada más.';
 }
 
 function renderMiPlan(){
   const cot=getCotizacionUsada();
-  const fondoUsd=configSheet.fondo_bs3_usd||3643;
+  const fondoUsd=configSheet.fondo_bs3_usd||0;
   const fondoPesos=Math.round(fondoUsd*cot);
-  const metaBS3=configSheet.meta_bs3_minimo||9000000;
+  const metaBS3=configSheet.meta_bs3_minimo||0;
   const pct=Math.min((fondoPesos/metaBS3)*100,100);
   const falta=Math.max(metaBS3-fondoPesos,0);
-  const ingreso=configSheet.ingreso_mes_actual||3800000;
-  const diezmo=Math.round(ingreso*0.10);
-  const sumaTechos=Object.values(TECHOS_BS3).reduce((s,v)=>s+v,0);
-  const excedente=ingreso-diezmo-sumaTechos;
-  const meses=excedente>0?Math.ceil(falta/excedente):0;
+  // El excedente teórico (ingreso − diezmo − techos) se eliminó: daba
+  // $1.036.054/mes contra ~$0 real. Los meses salen del aporte que se transfiere.
+  const ap=aporteBS3();
+  const meses=(ap&&ap>0)?Math.ceil(falta/ap):0;
   const elDesc=document.getElementById('bsDesc');
   if(elDesc)elDesc.textContent=`¡Deudas eliminadas! Ahora construí un fondo de 3 a 6 meses de gastos. USD ${fondoUsd} (~${fp(fondoPesos)}) = ${Math.round(pct)}% de la meta. ¡No los toques!`;
   const elPct=document.getElementById('deudaPct');
@@ -1351,124 +1250,16 @@ function renderMiPlan(){
     <div style="background:var(--yellow-light);border-radius:12px;padding:14px;border-left:4px solid var(--yellow)">
       <div style="font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:4px">🎯 Meta BS3 mínima</div>
       <div style="font-size:13px;font-weight:600">${fp(metaBS3)} — ${fp(metaBS3*2)}</div>
-      <div style="font-size:11px;color:var(--muted);margin-top:4px">${excedente>0?'Agregar ~'+fp(excedente)+'/mes del excedente':'⚠️ Sin excedente este mes'}${meses>0?' · '+meses+' meses para BS3':''}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">${meses>0?'A '+fp(ap)+'/mes: '+meses+' meses':'⚠️ Fijá el aporte mensual en Resumen'}</div>
     </div>`;
   }
 }
 
-function renderPagar(){
-  const estimadoMaster=gastosReales(gastosMes).filter(g=>g.cuenta&&g.cuenta.toLowerCase().includes('mastercard')).reduce((s,g)=>s+g.monto,0);
-  const estimadoVisa=gastosReales(gastosMes).filter(g=>g.cuenta&&g.cuenta.toLowerCase().includes('visa')).reduce((s,g)=>s+g.monto,0);
-  const total=estimadoMaster+estimadoVisa;
-  // Lo que queda del sueldo después del diezmo es la vara contra la que se
-  // mide si el resumen se puede pagar. Antes se comparaba contra
-  // gazelle_para_tarjetas, que no se setea nunca y vale 0: cualquier monto
-  // mayor a cero pintaba en rojo, aunque sobrara plata de sobra para pagarlo.
-  const ingreso=configSheet.ingreso_mes_actual||0;
-  const diezmo=Math.round(ingreso*0.10);
-  const queda=ingreso-diezmo;
 
-  const pagarVisa=document.getElementById('pagarVisa');const pagarMaster=document.getElementById('pagarMaster');
-  pagarVisa.textContent=estimadoVisa>0?fp(estimadoVisa):'Sin movimientos';
-  pagarVisa.className=estimadoVisa>queda?'pagar-monto danger':'pagar-monto ok';
-  pagarMaster.textContent=fp(estimadoMaster);
-  pagarMaster.className=estimadoMaster>queda?'pagar-monto danger':'pagar-monto ok';
-  document.getElementById('pagarTotal').textContent=fp(total);
 
-  // "Tu capacidad de pago" era HTML fijo de una maqueta vieja: ingreso
-  // $3.800.000, diezmo $380.000 y un "Fijos + Variables $1.875.784" que no
-  // salía de ningún cálculo. Solo la Diferencia se computaba, y contra
-  // gazelle_para_tarjetas, que nunca se setea y vale 0 — por eso daba el total
-  // de la tarjeta en rojo como si no hubiera con qué pagarla. Ahora las cuatro
-  // líneas salen de Config y de los gastos del ciclo.
-  document.getElementById('capIngreso').textContent=fp(ingreso);
-  document.getElementById('capDiezmo').textContent='-'+fp(diezmo);
-  document.getElementById('capacidadPago').textContent=fp(queda);
-  document.getElementById('capTarjeta').textContent='-'+fp(total);
-
-  const diferencia=queda-total;
-  const difEl=document.getElementById('diferenciaPago');const difBox=document.getElementById('diferenciaBox');
-  difEl.textContent=(diferencia>=0?'+':'-')+fp(diferencia);
-  difEl.style.color=diferencia>=0?'var(--green)':'var(--red)';
-  difBox.className='diferencia-box '+(diferencia>=0?'ok':'danger');
-
-  // Dos razones por las que esta diferencia es optimista, dichas acá y no
-  // escondidas: no descuenta las reservas de MercadoPago (el gasto diario sale
-  // del mismo saldo), y el total de la tarjeta es lo que hay CARGADO — los
-  // débitos automáticos que todavía no entraron al Sheet no están contados.
-  const fP=frescuraDatos();
-  document.getElementById('capNota').innerHTML=
-    'No descuenta las reservas de MercadoPago: el gasto diario sale de este mismo saldo.'+
-    (fP.tc.vencido?'<br>⚠️ La tarjeta no tiene datos nuevos hace '+(fP.tc.dias===null?'—':fP.tc.dias)+' días: el resumen real es mayor.'
-                  :'<br>El resumen es lo cargado hasta hoy; los débitos automáticos que falten entrar lo suben.');
-}
-
-function renderCategorias(){
-  const c=document.getElementById('barsContainer');c.innerHTML='';
-  const totCat={};
-  gastosUnificados().forEach(g=>{totCat[g.cat]=(totCat[g.cat]||0)+g.monto});
-  const cats=new Set([...Object.keys(presupuesto),...Object.keys(totCat)]);
-  [...cats].forEach(cat=>{
-    if(CATS_EXCLUIDAS.has(cat))return;
-    const cfg=presupuesto[cat]||{icon:'📦',limite:50000};
-    const gastado=totCat[cat]||0;const pct=Math.min((gastado/cfg.limite)*100,100);
-    let cl='ok';if(pct>=80)cl='danger';else if(pct>=60)cl='warning';
-    const idCat='cat-'+cat.replace(/[^a-z0-9]/gi,'');
-    const div=document.createElement('div');div.className='cat-card';div.id=idCat;
-    div.onclick=()=>{const det=document.getElementById('det-'+idCat);if(det)det.style.display=det.style.display==='none'?'block':'none'};
-    const gastosCat=gastosUnificados().filter(g=>g.cat===cat);
-    // Nivel 2: agrupar por subcategoría
-    const porSubcat={};
-    gastosCat.forEach(g=>{
-      const sc=g.subcat&&g.subcat.trim()?g.subcat.trim():'Sin subcategoría';
-      (porSubcat[sc]=porSubcat[sc]||[]).push(g);
-    });
-    const subcatEntries=Object.entries(porSubcat).map(([sc,items])=>({
-      sc,items:items.sort((a,b)=>b.monto-a.monto),total:items.reduce((s,g)=>s+g.monto,0)
-    })).sort((a,b)=>b.total-a.total);
-    const idSubBase=idCat+'-sub';
-    const subcatHtml=subcatEntries.length?subcatEntries.map((s,i)=>{
-      const idSub=idSubBase+i;
-      // Nivel 3: movimientos individuales de la subcategoría
-      const movs=s.items.map(g=>`<div class="cat-detalle-item" style="padding-left:16px"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%">${g.esProhibido?'🚫 ':''}${g.comercio} <span class="chip ${g.fuenteMP?'chip-mp':g.quien==='Romina'?'chip-romi':'chip-edu'}">${g.fuenteMP?'MP':g.quien.substring(0,3).toUpperCase()}</span></span><span style="font-family:'Space Mono',monospace;white-space:nowrap">${fp(g.monto)}</span></div>`).join('');
-      return `<div class="cat-detalle-item" style="cursor:pointer;font-weight:600" onclick="event.stopPropagation();const d=document.getElementById('${idSub}');d.style.display=d.style.display==='none'?'block':'none'"><span>📂 ${s.sc} <span style="color:var(--muted);font-weight:400">(${s.items.length})</span></span><span style="font-family:'Space Mono',monospace">${fp(s.total)}</span></div><div id="${idSub}" style="display:none">${movs}</div>`;
-    }).join(''):'<div style="color:var(--muted);font-size:11px;padding:4px 0">Sin movimientos</div>';
-    const restante=Math.max(cfg.limite-gastado,0);
-    const diasRest=diasRestantesCiclo();
-    const ritmoDiario=diasRest>0?restante/diasRest:restante;
-    // El semanal nunca puede superar lo que queda: con 2 días y $60.000 de
-    // margen, "$210.000/semana" es una autorización de gasto que no existe.
-    const ritmoSemanal=Math.min(ritmoDiario*7,restante);
-    const fD=frescuraDatos();
-    const fuenteVencida=fD.mp.vencido?'MercadoPago':fD.tc.vencido?'la tarjeta':null;
-    const ritmoHtml=cat==='Diezmo'?''
-      // Sin datos frescos no se puede decir cuánto queda: el gasto que falta
-      // cargar ya se hizo. Antes que un número lindo y falso, la verdad.
-      :fuenteVencida?`<div style="font-size:10px;color:var(--red);margin-top:3px">⚠️ Sin datos de ${fuenteVencida} desde el ${fFecha(fuenteVencida==='MercadoPago'?fD.mp.fecha:fD.tc.fecha)} — lo gastado real es mayor que ${fp(gastado)}, no puedo darte un ritmo</div>`
-      :gastado>=cfg.limite
-      ?'<div style="font-size:10px;color:var(--red);font-weight:600;margin-top:3px">⚠️ Techo alcanzado — evitar más gastos en lo que queda del ciclo</div>'
-      :diasRest>0?`<div style="font-size:10px;color:var(--muted);margin-top:3px">Ritmo para llegar holgado: <b style="color:var(--text)">${fp(ritmoDiario)}/día</b> · ${fp(ritmoSemanal)}/semana</div>`:'';
-    div.innerHTML=`<div class="cat-header"><div class="cat-name">${cfg.icon} ${cat}</div><div class="cat-amounts"><div class="cat-spent" style="color:${pct>=80?'var(--red)':pct>=60?'var(--yellow)':'var(--text)'}">${fp(gastado)}</div><div class="cat-limit">de ${fp(cfg.limite)}</div></div></div><div class="cat-bar-track"><div class="cat-bar-fill ${cl}" style="width:0%" data-pct="${pct}"></div></div>${ritmoHtml}<div class="cat-detalle" id="det-${idCat}">${subcatHtml}</div>`;
-    c.appendChild(div);
-  });
-  setTimeout(()=>{document.querySelectorAll('.cat-bar-fill[data-pct]').forEach(el=>{el.style.width=el.dataset.pct+'%'})},50);
-}
-
-function renderProhibidos(){
-  const list=document.getElementById('prohibidoList');list.innerHTML='';
-  PROHIBIDOS_DEF.forEach(p=>{
-    const enc=gastosUnificados().filter(g=>p.keys.some(k=>g.comercio.toLowerCase().includes(k)));
-    const total=enc.reduce((s,g)=>s+g.monto,0);const found=enc.length>0;
-    const div=document.createElement('div');div.className='prohibido-item'+(found?' found':'');
-    const chips=found?[...new Set(enc.map(g=>g.quien))].map(q=>`<span class="chip ${q==='Eduardo'?'chip-edu':'chip-romi'}">${q.substring(0,3).toUpperCase()}</span>`).join(''):'';
-    div.innerHTML=`<div class="prohibido-name">${found?'🚨':'✅'} ${p.nombre} ${chips}</div>${found?`<div class="prohibido-amount">${fp(total)}</div>`:'<div class="prohibido-ok">Libre ✓</div>'}`;
-    list.appendChild(div);
-  });
-}
 
 function renderTxn(filtro){
   if(filtro)filtroActual=filtro;
-  renderResumenPersonas();
   const list=document.getElementById('txnList');list.innerHTML='';
   let datos=[...gastosMes].sort((a,b)=>Math.abs(b.monto)-Math.abs(a.monto));
   if(filtroActual==='Eduardo')datos=datos.filter(g=>g.quien==='Eduardo'&&g.monto>0);
@@ -1603,7 +1394,7 @@ function renderCotizaciones(){
 function getCotizacionUsada(){return cotizaciones.mep||configSheet.cotizacion_dolar||1430}
 
 function renderConfigBS3(){
-  const ingreso=configSheet.ingreso_mes_actual||3800000;
+  const ingreso=configSheet.ingreso_mes_actual||0;
   const diezmo=Math.round(ingreso*0.10);
   const sumaTechos=Object.values(TECHOS_BS3).reduce((s,v)=>s+v,0);
   const excedente=ingreso-diezmo-sumaTechos;
@@ -1612,9 +1403,9 @@ function renderConfigBS3(){
   const elEx=document.getElementById('cfg_excedente_bs3');
   if(elEx){elEx.textContent=(excedente>=0?'+':'')+fp(excedente);elEx.style.color=excedente>=0?'#fff':'#FFD700'}
   const cot=getCotizacionUsada();
-  const fondoUsd=configSheet.fondo_bs3_usd||3643;
+  const fondoUsd=configSheet.fondo_bs3_usd||0;
   const fondoPesos=Math.round(fondoUsd*cot);
-  const metaBS3=configSheet.meta_bs3_minimo||9000000;
+  const metaBS3=configSheet.meta_bs3_minimo||0;
   const faltaBS3=metaBS3-fondoPesos;
   const mesesBS3=excedente>0?Math.ceil(faltaBS3/excedente):0;
   set('cfg_fondo_usd','USD '+fondoUsd.toLocaleString('es-AR'));
@@ -1759,9 +1550,10 @@ async function init(){
   cicloActual=detectarCicloActual();
   actualizarCicloUI();
   renderAlimentacion(); // no depende del Sheet: sale del saldo guardado, se pinta ya
+  renderBS3();
   renderConexion();
   await Promise.all([cargarConfigDesdeSheet(),cargarCotizaciones()]);
-  presupuesto['Diezmo'].limite=Math.round((configSheet.ingreso_mes_actual||3800000)*0.10);
+  presupuesto['Diezmo'].limite=Math.round((configSheet.ingreso_mes_actual||0)*0.10);
   renderCotizaciones();
   fetchSheet();
   setInterval(fetchSheet,5*60*1000);

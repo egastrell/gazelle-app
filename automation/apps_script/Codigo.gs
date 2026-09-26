@@ -269,9 +269,13 @@ function procesarTransferencia_(texto, file, tarjetasSheet, logSheet, pendientes
   // El diezmo es siempre el 10% del ingreso: cada vez que llega uno nuevo
   // (más reciente que el último usado), se recalcula solo ingreso_mes_actual
   // en Config. Así nunca hay que cargar el sueldo a mano.
-  if (beneficiario.categoria === 'Diezmo') {
-    actualizarIngresoDesdeDiezmo_(fecha, monto);
-  }
+  // DESACTIVADO el 26/09/2026. actualizarIngresoDesdeDiezmo_ derivaba
+  // ingreso = diezmo / 0,10 en cada corrida del trigger. En JUNIO y DICIEMBRE
+  // el aguinaldo duplica el diezmo, así que la app iba a mostrar ~$10.000.000
+  // de ingreso y ~$6.000.000 de excedente justo en el mes de mayor gasto del
+  // año. No era un riesgo: era una fecha. El ingreso se carga a mano en Config
+  // desde el recibo — el neto de bolsillo, nunca derivado del diezmo.
+  // if (beneficiario.categoria === 'Diezmo') actualizarIngresoDesdeDiezmo_(fecha, monto);
 
   return { categoria: beneficiario.categoria, monto: monto, fecha: fecha, archivo: file.getName() };
 }
@@ -663,24 +667,13 @@ function limpiarDuplicadosDiezmo() {
 }
 
 /**
- * Utilidad de una sola vez: actualiza el fondo BS3 en Config al último
- * depósito confirmado por chat (USD 3.997,49, antes era USD 3.643). Se
- * puede borrar esta función después de correrla una vez.
+ * BORRADA el 26/09/2026: actualizarFondoBS3() escribía 3997.49 hardcodeado en
+ * Config. Ese es el saldo de ANTES de pagar el techo de Santa Anita (~US$ 1.005
+ * de diferencia) y era el número que hacía ver 68% de la meta donde el real era
+ * 51%. El ritual mensual dice "actualizá fondo_bs3_usd" y había una función con
+ * ese nombre exacto esperando el play: una mina, no una utilidad.
+ * El fondo se carga a mano en Config, leyendo el saldo real de MercadoPago.
  */
-function actualizarFondoBS3() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var configSheet = ss.getSheetByName(CONFIG_SHEET_NAME);
-  var configActual = leerConfig_(configSheet);
-
-  var nuevoValor = 3997.49;
-  if (configActual['fondo_bs3_usd']) {
-    configSheet.getRange(configActual['fondo_bs3_usd'].fila, 2).setValue(nuevoValor);
-  } else {
-    configSheet.appendRow(['fondo_bs3_usd', nuevoValor]);
-  }
-
-  Logger.log('fondo_bs3_usd actualizado a ' + nuevoValor);
-}
 
 /**
  * Utilidad de una sola vez: primer cálculo automático del ingreso, a
