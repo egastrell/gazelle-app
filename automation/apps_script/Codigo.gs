@@ -8,6 +8,15 @@
  * configurarTrigger() una sola vez para que quede en automático.
  */
 
+// El Sheet se abre SIEMPRE por ID, nunca con getActiveSpreadsheet(). Si este
+// proyecto de Apps Script quedara standalone (no vinculado al Sheet), el activo
+// es null y morían de una: el importador de MercadoPago, el ritmo semanal, el
+// mail del giro y las cinco utilidades de limpieza. Solo sobrevivían doGet y
+// actualizarNotaEdenorMirta, que ya usaban openById. Con esto da igual cómo
+// esté creado el proyecto.
+var SHEET_ID_ = '15TzS_-VQazdA427n8S7H_FnPD5Fj0eDrRMuETIdNLgQ';
+function abrirSheet_() { return SpreadsheetApp.openById(SHEET_ID_); }
+
 var DRIVE_FOLDER_ID = '1AygsLwG30QaMfFNMuRXZVZNbN-_eANyf';
 var CONFIG_SHEET_NAME = 'Config';
 var TARJETAS_SHEET_NAME = 'Tarjetas';
@@ -56,7 +65,7 @@ var MESES_ES = {
  * configurada (ver configurarTrigger).
  */
 function actualizarMontosReferencia() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = abrirSheet_();
   var configSheet = ss.getSheetByName(CONFIG_SHEET_NAME);
   var tarjetasSheet = ss.getSheetByName(TARJETAS_SHEET_NAME);
   var logSheet = obtenerOCrearHoja_(ss, LOG_SHEET_NAME,
@@ -291,7 +300,7 @@ function actualizarIngresoDesdeDiezmo_(fecha, montoDiezmo) {
   var fechaNueva = parsearFechaComparable_(fecha);
   if (fechaGuardada && fechaNueva <= parsearFechaComparable_(fechaGuardada)) return;
 
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = abrirSheet_();
   var configSheet = ss.getSheetByName(CONFIG_SHEET_NAME);
   var configActual = leerConfig_(configSheet);
   var ingreso = Math.round((montoDiezmo / 0.10) * 100) / 100;
@@ -590,7 +599,7 @@ function enviarResumen_(reporteConfig, reporteTransferencias, reporteMP) {
  * función después de correrla una vez.
  */
 function cargarProveedoresIniciales() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = abrirSheet_();
   var configSheet = ss.getSheetByName(CONFIG_SHEET_NAME);
   var pendientesSheet = ss.getSheetByName(PENDIENTES_SHEET_NAME);
 
@@ -630,7 +639,7 @@ function cargarProveedoresIniciales() {
  * propias. Se puede borrar esta función después de correrla una vez.
  */
 function limpiarDuplicadosDiezmo() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = abrirSheet_();
   var tarjetasSheet = ss.getSheetByName(TARJETAS_SHEET_NAME);
   var pendientesSheet = ss.getSheetByName(PENDIENTES_SHEET_NAME);
 
@@ -842,7 +851,7 @@ function esDeLosPadres_(usuario, familia) {
 // por reservas de MP, Alimentación siempre daba ~$0 y el mail autorizaba a
 // gastar plata ya gastada.
 function calcularGastoPorCategoria_(inicio, fin) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = abrirSheet_();
   var totales = {};
   var suma = function (cat, monto) { totales[cat] = (totales[cat] || 0) + monto; };
 
@@ -954,7 +963,7 @@ function textoFrescura_(f) {
 }
 
 function escribirHojaRitmoSemanal_(reporte) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = abrirSheet_();
   var sheet = ss.getSheetByName(RITMO_SHEET_NAME);
   if (!sheet) sheet = ss.insertSheet(RITMO_SHEET_NAME);
   sheet.clear();
@@ -996,12 +1005,13 @@ function formatearPesos_(n) {
  * ajustar las reservas de MP antes de que sea tarde, no después).
  */
 function actualizarRitmoSemanal() {
+  // Primero de todo, antes incluso de leer el Sheet: el giro es una fecha y un
+  // monto fijo. Antes corría después de calcularRitmoSemanal_(), así que si esa
+  // lectura fallaba se caía con ella — justo el día que más falta hace.
+  avisoGiroAlimentacion_();
+
   var reporte = calcularRitmoSemanal_();
   escribirHojaRitmoSemanal_(reporte);
-
-  // Antes del corte por frescura a propósito: el giro es una acción de
-  // calendario con monto fijo, no depende de que el Sheet esté al día.
-  avisoGiroAlimentacion_();
 
   var esLunes = new Date().getDay() === 1;
   var enRiesgo = reporte.items.filter(function (it) { return it.riesgo !== 'ok'; });
@@ -1145,7 +1155,7 @@ var MERCADERES_USD_ = ['GOOGLE *CLAUDE', 'GOOGLE *CHATGPT', 'GOOGLE *GOOGLE O', 
  * no existe y la completa ARS/USD fila por fila.
  */
 function agregarColumnaMoneda() {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(TARJETAS_SHEET_NAME);
+  var sheet = abrirSheet_().getSheetByName(TARJETAS_SHEET_NAME);
   var data = sheet.getDataRange().getValues();
   var header = data[0];
 
@@ -1228,7 +1238,7 @@ function ajustarValidacionSubcategoria_(celda, categoria) {
 }
 
 function corregirTodo() {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(TARJETAS_SHEET_NAME);
+  var sheet = abrirSheet_().getSheetByName(TARJETAS_SHEET_NAME);
   var data = sheet.getDataRange().getValues();
   var header = data[0];
   var colComercio = header.indexOf('Comercio');
@@ -1301,7 +1311,7 @@ function corregirTodo() {
 // validación y su formato puestos, así que el problema no existe — y además
 // no reescribe 3.600 filas.
 function ordenarPorFecha() {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(TARJETAS_SHEET_NAME);
+  var sheet = abrirSheet_().getSheetByName(TARJETAS_SHEET_NAME);
   var ultimaCol = sheet.getLastColumn();
   var headers = sheet.getRange(1, 1, 1, ultimaCol).getValues()[0];
   var colFecha = headers.indexOf('Fecha');
@@ -1405,7 +1415,7 @@ function encontrarDuplicados_(sheet) {
  * una copia) — esto borra filas, no se deshace fácil.
  */
 function previsualizarDuplicados() {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(TARJETAS_SHEET_NAME);
+  var sheet = abrirSheet_().getSheetByName(TARJETAS_SHEET_NAME);
   var r = encontrarDuplicados_(sheet);
   var data = r.data, colFecha = r.colFecha, colComercio = r.colComercio, colMonto = r.colMonto, filasABorrar = r.filasABorrar;
 
@@ -1437,7 +1447,7 @@ function previsualizarDuplicados() {
  * previsualizarDuplicados(). Correr SOLO después de revisar ese log.
  */
 function eliminarDuplicados() {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(TARJETAS_SHEET_NAME);
+  var sheet = abrirSheet_().getSheetByName(TARJETAS_SHEET_NAME);
   var r = encontrarDuplicados_(sheet);
   var filasOrdenadas = r.filasABorrar.slice().sort(function (a, b) { return b - a; });
   filasOrdenadas.forEach(function (idx) { sheet.deleteRow(idx + 1); }); // +1 porque data[idx] corresponde a la fila (idx+1) del Sheet
@@ -1493,7 +1503,7 @@ function actualizarNotaEdenorMirta() {
 // en vivo. La URL no cambia al hacer eso.
 // ======================================================================
 
-var SHEET_ID_ = '15TzS_-VQazdA427n8S7H_FnPD5Fj0eDrRMuETIdNLgQ';
+
 
 // Lista blanca explícita: solo estas hojas se sirven. Log_Automatizacion y
 // Pendientes_Confirmacion quedan afuera a propósito — la app no las usa.
@@ -1664,7 +1674,7 @@ function esResumenMercadoPago_(texto) {
  * resumen dos veces, o resúmenes con períodos superpuestos, sin duplicar nada.
  */
 function procesarResumenMP_(texto, file, logSheet, procesadasFolder) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = abrirSheet_();
   var sheet = ss.getSheetByName(MP_SHEET_IMPORT_);
   if (!sheet) {
     registrarLog_(logSheet, 'resumen_mercadopago', '', 'falta_hoja_MercadoPago', null, null, null, file.getName());
@@ -1728,7 +1738,7 @@ function procesarResumenMP_(texto, file, logSheet, procesadasFolder) {
  * estén en la carpeta, sin esperar al trigger de 6 horas.
  */
 function importarResumenesMP() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = abrirSheet_();
   var logSheet = obtenerOCrearHoja_(ss, LOG_SHEET_NAME,
     ['Fecha', 'Proveedor/Categoría', 'Titular', 'Estado', 'Monto anterior', 'Monto nuevo', 'Variación', 'Fecha/Vencimiento', 'Archivo']);
   var folder = DriveApp.getFolderById(DRIVE_FOLDER_ID);

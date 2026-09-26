@@ -1154,8 +1154,17 @@ function renderResumen(){
 // ahorro sale del aporte fijo del día de cobro, no de lo que sobra. A $80.000
 // son 55 meses, no 5. Un error de 11x, y en la dirección que autoriza gasto.
 // ---------------------------------------------------------------------------
-function aporteBS3(){ const v=localStorage.getItem('gazelle_aporte_bs3'); return v===null?null:parseFloat(v); }
-function aporteHecho(){ return localStorage.getItem('gazelle_aporte_hecho')||''; }
+// Etapa 1 de la Regla Maestra: $80.000, que es la baja de los débitos de Mirta.
+// Sube a $160.000 con las llamadas hechas y dos ciclos sin delivery.
+const APORTE_BS3_DEF=80000;
+function aporteBS3(){ const v=localStorage.getItem('gazelle_aporte_bs3'); return v===null?APORTE_BS3_DEF:parseFloat(v); }
+
+// Historial de aportes REALES. La fecha de llegada se calcula sobre lo que se
+// transfirió de verdad, no sobre lo que se planeó: un plan que no se cumple es
+// otra cifra optimista, y de esas ya hubo cinco.
+function aportesHechos(){ try{ return JSON.parse(localStorage.getItem('gazelle_aportes')||'[]'); }catch(e){ return []; } }
+function aporteHecho(){ const h=aportesHechos(); return h.length?h[h.length-1].mes:''; }
+function promedioAportado(){ const h=aportesHechos(); return h.length?h.reduce((s,a)=>s+a.monto,0)/h.length:null; }
 function mesActualISO(){ const d=new Date(); return d.getFullYear()+'-'+pad2(d.getMonth()+1); }
 function pad2(n){ return String(n).length<2?'0'+n:String(n); }
 
@@ -1165,8 +1174,10 @@ function guardarAporte(){
   localStorage.setItem('gazelle_aporte_bs3',v); el.value=''; renderBS3();
 }
 function marcarAporteHecho(){
-  localStorage.setItem('gazelle_aporte_hecho',mesActualISO()); renderBS3();
-  mostrarAlert('✅','Anotado','El aporte de este mes está hecho. Ahora actualizá fondo_bs3_usd en la hoja Config.');
+  const h=aportesHechos(), mes=mesActualISO();
+  if(!h.some(a=>a.mes===mes)){ h.push({mes:mes,monto:aporteBS3()}); localStorage.setItem('gazelle_aportes',JSON.stringify(h)); }
+  renderBS3();
+  mostrarAlert('✅','Aporte '+h.length+' anotado','Ahora actualizá fondo_bs3_usd en la hoja Config con el saldo real de MercadoPago.');
 }
 
 function renderBS3(){
@@ -1193,15 +1204,14 @@ function renderBS3(){
 
   const ap=aporteBS3();
   if(falta<=0){ elEta.textContent=''; elTxt.textContent='BS3 cumplido.'; elWrap.style.display='none'; return; }
-  if(ap===null||ap<=0){
-    elEta.textContent='Fijá tu aporte mensual acá abajo para ver la fecha de llegada.';
-    elTxt.innerHTML='<b>Todavía no fijaste el aporte.</b> Es la transferencia del día de cobro: sale antes que todo lo demás, apenas después del diezmo.';
-    elWrap.style.display='none'; return;
-  }
-  const meses=Math.ceil(falta/ap);
+  // Con dos aportes o más manda el promedio real, no el planificado.
+  const real=promedioAportado(), n=aportesHechos().length;
+  const base=(n>=2&&real>0)?real:ap;
+  const meses=Math.ceil(falta/base);
   const llegada=new Date(); llegada.setMonth(llegada.getMonth()+meses);
   const MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-  elEta.innerHTML='A '+fp(ap)+'/mes: <b>'+meses+' meses</b> — '+MESES[llegada.getMonth()]+' '+llegada.getFullYear()+
+  elEta.innerHTML='A '+fp(base)+'/mes: <b>'+meses+' meses</b> — '+MESES[llegada.getMonth()]+' '+llegada.getFullYear()+
+    (n>=2?' (promedio de '+n+' aportes reales)':' (planificado)')+
     '. El aguinaldo de junio y diciembre lo acorta si va entero.';
 
   const hecho=aporteHecho()===mesActualISO();

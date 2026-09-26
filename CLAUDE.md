@@ -69,7 +69,7 @@ El ahorro no ocurre porque sobre: ocurre porque la plata **no está disponible**
 |---|---:|---|
 | Hoy | **$80.000** | La baja de los débitos de Mirta — estructural |
 | Después | **$160.000** | Llamadas hechas **y** dos ciclos sin delivery |
-| Si se confirma | **$420.000** | Techo de Alimentación recalibrado con datos reales |
+| Ya aplicado | **+$260.000** | Giro de Alimentación bajado de $210.000 a $150.000 |
 
 **Por qué no arranca en $160.000:** la baja de Mirta ($78.757) es estructural —dos
 llamadas y desaparece—, pero el corte de delivery ($82.730) es conductual y depende
@@ -86,6 +86,10 @@ fallar**; lo que se ahorre de más se transfiere a mano el mismo día.
 - La meta de $9.000.000 son "3 meses de gastos", no una cifra fija: **se recalcula
   una vez por año.** Que el fondo esté en dólares cubre casi todo el riesgo de
   inflación — eso ya estaba bien diseñado, no cambiarlo.
+- **El giro de Alimentación es $150.000, no $210.000** (26/09/2026). El techo de
+  $910.000/mes no salía del consumo: salía de lo que se giraba ($210.000 × 52/12).
+  El gasto real medido es ~$593.000. Se giraban $317.000/mes que nadie consumía y
+  nadie devolvía — el sobre **es** la autorización.
 
 ### Ritual mensual — 30 minutos el día de cobro
 
@@ -172,7 +176,7 @@ viene detallado.** Solo agregaba trabajo de mantenimiento.
 
 | # | Sobre | Nota |
 |---|---|---|
-| 1 | **Alimentación** | Giro semanal, los lunes |
+| 1 | **Alimentación** | Giro semanal, los lunes — **$150.000** |
 | 2 | **Vehículo + Transporte** | |
 | 3 | **Salud + Hogar** | |
 | 4 | **Comida y Entretenimiento** | De acá sale el delivery si reaparece |
@@ -235,11 +239,26 @@ desde reserva Santa Anita).
 > produce la transferencia del día de cobro, no el tablero. Seguir agregándole
 > funciones es trabajo que se siente productivo y no mueve un peso a BS3.
 
-**Hasta que BS3 esté completo, Gazelle hace solo tres cosas:**
+**Hasta que BS3 esté completo, Gazelle hace solo tres cosas** (implementado el
+26/09/2026, −342 líneas):
 
-1. Muestra el **% de BS3** y la fecha estimada de llegada.
+1. Abre con el **% de BS3** en 52px, cuánto falta y la fecha real de llegada,
+   más la tarjeta de **aporte** con el botón "ya lo transferí".
 2. Muestra el **saldo diario de Alimentación**.
 3. Una vez por mes importa el PDF de MercadoPago y el resumen de la tarjeta.
+
+Quedan 4 pestañas: Resumen · Movimientos · Mi Plan · Config (+ MercadoPago en
+"Más"). Se borraron A Pagar, Categorías y Prohibidos, la tarjeta del asesor y la
+grilla Eduardo vs Romina.
+
+**Movimientos y MercadoPago NO se tocan**, aunque no "ayuden a ahorrar": son la
+única auditoría que hay en el celular y la deduplicación de 241 filas /
+$4.686.973 todavía no se corrió. Borrar la ventana a un bug vivo no es
+simplificar, es taparlo.
+
+**La fecha de llegada sale del aporte REAL.** La app guarda cada aporte marcado
+como hecho; con dos o más usa el promedio de lo transferido, no lo planificado.
+Un plan que no se cumple es otra cifra optimista, y de esas ya hubo cinco.
 
 **Filtro para cualquier tarea técnica nueva — una sola pregunta:**
 *¿esto agrega plata a BS3 este mes?* Si la respuesta es no, se anota en la
@@ -290,7 +309,11 @@ Eventos permanentes ya creados:
 | Cuándo | Qué |
 |---|---|
 | Día 26, mensual | 💰 **APORTE BS3** — la transferencia, antes que nada |
-| Lunes, semanal | 🛒 Girar $210.000 a Alimentación + bajar resumen MP a Drive |
+| Lunes, semanal | 🛒 Girar **$150.000** a Alimentación |
+| Día 1, mensual | 📄 Bajar el resumen de MercadoPago a Drive |
+
+El resumen de MP estaba pegado al giro de los lunes. Es un documento **mensual**:
+pedirlo 4 veces para que sirva 1 enseña a ignorar el aviso. Va aparte y el día 1.
 
 ---
 
@@ -729,11 +752,12 @@ de `jezweb/claude-skills` existe pero **no cubre despliegue como web app ni
   (BS2 terminó en mayo 2026) y lista los 7 ítems como "Libre ✓", incluido Delivery
   — que Eduardo decidió cortar ($82.730/mes en PedidosYa).
 - Visa Galicia sigue en la proyección de pagos aunque la cuenta esté cancelada.
-- El proyecto de Apps Script se llama "Proyecto sin título" y su URL es de
-  `/home/projects/`, lo que sugiere que podría ser standalone y no vinculado al
-  Sheet. `doGet` funciona igual porque usa `openById`, pero las funciones que usan
-  `getActiveSpreadsheet()` fallarían. **Verificar antes de correr las utilidades
-  de limpieza o de confiar en los triggers.**
+- ~~El proyecto de Apps Script podría ser standalone~~ **RESUELTO (26/09/2026):**
+  ya no importa. Los 13 `getActiveSpreadsheet()` pasaron a `abrirSheet_()`, que
+  usa `openById(SHEET_ID_)`. Vinculado o standalone, todo funciona igual. Además
+  `avisoGiroAlimentacion_()` pasó al principio de `actualizarRitmoSemanal`: antes
+  corría después de leer el Sheet y se caía con esa lectura, justo el día que más
+  falta hace.
 
 ---
 
@@ -760,3 +784,79 @@ falsa y optimista autoriza gasto, que es lo contrario de ahorrar.
 **Fuera de esta lista (no es técnico):** del fraude solo queda **US$ 10,88**
 sin devolver — los US$ 92,57 ya estaban acreditados. Son ~$16.800: decidir si
 vale el reclamo, no darlo por hecho.
+
+---
+
+## Sesión 26/09/2026 — Seis analistas y 342 líneas menos
+
+Seis subagentes revisaron la app en paralelo (Baby Steps, simplificación,
+automatización, ahorro, UX, crítico). Coincidieron sin hablarse: **lo primero y
+más grande de la pantalla era un permiso de gasto, y el % de BS3 —el único motivo
+del esfuerzo— no aparecía en el Resumen.**
+
+### La quinta cifra que mentía
+
+`renderMiPlan` calculaba `excedente = ingreso − diezmo − techos` = **$1.036.054/mes**
+y mostraba **"5 meses para BS3"**. El excedente medido es ~$0 y el ahorro sale del
+aporte fijo: a $80.000/mes son **55 meses**. Un error de **11x**, en la tarjeta
+principal, siempre hacia "podés gastar". Ya son cinco veces el mismo patrón.
+
+Otro hallazgo del mismo tipo: el `configSheet` traía `fondo_bs3_usd:3643` como
+default mudo, que pinta **59%** donde el real es 51%. Y **el "~57%" que este
+archivo arrastró durante meses era ese número**, no un dato del Sheet:
+3643 × 1430 ÷ 9.000.000 = 57,9%. Los defaults inventados se eliminaron: sin
+Config, la app dice que no sabe.
+
+### Dos minas desactivadas en Codigo.gs
+
+- `actualizarFondoBS3()` escribía **3997,49 hardcodeado** — el saldo de ANTES del
+  techo de Santa Anita. El ritual mensual dice "actualizá `fondo_bs3_usd`" y había
+  una función con ese nombre exacto esperando el ▶. Borrada.
+- `actualizarIngresoDesdeDiezmo_` derivaba `ingreso = diezmo ÷ 0,10` en cada
+  corrida del trigger. **En junio y diciembre el aguinaldo duplica el diezmo**, así
+  que la app iba a mostrar ~$10.000.000 de ingreso y ~$6.000.000 de excedente justo
+  en el mes de mayor gasto del año. No era un riesgo: era una fecha. Desactivada.
+
+### Fugas nuevas medidas (todavía sin ejecutar)
+
+| | Por mes |
+|---|---:|
+| Alimentación: girar $150.000 en vez de $210.000 | **$260.000** ✅ aplicado |
+| Suscripciones USD: Make.com (congelado y pago) + ChatGPT | $44.718 |
+| Zurich Invest Future — vida **con ahorro**, Ramsey manda cancelar | ~$40.000 |
+| Débitos de Mirta (2 llamadas) | $78.757 |
+| Delivery a cero | $82.730 |
+| **Capacidad total de ahorro forzoso** | **$506.205** |
+
+A $506.205/mes, BS3 cierra en **junio 2027**. A los $80.000 de hoy, abril 2031.
+
+### LA FUGA MÁS GRANDE, sin atacar
+
+**$658.088/mes en 170 transferencias sin identificar** = $7.897.056/año = **1,8
+veces lo que falta para cerrar BS3**, y 4 veces Mirta + delivery juntos. Son ~40
+movimientos mensuales de ~$16.290. Los 20 primeros nombres explican el 80%.
+
+Y hay un bug detrás: `esDeLosPadres_` filtra la hoja Tarjetas, pero
+**`clasificarMovimientoMP_` no excluye a Mirta ni a Alfredo** — solo a Eduardo vía
+`MP_TITULAR_`. Parte de esos $658.088 puede ser la casa de los padres contándose
+como gasto del Núcleo.
+
+### Decisiones abiertas, de Eduardo
+
+1. Sacar el fondo BS3 de MercadoPago (está en la misma app que los sobres; vender
+   dólares son 3 toques y ya fue saqueado una vez para el techo).
+2. Cancelar Zurich Invest Future.
+3. Poner la meta en USD: está en pesos con el fondo en dólares — un MEP de 1.470 a
+   1.700 suma $688.000 al porcentaje sin haber ahorrado un dólar.
+4. Destino del aguinaldo: no existe en ninguna regla. El de junio 2026 se fue al
+   techo de Santa Anita, que está bloqueado hasta BS6.
+
+### Sobre cambiar de metodología
+
+Se evaluaron YNAB, Barefoot Investor, Ramit Sethi, Bach y Kakeibo. **Ninguno
+reemplaza a Ramsey acá**: BS1 y BS2 ya están cobrados, y lo que faltaba —pagarse
+primero— es Bach y se enchufa adentro de Ramsey sin reemplazarlo (ya es la Regla
+Maestra). El problema real de Ramsey para Argentina no es el método sino que
+asume inflación baja y ahorro en efectivo; Eduardo ya se desvió bien al tener el
+fondo en dólares. **La adaptación argentina importa más que la elección del
+sistema** — y cambiar de metodología es otra forma de no hacer las dos llamadas.
