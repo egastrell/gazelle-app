@@ -844,12 +844,19 @@ Config, la app dice que no sabe.
 |---|---:|
 | Alimentación: girar $150.000 en vez de $210.000 | **$260.000** ✅ aplicado |
 | Suscripciones USD: Make.com (congelado y pago) + ChatGPT | $44.718 |
-| Zurich Invest Future — vida **con ahorro**, Ramsey manda cancelar | ~$40.000 |
+| Zurich Invest Future — vida **con ahorro**, Ramsey manda cancelar | **$301.659** |
 | Débitos de Mirta (2 llamadas) | $78.757 |
 | Delivery a cero | $82.730 |
-| **Capacidad total de ahorro forzoso** | **$506.205** |
+| **Capacidad total de ahorro forzoso** | **$767.864** |
 
-A $506.205/mes, BS3 cierra en **junio 2027**. A los $80.000 de hoy, abril 2031.
+> **Corregido el 04/11/2026.** Zurich figuraba en ~$40.000 y el débito real es
+> **$301.659/mes** ($291.120 de abril a agosto 2026, $301.659 desde septiembre;
+> verificado en los resúmenes). Es la fuga más grande de la tabla, 7,5 veces lo que
+> decía, y por esa cifra se la trató como un tema menor. Antes de cancelar: pedir
+> el **valor de rescate** y la penalidad por rescate anticipado. Es una póliza con
+> ahorro, y lo rescatado va a BS3.
+
+A los $80.000 de hoy, BS3 cierra en abril 2031.
 
 ### LA FUGA MÁS GRANDE, sin atacar
 
@@ -866,7 +873,7 @@ como gasto del Núcleo.
 
 1. Sacar el fondo BS3 de MercadoPago (está en la misma app que los sobres; vender
    dólares son 3 toques y ya fue saqueado una vez para el techo).
-2. Cancelar Zurich Invest Future.
+2. Cancelar Zurich Invest Future — **$301.659/mes**, la fuga fija más grande.
 3. Poner la meta en USD: está en pesos con el fondo en dólares — un MEP de 1.470 a
    1.700 suma $688.000 al porcentaje sin haber ahorrado un dólar.
 4. Destino del aguinaldo: no existe en ninguna regla. El de junio 2026 se fue al
