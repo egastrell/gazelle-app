@@ -57,11 +57,30 @@ Santa Anita bloqueada hasta BS6.
 
 **El día de cobro, en este orden, sin excepción:**
 
-1. **Diezmo.**
-2. **Transferencia fija a MP dólares (BS3).** Ese mismo día, no a fin de mes.
-3. Recién después se arma todo lo demás con lo que queda.
+1. **Diezmo** — 10% del neto.
+2. **Ofrenda misionera** — familia De Souza (Mburucuyá, Corrientes). **Mínimo
+   $50.000, sin tope.** Ver abajo.
+3. **Transferencia fija a MP dólares (BS3).** Ese mismo día, no a fin de mes.
+4. Recién después se arma todo lo demás con lo que queda.
 
 El ahorro no ocurre porque sobre: ocurre porque la plata **no está disponible**.
+
+### Ofrenda misionera (desde el 04/11/2026)
+
+Decisión de Eduardo y Romina después de la ayuda de $300.000 del 26/10/2026 a la
+familia De Souza, misioneros en Mburucuyá. Quieren que se repita todos los meses,
+no que dependa de lo que sobre — por la misma razón que el aporte a BS3: lo que
+sobra a fin de mes no existe.
+
+- **Mínimo $50.000 por mes, sin tope.** Lo que se dé por encima del mínimo sale de
+  lo que queda **después** del aporte a BS3: nunca de BS3 ni con la tarjeta.
+- Dos caminos, a elección de ellos:
+  - **Directo** a Hernán De Souza: él ve quién transfiere y **no es deducible**.
+  - **A través de Centro Familia y Vida**, con destino a la familia De Souza: es
+    anónimo y, si la iglesia lo recibe como donación, **se deduce en SiRADIG**.
+    Pendiente: preguntarle a Andrés Giudicci si la iglesia puede canalizarla.
+- Los datos bancarios están en el evento del día de cobro del calendario, no acá:
+  este repo es público.
 
 ### El monto crece por etapas, no de golpe
 
@@ -93,7 +112,7 @@ fallar**; lo que se ahorre de más se transfiere a mano el mismo día.
 
 ### Ritual mensual — 30 minutos el día de cobro
 
-1. ¿Se hizo el aporte a BS3?
+1. ¿Se hicieron el diezmo, la ofrenda misionera y el aporte a BS3?
 2. ¿Qué sobre se pasó? Se ajusta **ese solo**.
 3. Se actualiza **un único número**: `fondo_bs3_usd` en la hoja Config.
 
@@ -112,7 +131,8 @@ Los presupuestos y reservas son referencias móviles, no cifras fijas. La inflac
 argentina los modifica mes a mes. Siempre validar contra el resumen real de la
 tarjeta antes de definir montos de reserva.
 
-Diezmo: 10% del ingreso bruto → Asociación Civil Centro Familia y Vida (CUIT
+Diezmo: 10% del ingreso **neto** (confirmado por Eduardo en octubre 2026) →
+Asociación Civil Centro Familia y Vida (CUIT
 30714829358, CVU 0000003100033712204323), por convicción cristiana, primera salida
 del ciclo, siempre sin excepción.
 
@@ -128,12 +148,13 @@ Circuito del diezmo (mensual):
 ## Ciclo financiero mensual (desde el 23/09/2026)
 
 1. **Diezmo.**
-2. **Aporte fijo a BS3** — ver REGLA MAESTRA arriba. Intocable, no figura nunca
+2. **Ofrenda misionera** — mínimo $50.000, sin tope. Ver REGLA MAESTRA arriba.
+3. **Aporte fijo a BS3** — ver REGLA MAESTRA arriba. Intocable, no figura nunca
    como "disponible".
-3. Pagos fijos a terceros: Walter Simón, AySA, Candela Parodi, Cooperativa Santa
+4. Pagos fijos a terceros: Walter Simón, AySA, Candela Parodi, Cooperativa Santa
    Anita, Urunet (desde reservas).
-4. Pago de tarjeta de crédito (5-10 días después del cobro), desde Pellegrini.
-5. Resto del mes con los 5 sobres de MercadoPago.
+5. Pago de tarjeta de crédito (5-10 días después del cobro), desde Pellegrini.
+6. Resto del mes con los 5 sobres de MercadoPago.
 
 ---
 
@@ -308,7 +329,7 @@ Eventos permanentes ya creados:
 
 | Cuándo | Qué |
 |---|---|
-| Día 26, mensual | 💰 **APORTE BS3** — la transferencia, antes que nada |
+| Día 26, mensual | 💰 **DÍA DE COBRO** — diezmo → ofrenda misionera → aporte BS3, antes que nada |
 | Lunes, semanal | 🛒 Girar **$150.000** a Alimentación |
 | Día 1, mensual | 📄 Bajar el resumen de MercadoPago a Drive |
 
