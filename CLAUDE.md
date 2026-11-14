@@ -425,11 +425,16 @@ transporte público, streaming, farmacia.
 ## Débitos automáticos — Estado de migración a MC BNA
 
 Migrados y activos en TC: Zurich, Claro x2, ARBA Inmobiliario, Gas Natural
-Eduardo, AySA, Swiss Medical, NAC SE18, Provincia Seguros, Edenor x2, Colegio
+Eduardo, AySA, NAC SE18, Provincia Seguros, Edenor x2, Colegio
 Belgrano, Colegio Moderno Ituzaingó, Cooperativa luz Santa Anita, Urunet, Club
 GEI.
 
 PENDIENTE: Municipalidad Morón (partida 101-092302).
+
+**Swiss Medical NO es débito automático desde septiembre 2026.** Hasta agosto se
+cobraba solo (`SWISS MEDICAL PREPAGO`). Desde septiembre figura como
+`MERPAGO*SWISSMEDICALG`: lo paga Eduardo a mano por Mercado Pago con la MC BNA.
+Hay un aviso mensual el día 11 en el calendario. Pendiente: volver a adherirlo.
 
 ERROR a corregir: Gas Mirta (GAS NATU00206947) mal cargado en la TC de Eduardo —
 dar de baja y migrar a nombre de Mirta.
