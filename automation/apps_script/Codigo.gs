@@ -745,10 +745,6 @@ var MP_SHEET_NAME = 'MercadoPago';
 var MP_CATS_GASTO_RITMO = ['Alimentación', 'Salud', 'Servicios', 'Educación', 'Vehículo',
   'Comida Fuera', 'Entretenimiento', 'Indumentaria', 'Transporte', 'Compras Online', 'Hogar', 'Otros'];
 
-// La app corrigió a mano el cierre de junio 2026 (index.html, EXCEPCIONES_CIERRE).
-// Si el script no conoce la excepción, ese mes difiere una semana entera.
-var EXCEPCIONES_CIERRE_ = { '2026-06-18': '2026-06-25' };
-
 // Más de DIAS_DATO_CONFIABLE sin un movimiento nuevo en una fuente = no se
 // puede guiar el gasto diario con eso. La hoja MercadoPago estuvo 128 días
 // sin datos y el ritmo igual salía con números lindos y falsos.
@@ -758,21 +754,15 @@ function aISO_(d) {
   return Utilities.formatDate(d, Session.getScriptTimeZone(), 'yyyy-MM-dd');
 }
 
-// Anteúltimo jueves del mes: mismo criterio que usa la app (index.html,
-// anteultimoJueves) para cerrar los ciclos mensuales de presupuesto.
-function anteultimoJueves_(year, month) {
-  var jueves = [];
-  var d = new Date(year, month - 1, 1);
-  while (d.getMonth() === month - 1) {
-    if (d.getDay() === 4) jueves.push(new Date(d));
-    d.setDate(d.getDate() + 1);
-  }
-  var fin = jueves[jueves.length - 2];
-  var iso = aISO_(fin);
-  if (EXCEPCIONES_CIERRE_[iso]) {
-    var p = EXCEPCIONES_CIERRE_[iso].split('-');
-    fin = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
-  }
+// Cierre de la MC BNA: el jueves que cae entre el 19 y el 25 del mes
+// (verificado en 8 resúmenes, mar–oct 2026). Mismo criterio que la app
+// (index.html, juevesDeCierre). NO es el "anteúltimo jueves": esa regla cierra
+// una semana antes cuando el último jueves del mes cae entre el 22 y el 25
+// (jun y sep 2026; feb, mar y jun 2027). Por eso existía una excepción a mano
+// para junio 2026; con esta regla ya no hace falta.
+function juevesDeCierre_(year, month) {
+  var fin = new Date(year, month - 1, 19);
+  while (fin.getDay() !== 4) fin.setDate(fin.getDate() + 1);
   fin.setHours(0, 0, 0, 0);
   return fin;
 }
@@ -788,9 +778,9 @@ function obtenerCicloActual_() {
   var mesAnt = m - 1, yAnt = y; if (mesAnt < 1) { mesAnt = 12; yAnt = y - 1; }
   var mesSig = m + 1, ySig = y; if (mesSig > 12) { mesSig = 1; ySig = y + 1; }
 
-  var finEsteMes = anteultimoJueves_(y, m);
-  var finMesAnterior = anteultimoJueves_(yAnt, mesAnt);
-  var finMesSiguiente = anteultimoJueves_(ySig, mesSig);
+  var finEsteMes = juevesDeCierre_(y, m);
+  var finMesAnterior = juevesDeCierre_(yAnt, mesAnt);
+  var finMesSiguiente = juevesDeCierre_(ySig, mesSig);
 
   var inicio, fin;
   if (hoy > finMesAnterior && hoy <= finEsteMes) {
@@ -801,7 +791,7 @@ function obtenerCicloActual_() {
     fin = finMesSiguiente;
   } else {
     var mesAnt2 = mesAnt - 1, yAnt2 = yAnt; if (mesAnt2 < 1) { mesAnt2 = 12; yAnt2 = yAnt - 1; }
-    var finMesAntAnt = anteultimoJueves_(yAnt2, mesAnt2);
+    var finMesAntAnt = juevesDeCierre_(yAnt2, mesAnt2);
     inicio = new Date(finMesAntAnt); inicio.setDate(inicio.getDate() + 1);
     fin = finMesAnterior;
   }
