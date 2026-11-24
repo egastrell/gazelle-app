@@ -216,7 +216,8 @@ del día 1.
 Fondo Pellegrini Renta Pesos (BNA): reemplazó a Brubank SBS Capital Plus (eliminado
 28/07/2026). Respalda débitos automáticos, cuotas y suscripciones en USD de la TC.
 Condición: el rendimiento debe igualar o superar la tasa de reserva en pesos de MP
-(actualmente 18,1% vs 17,5% de MP). Rescate el día anterior al vencimiento de la TC.
+(actualmente 18,1% vs 17,5% de MP). La cuenta sueldo rescata sola del Pellegrini al
+pagar: la tarjeta se paga el día del vencimiento, no antes.
 
 Transferencias fuera de MP: Walter Fabián Simón (jardinero Santa Anita,
 ~$130.000/mes) y Urunet (cable Santa Anita, ~$35-43k/mes, transferencia manual
@@ -229,7 +230,9 @@ desde reserva Santa Anita).
 ### Google Sheets
 - Sheet ID: 15TzS_-VQazdA427n8S7H_FnPD5Fj0eDrRMuETIdNLgQ
 - Hojas: Tarjetas | Tarjetas_backup | MercadoPago | Config
-- Ciclo de corte: Anteúltimo jueves de cada mes (NO mes calendario)
+- Ciclo de corte: el jueves que cae entre el 19 y el 25 de cada mes; vencimiento =
+  cierre + 13 días (NO mes calendario). NO es el "anteúltimo jueves": esa regla
+  cierra una semana antes cuando el último jueves cae entre el 22 y el 25.
 - Columnas Tarjetas: Fecha | Cuenta | Medio | NroComprobante | Comercio |
   DescripcionRaw | Monto | Signo | Categoria | Subcategoria | Familia | Hormiga |
   Conciliado | Fuente | Nota | USUARIO | Hora | Cuotas | Ultimos4 | Ubicacion |
@@ -410,10 +413,11 @@ transporte público, streaming, farmacia.
 - CHEEKY SHOPPING SOLEY → Indumentaria / Ropa Niños
 - FARICCI → Comida Fuera / Heladería (Hormiga S)
 - ARDENTE / CHEKA → Comida Fuera / Restaurante
+- LEAU VIVE → Comida Fuera / Restaurante (restaurante del convento de Luján)
 - WHOP*AUTOMATIZA / WWW.MAKE.COM → Entretenimiento / Streaming
 - TROPEA → Indumentaria / Accesorios (Hormiga S)
 - EMOVA SUBTE / SUBE VIAJES → Transporte / Subte/SUBE
-- MERPAGO*OPEN25 → Entretenimiento / Streaming
+- MERPAGO*OPEN25 → Alimentación / Almacén/Kiosko (cadena de kioscos Open 25, Hormiga S)
 - WALTER FABIAN SIMON → Servicios / Jardinería Santa Anita (transferencia
   directa ~$130.000/mes, NO en TC)
 - MATIAS ALEJANDRO GOMEZ → Alimentación / Almacén (Hormiga S — solo urgencias)

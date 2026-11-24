@@ -289,22 +289,26 @@ function sobre(){
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// CICLO — anteúltimo jueves. Se calcula al vuelo: la versión anterior
-// precomputaba una tabla que se terminaba en 2028 y después caía al último
-// ciclo sin avisar, mostrando "$0 gastado" para siempre.
+// CICLO — cierre de la MC BNA: el jueves que cae entre el 19 y el 25 del mes
+// (verificado en 8 resúmenes, mar–oct 2026). NO es el "anteúltimo jueves":
+// esa regla cierra una semana antes cuando el último jueves del mes cae entre
+// el 22 y el 25 (jun y sep 2026; feb, mar y jun 2027) y pasa una semana de
+// gasto al ciclo siguiente, o sea muestra menos gastado del real.
+// Se calcula al vuelo: la versión anterior precomputaba una tabla que se
+// terminaba en 2028 y después caía al último ciclo sin avisar.
 // ══════════════════════════════════════════════════════════════════════
-function anteultimoJueves(a,m){
-  const j=[], d=new Date(a,m,1);
-  while(d.getMonth()===m){ if(d.getDay()===4) j.push(new Date(d)); d.setDate(d.getDate()+1); }
-  const f=j[j.length-2]; f.setHours(0,0,0,0); return f;
+function juevesDeCierre(a,m){
+  const f=new Date(a,m,19);
+  while(f.getDay()!==4) f.setDate(f.getDate()+1);
+  f.setHours(0,0,0,0); return f;
 }
 function ciclo(){
   const h=new Date(); h.setHours(0,0,0,0);
   let a=h.getFullYear(), m=h.getMonth();
-  let fin=anteultimoJueves(a,m), pa=a, pm=m-1;
-  if(h>fin){ pm=m; m++; if(m>11){m=0;a++;} fin=anteultimoJueves(a,m); }
+  let fin=juevesDeCierre(a,m), pa=a, pm=m-1;
+  if(h>fin){ pm=m; m++; if(m>11){m=0;a++;} fin=juevesDeCierre(a,m); }
   if(pm<0){ pm=11; pa=a-1; }
-  const ini=new Date(anteultimoJueves(pa,pm)); ini.setDate(ini.getDate()+1); ini.setHours(0,0,0,0);
+  const ini=new Date(juevesDeCierre(pa,pm)); ini.setDate(ini.getDate()+1); ini.setHours(0,0,0,0);
   return { ini, fin, dias:Math.max(Math.ceil((fin-h)/864e5)+1,0) };
 }
 
