@@ -216,8 +216,10 @@ del día 1.
 Fondo Pellegrini Renta Pesos (BNA): reemplazó a Brubank SBS Capital Plus (eliminado
 28/07/2026). Respalda débitos automáticos, cuotas y suscripciones en USD de la TC.
 Condición: el rendimiento debe igualar o superar la tasa de reserva en pesos de MP
-(actualmente 18,1% vs 17,5% de MP). La cuenta sueldo rescata sola del Pellegrini al
-pagar: la tarjeta se paga el día del vencimiento, no antes.
+(actualmente 18,1% vs 17,5% de MP). **La cuenta sueldo NO rescata sola del Pellegrini,
+nunca:** se rescata a mano el día anterior al vencimiento. El día del vencimiento se
+paga a mano (pesos y después U$S en dólares) y se hace **SIEMPRE el stop debit**; si no,
+el débito automático cobra todo otra vez, en pesos. No se paga antes del vencimiento.
 
 Transferencias fuera de MP: Walter Fabián Simón (jardinero Santa Anita,
 ~$130.000/mes) y Urunet (cable Santa Anita, ~$35-43k/mes, transferencia manual
@@ -417,7 +419,7 @@ transporte público, streaming, farmacia.
 - WHOP*AUTOMATIZA / WWW.MAKE.COM → Entretenimiento / Streaming
 - TROPEA → Indumentaria / Accesorios (Hormiga S)
 - EMOVA SUBTE / SUBE VIAJES → Transporte / Subte/SUBE
-- MERPAGO*OPEN25 → Alimentación / Almacén/Kiosko (cadena de kioscos Open 25, Hormiga S)
+- MERPAGO*OPEN25 → Comida Fuera / Fast Food (almuerzo de Eduardo en el trabajo, cadena Open 25)
 - WALTER FABIAN SIMON → Servicios / Jardinería Santa Anita (transferencia
   directa ~$130.000/mes, NO en TC)
 - MATIAS ALEJANDRO GOMEZ → Alimentación / Almacén (Hormiga S — solo urgencias)
@@ -586,6 +588,13 @@ septiembre como `TOTAL COMISIONES Y AJUSTES 10,88`. Es el único de los 20 cargo
 que quedó a cargo de Eduardo. Son ~$16.800 al MEP: decidir si vale el reclamo.
 Se le dio a Eduardo un guión de llamada con los datos exactos (cupones, montos,
 fechas) para reclamar ambos casos. Estado de la llamada: no confirmado en este chat.
+
+> **25/11/2026: Eduardo decidió reclamar los US$ 10,88.** Los cargos de Boracay están en
+> la tarjeta **adicional de Romina**. El 00796 entró en investigación el 23/07
+> (`TRANSAC A INVESTIGAR -10,88`, resumen vto 05/08) y volvió como `FIN INVESTIGACION
+> 10,88` sin crédito en el resumen vto 02/09. Argumento: dos cargos del mismo comercio
+> (00355 y 00358) y el 7-Eleven del mismo día (00795) sí se devolvieron. No hay ningún
+> registro de la denuncia de junio en Gmail ni en Drive.
 
 ### Scripts de limpieza del Sheet — AHORA VIVEN EN EL REPO
 
